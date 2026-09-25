@@ -41,11 +41,7 @@ class AuthService
 
         // Verificación previa de existencia de correo
         if (Usuario::where('correo', $correo)->exists()) {
-            throw new ApiException(
-                409,
-                'USER_ALREADY_EXISTS',
-                'El correo electrónico ya se encuentra registrado.'
-            );
+            throw new ApiException(409, 'USER_ALREADY_EXISTS');
         }
 
         try {
@@ -59,11 +55,7 @@ class AuthService
         } catch (QueryException $e) {
             // Manejo de condición de carrera / colisión concurrente (código 23505 en PostgreSQL)
             if ($e->getCode() === '23505' || str_contains($e->getMessage(), 'usuarios_correo_unique')) {
-                throw new ApiException(
-                    409,
-                    'USER_ALREADY_EXISTS',
-                    'El correo electrónico ya se encuentra registrado.'
-                );
+                throw new ApiException(409, 'USER_ALREADY_EXISTS');
             }
 
             throw $e;
@@ -90,7 +82,7 @@ class AuthService
             throw new ApiException(
                 429,
                 'TOO_MANY_ATTEMPTS',
-                'Demasiados intentos de inicio de sesión. Por favor intente más tarde.',
+                null,
                 [],
                 ['Retry-After' => (string) $segundos]
             );
@@ -104,21 +96,13 @@ class AuthService
             Hash::check($password, self::DUMMY_HASH);
             RateLimiter::hit($throttleKey, 60);
 
-            throw new ApiException(
-                401,
-                'AUTH_INVALID_CREDENTIALS',
-                'Correo o contraseña inválidos.'
-            );
+            throw new ApiException(401, 'AUTH_INVALID_CREDENTIALS');
         }
 
         if (!Hash::check($password, $usuario->password_hash)) {
             RateLimiter::hit($throttleKey, 60);
 
-            throw new ApiException(
-                401,
-                'AUTH_INVALID_CREDENTIALS',
-                'Correo o contraseña inválidos.'
-            );
+            throw new ApiException(401, 'AUTH_INVALID_CREDENTIALS');
         }
 
         // 4. Credenciales correctas: limpiar intentos fallidos
@@ -182,11 +166,7 @@ class AuthService
             // a y b. No existe el hash
             if (!$rt) {
                 DB::rollBack();
-                throw new ApiException(
-                    401,
-                    'AUTH_TOKEN_INVALID',
-                    'El token de refresco es inválido.'
-                );
+                throw new ApiException(401, 'AUTH_TOKEN_INVALID');
             }
 
             // c. Verificar si ya fue revocado (por ejemplo por un logout de esa sesión)
@@ -194,11 +174,7 @@ class AuthService
             // si el usuario simplemente presentó un token que ya había sido cerrado legítimamente.
             if ($rt->revocado_en !== null) {
                 DB::rollBack();
-                throw new ApiException(
-                    401,
-                    'AUTH_TOKEN_REVOKED',
-                    'El token de refresco ha sido revocado.'
-                );
+                throw new ApiException(401, 'AUTH_TOKEN_REVOKED');
             }
 
             // d. Detección de reuso de token:
@@ -218,21 +194,13 @@ class AuthService
 
                 DB::commit();
 
-                throw new ApiException(
-                    401,
-                    'AUTH_TOKEN_REVOKED',
-                    'Reuso de token detectado. Todas las sesiones activas han sido cerradas por seguridad.'
-                );
+                throw new ApiException(401, 'AUTH_TOKEN_REVOKED', 'AUTH_TOKEN_REUSED');
             }
 
             // e. Verificar fecha de expiración
             if (Carbon::parse($rt->expira_en)->isPast()) {
                 DB::rollBack();
-                throw new ApiException(
-                    401,
-                    'AUTH_TOKEN_EXPIRED',
-                    'El token de refresco ha expirado.'
-                );
+                throw new ApiException(401, 'AUTH_TOKEN_EXPIRED');
             }
 
             // f. Rotación de refresh tokens:
@@ -244,11 +212,7 @@ class AuthService
             $usuario = $rt->usuario;
             if (!$usuario) {
                 DB::rollBack();
-                throw new ApiException(
-                    401,
-                    'AUTH_TOKEN_INVALID',
-                    'El usuario asociado al token no existe.'
-                );
+                throw new ApiException(401, 'AUTH_TOKEN_INVALID');
             }
 
             $nuevoRefreshToken = $this->tokenService->emitirRefreshToken($usuario, $rt->familia_id);

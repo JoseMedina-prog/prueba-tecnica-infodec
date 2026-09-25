@@ -39,18 +39,8 @@ class LoginRequest extends FormRequest
         ];
     }
 
-    /**
-     * Mensajes personalizados de error en español.
-     *
-     * @return array<string, string>
-     */
     public function messages(): array
     {
-        return [
-            'correo.required' => 'El campo correo es obligatorio.',
-            'correo.email' => 'El correo electrónico no tiene un formato válido.',
-            'password.required' => 'El campo contraseña es obligatorio.',
-            'password.string' => 'La contraseña debe ser una cadena de texto.',
-        ];
+        return [];
     }
 }

@@ -56,17 +56,16 @@ class TokenService
      * Incluye el claim 'sid' (Session ID / familia_id) para asociar el access token
      * a su familia de refresh tokens y permitir la revocación granular por sesión en el logout.
      */
-    public function emitirAccessToken(Usuario $usuario, ?string $familiaId = null): string
+    public function emitirAccessToken(Usuario $usuario, string $familiaId): string
     {
         $ahora = time();
-        $familia = $familiaId ?? (string) Str::uuid();
 
         $payload = [
             'sub' => $usuario->id,
             'iat' => $ahora,
             'exp' => $ahora + ($this->accessTtl * 60),
             'jti' => (string) Str::uuid(),
-            'sid' => $familia, // Vinculación unívoca con la familia de refresh tokens de esta sesión
+            'sid' => $familiaId, // Vinculación unívoca con la familia de refresh tokens de esta sesión
             'idioma' => $usuario->idioma,
             'iss' => config('app.url'),
             'aud' => 'travel-app',
@@ -92,11 +91,7 @@ class TokenService
         try {
             $jwt = $this->encrypter->decryptString($token);
         } catch (DecryptException $e) {
-            throw new ApiException(
-                401,
-                'AUTH_TOKEN_INVALID',
-                'El token de autenticación es inválido o ha sido alterado.'
-            );
+            throw new ApiException(401, 'AUTH_TOKEN_INVALID');
         }
 
         // 2. Decodificar y verificar la firma fija HS256 (rechaza alg none y algoritmos inesperados)
@@ -105,17 +100,9 @@ class TokenService
         try {
             $decoded = JWT::decode($jwt, new Key($this->claveFirma, 'HS256'));
         } catch (ExpiredException $e) {
-            throw new ApiException(
-                401,
-                'AUTH_TOKEN_EXPIRED',
-                'El token de acceso ha expirado.'
-            );
+            throw new ApiException(401, 'AUTH_TOKEN_EXPIRED');
         } catch (SignatureInvalidException | BeforeValidException | UnexpectedValueException | DomainException | InvalidArgumentException | Throwable $e) {
-            throw new ApiException(
-                401,
-                'AUTH_TOKEN_INVALID',
-                'El token de autenticación es inválido o ha sido alterado.'
-            );
+            throw new ApiException(401, 'AUTH_TOKEN_INVALID');
         }
 
         $claims = (array) $decoded;
@@ -125,19 +112,11 @@ class TokenService
         $esperadoAud = 'travel-app';
 
         if (($claims['iss'] ?? null) !== $esperadoIss || ($claims['aud'] ?? null) !== $esperadoAud) {
-            throw new ApiException(
-                401,
-                'AUTH_TOKEN_INVALID',
-                'El token de autenticación es inválido o no corresponde a esta aplicación.'
-            );
+            throw new ApiException(401, 'AUTH_TOKEN_INVALID');
         }
 
         if (empty($claims['sid']) || !is_string($claims['sid'])) {
-            throw new ApiException(
-                401,
-                'AUTH_TOKEN_INVALID',
-                'El token de autenticación es inválido o carece de identificador de sesión.'
-            );
+            throw new ApiException(401, 'AUTH_TOKEN_INVALID');
         }
 
         return $claims;

@@ -89,7 +89,7 @@ class AuthController extends Controller
         $this->authService->logout($usuario, $claims);
 
         return $this->successResponse([
-            'message' => 'Sesión cerrada correctamente.',
+            'message' => __('api.SESSION_LOGOUT_SUCCESS'),
         ], 200);
     }
 }

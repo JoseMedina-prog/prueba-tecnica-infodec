@@ -26,16 +26,8 @@ class RefreshRequest extends FormRequest
         ];
     }
 
-    /**
-     * Mensajes personalizados de error en español.
-     *
-     * @return array<string, string>
-     */
     public function messages(): array
     {
-        return [
-            'refresh_token.required' => 'El campo refresh_token es obligatorio.',
-            'refresh_token.string' => 'El campo refresh_token debe ser una cadena de texto.',
-        ];
+        return [];
     }
 }

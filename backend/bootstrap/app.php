@@ -22,30 +22,56 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->prependToGroup('api', [
+            \App\Http\Middleware\AsignarTraceId::class,
+            \App\Http\Middleware\EstablecerIdioma::class,
+        ]);
+
         $middleware->alias([
             'auth.token' => \App\Http\Middleware\AuthTokenMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
+        $exceptions->dontFlash([
+            'password',
+            'password_confirmation',
+            'refresh_token',
+        ]);
+
         $exceptions->render(function (Throwable $e, Request $request) {
             if ($request->is('api/*') || $request->expectsJson()) {
-                $traceId = (string) Str::uuid();
+                $traceId = $request->attributes->get('trace_id') ?? (string) Str::uuid();
+
+                // Asegurar que el idioma esté sincronizado con Accept-Language incluso si la excepción
+                // ocurrió antes de que EstablecerIdioma se ejecutara
+                $acceptLanguage = $request->header('Accept-Language', '');
+                if (str_starts_with(strtolower(trim($acceptLanguage)), 'de')) {
+                    \Illuminate\Support\Facades\App::setLocale('de');
+                } else {
+                    \Illuminate\Support\Facades\App::setLocale('es');
+                }
+
+                $headers = ['X-Trace-Id' => $traceId];
 
                 if ($e instanceof ApiException) {
                     $error = [
                         'code' => $e->getErrorCode(),
-                        'message' => $e->getMessage(),
+                        'message' => $e->getErrorMessage(),
                     ];
 
                     if (!empty($e->getDetails())) {
                         $error['details'] = $e->getDetails();
                     }
 
+                    if ($e->getStatusCode() >= 400 && $e->getStatusCode() < 500) {
+                        Log::info("Error 4xx [{$e->getStatusCode()} {$e->getErrorCode()}] en ruta: {$request->path()}");
+                    }
+
                     return response()->json([
                         'success' => false,
                         'error' => $error,
                         'trace_id' => $traceId,
-                    ], $e->getStatusCode(), $e->getHeaders());
+                    ], $e->getStatusCode(), array_merge($headers, $e->getHeaders()));
                 }
 
                 if ($e instanceof ValidationException) {
@@ -59,66 +85,79 @@ return Application::configure(basePath: dirname(__DIR__))
                         }
                     }
 
+                    Log::info("Error 4xx [422 VALIDATION_ERROR] en ruta: {$request->path()}");
+
                     return response()->json([
                         'success' => false,
                         'error' => [
                             'code' => 'VALIDATION_ERROR',
-                            'message' => 'Error de validación en los datos enviados.',
+                            'message' => __('api.VALIDATION_ERROR'),
                             'details' => $details,
                         ],
                         'trace_id' => $traceId,
-                    ], 422);
+                    ], 422, $headers);
                 }
 
                 if ($e instanceof NotFoundHttpException || $e instanceof ModelNotFoundException) {
+                    Log::info("Error 4xx [404 NOT_FOUND] en ruta: {$request->path()}");
+
                     return response()->json([
                         'success' => false,
                         'error' => [
                             'code' => 'NOT_FOUND',
-                            'message' => 'El recurso solicitado no fue encontrado.',
+                            'message' => __('api.NOT_FOUND'),
                         ],
                         'trace_id' => $traceId,
-                    ], 404);
+                    ], 404, $headers);
                 }
 
                 if ($e instanceof MethodNotAllowedHttpException) {
+                    Log::info("Error 4xx [405 METHOD_NOT_ALLOWED] en ruta: {$request->path()}");
+
                     return response()->json([
                         'success' => false,
                         'error' => [
                             'code' => 'METHOD_NOT_ALLOWED',
-                            'message' => 'El método HTTP no está permitido para esta ruta.',
+                            'message' => __('api.METHOD_NOT_ALLOWED'),
                         ],
                         'trace_id' => $traceId,
-                    ], 405);
+                    ], 405, array_merge($headers, $e->getHeaders()));
                 }
 
                 if ($e instanceof ThrottleRequestsException) {
-                    $headers = method_exists($e, 'getHeaders') ? $e->getHeaders() : [];
+                    Log::info("Error 4xx [429 TOO_MANY_ATTEMPTS] en ruta: {$request->path()}");
+
+                    $throttleHeaders = method_exists($e, 'getHeaders') ? $e->getHeaders() : [];
 
                     return response()->json([
                         'success' => false,
                         'error' => [
                             'code' => 'TOO_MANY_ATTEMPTS',
-                            'message' => 'Demasiados intentos. Por favor intente más tarde.',
+                            'message' => __('api.TOO_MANY_ATTEMPTS'),
                         ],
                         'trace_id' => $traceId,
-                    ], 429, $headers);
+                    ], 429, array_merge($headers, $throttleHeaders));
                 }
 
                 if ($e instanceof HttpExceptionInterface) {
+                    $status = $e->getStatusCode();
+                    if ($status >= 400 && $status < 500) {
+                        Log::info("Error 4xx [{$status} HTTP_ERROR] en ruta: {$request->path()}");
+                    }
+
                     return response()->json([
                         'success' => false,
                         'error' => [
                             'code' => 'HTTP_ERROR',
-                            'message' => $e->getMessage() ?: 'Error en la petición HTTP.',
+                            'message' => $e->getMessage() ?: __('api.INTERNAL_ERROR'),
                         ],
                         'trace_id' => $traceId,
-                    ], $e->getStatusCode(), $e->getHeaders());
+                    ], $status, array_merge($headers, $e->getHeaders()));
                 }
 
-                // Fallback 500: registrar excepción real en el log con el trace_id sin exponer datos al cliente
-                Log::error("Error 500 interno [trace_id: {$traceId}]: " . $e->getMessage(), [
-                    'trace_id' => $traceId,
+                // Fallback 500: registrar excepción real en el log con clase, archivo y línea
+                // (el trace_id ya está en el contexto del log via Log::withContext)
+                Log::error("Error 500 interno: " . $e->getMessage(), [
                     'exception' => get_class($e),
                     'file' => $e->getFile(),
                     'line' => $e->getLine(),
@@ -128,10 +167,10 @@ return Application::configure(basePath: dirname(__DIR__))
                     'success' => false,
                     'error' => [
                         'code' => 'INTERNAL_ERROR',
-                        'message' => 'Ocurrió un error interno en el servidor.',
+                        'message' => __('api.INTERNAL_ERROR'),
                     ],
                     'trace_id' => $traceId,
-                ], 500);
+                ], 500, $headers);
             }
         });
     })->create();

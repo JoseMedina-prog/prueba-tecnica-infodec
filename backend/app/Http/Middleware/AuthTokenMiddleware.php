@@ -31,7 +31,7 @@ class AuthTokenMiddleware
             throw new ApiException(
                 401,
                 'AUTH_TOKEN_MISSING',
-                'No se proporcionó el token de autorización Bearer.',
+                null,
                 [],
                 ['WWW-Authenticate' => 'Bearer']
             );
@@ -43,7 +43,7 @@ class AuthTokenMiddleware
             throw new ApiException(
                 401,
                 'AUTH_TOKEN_MISSING',
-                'El token de autorización Bearer está vacío.',
+                null,
                 [],
                 ['WWW-Authenticate' => 'Bearer']
             );
@@ -56,7 +56,7 @@ class AuthTokenMiddleware
             throw new ApiException(
                 $e->getStatusCode(),
                 $e->getErrorCode(),
-                $e->getMessage(),
+                $e->getMessageKey(),
                 $e->getDetails(),
                 array_merge(['WWW-Authenticate' => 'Bearer'], $e->getHeaders())
             );
@@ -67,7 +67,7 @@ class AuthTokenMiddleware
             throw new ApiException(
                 401,
                 'AUTH_TOKEN_REVOKED',
-                'El token de autenticación ha sido revocado.',
+                null,
                 [],
                 ['WWW-Authenticate' => 'Bearer']
             );
@@ -80,7 +80,7 @@ class AuthTokenMiddleware
             throw new ApiException(
                 401,
                 'AUTH_TOKEN_INVALID',
-                'El usuario asociado al token no existe.',
+                null,
                 [],
                 ['WWW-Authenticate' => 'Bearer']
             );
