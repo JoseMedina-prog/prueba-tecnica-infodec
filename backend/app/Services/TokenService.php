@@ -52,15 +52,21 @@ class TokenService
 
     /**
      * Emite un token de acceso firmado con HS256 y cifrado con AES-256-GCM.
+     *
+     * Incluye el claim 'sid' (Session ID / familia_id) para asociar el access token
+     * a su familia de refresh tokens y permitir la revocación granular por sesión en el logout.
      */
-    public function emitirAccessToken(Usuario $usuario): string
+    public function emitirAccessToken(Usuario $usuario, ?string $familiaId = null): string
     {
         $ahora = time();
+        $familia = $familiaId ?? (string) Str::uuid();
+
         $payload = [
             'sub' => $usuario->id,
             'iat' => $ahora,
             'exp' => $ahora + ($this->accessTtl * 60),
             'jti' => (string) Str::uuid(),
+            'sid' => $familia, // Vinculación unívoca con la familia de refresh tokens de esta sesión
             'idioma' => $usuario->idioma,
             'iss' => config('app.url'),
             'aud' => 'travel-app',
@@ -82,7 +88,7 @@ class TokenService
      */
     public function validarAccessToken(string $token): array
     {
-        // 1. Descifrar con el Encrypter
+        // 1. Descifrar con el Encrypter (AES-256-GCM)
         try {
             $jwt = $this->encrypter->decryptString($token);
         } catch (DecryptException $e) {
@@ -93,7 +99,7 @@ class TokenService
             );
         }
 
-        // 2. Decodificar y verificar la firma fija HS256
+        // 2. Decodificar y verificar la firma fija HS256 (rechaza alg none y algoritmos inesperados)
         JWT::$leeway = 0;
 
         try {
@@ -114,7 +120,7 @@ class TokenService
 
         $claims = (array) $decoded;
 
-        // 3. Validar iss y aud
+        // 3. Validar iss, aud y presencia obligatoria de sid (identificador de sesión)
         $esperadoIss = config('app.url');
         $esperadoAud = 'travel-app';
 
@@ -123,6 +129,14 @@ class TokenService
                 401,
                 'AUTH_TOKEN_INVALID',
                 'El token de autenticación es inválido o no corresponde a esta aplicación.'
+            );
+        }
+
+        if (empty($claims['sid']) || !is_string($claims['sid'])) {
+            throw new ApiException(
+                401,
+                'AUTH_TOKEN_INVALID',
+                'El token de autenticación es inválido o carece de identificador de sesión.'
             );
         }
 

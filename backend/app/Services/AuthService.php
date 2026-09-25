@@ -3,13 +3,19 @@
 namespace App\Services;
 
 use App\Exceptions\ApiException;
+use App\Models\RefreshToken;
+use App\Models\TokenRevocado;
 use App\Models\Usuario;
+use Carbon\Carbon;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 
 /**
- * Servicio encargado de la lógica de autenticación y gestión de usuarios.
+ * Servicio encargado de la lógica de autenticación, gestión de sesiones y ciclo de vida de tokens.
  */
 class AuthService
 {
@@ -65,7 +71,7 @@ class AuthService
     }
 
     /**
-     * Autentica a un usuario y emite tokens de acceso y refresco.
+     * Autentica a un usuario y emite tokens de acceso y refresco vinculados por familia de sesión.
      *
      * @param string $correo
      * @param string $password
@@ -118,9 +124,12 @@ class AuthService
         // 4. Credenciales correctas: limpiar intentos fallidos
         RateLimiter::clear($throttleKey);
 
-        // 5. Emisión de tokens de acceso y refresco
-        $accessToken = $this->tokenService->emitirAccessToken($usuario);
-        $refreshToken = $this->tokenService->emitirRefreshToken($usuario);
+        // 5. Emisión de tokens: se genera primero familia_id (sid) para asociar unívocamente ambos tokens
+        // Para qué sirve el sid: Vincula el access token con su familia de refresh tokens,
+        // permitiendo que el logout revoque solo esa sesión sin cerrar sesiones en otros dispositivos.
+        $familiaId = (string) Str::uuid();
+        $refreshToken = $this->tokenService->emitirRefreshToken($usuario, $familiaId);
+        $accessToken = $this->tokenService->emitirAccessToken($usuario, $familiaId);
 
         return [
             'access_token' => $accessToken,
@@ -134,5 +143,166 @@ class AuthService
                 'idioma' => $usuario->idioma,
             ],
         ];
+    }
+
+    /**
+     * Renueva un par de tokens (access token y refresh token) aplicando rotación estricta y detección de reuso.
+     *
+     * @param string $refreshPlano Token de refresco recibido del cliente en texto plano
+     * @param string $ip Dirección IP del cliente para control de tasa (rate limiting)
+     * @return array Nuevo par de tokens y datos de usuario
+     * @throws ApiException Si el token es inválido, vencido, revocado o reusado
+     */
+    public function refrescar(string $refreshPlano, string $ip): array
+    {
+        // Rate limiting por IP: máximo 10 peticiones de refresco por minuto
+        $throttleKey = "refresh:{$ip}";
+        if (RateLimiter::tooManyAttempts($throttleKey, 10)) {
+            $segundos = RateLimiter::availableIn($throttleKey);
+            throw new ApiException(
+                429,
+                'TOO_MANY_ATTEMPTS',
+                'Demasiados intentos de renovación. Por favor intente más tarde.',
+                [],
+                ['Retry-After' => (string) $segundos]
+            );
+        }
+
+        RateLimiter::hit($throttleKey, 60);
+
+        DB::beginTransaction();
+
+        try {
+            $tokenHash = hash('sha256', $refreshPlano);
+
+            // Por qué lockForUpdate: Bloquea la fila del refresh token en la base de datos a nivel de transacción
+            // para evitar condiciones de carrera si dos peticiones simultáneas intentan usar el mismo token al mismo milisegundo.
+            $rt = RefreshToken::where('token_hash', $tokenHash)->lockForUpdate()->first();
+
+            // a y b. No existe el hash
+            if (!$rt) {
+                DB::rollBack();
+                throw new ApiException(
+                    401,
+                    'AUTH_TOKEN_INVALID',
+                    'El token de refresco es inválido.'
+                );
+            }
+
+            // c. Verificar si ya fue revocado (por ejemplo por un logout de esa sesión)
+            // Este paso va ANTES de la detección de reuso para no invalidar todas las sesiones
+            // si el usuario simplemente presentó un token que ya había sido cerrado legítimamente.
+            if ($rt->revocado_en !== null) {
+                DB::rollBack();
+                throw new ApiException(
+                    401,
+                    'AUTH_TOKEN_REVOKED',
+                    'El token de refresco ha sido revocado.'
+                );
+            }
+
+            // d. Detección de reuso de token:
+            // Si un refresh token que ya tiene 'usado_en' se vuelve a presentar, indica que hubo una interceptación
+            // o duplicación del token (un atacante o un cliente desfasado). Para proteger la cuenta,
+            // se invalidan de inmediato TODAS las sesiones activas del usuario y se persiste en BD.
+            if ($rt->usado_en !== null) {
+                RefreshToken::where('usuario_id', $rt->usuario_id)
+                    ->whereNull('revocado_en')
+                    ->update(['revocado_en' => Carbon::now()]);
+
+                // Registro seguro en auditoría: nunca se loguea el token plano
+                Log::warning("Reuso de refresh token detectado para usuario ID: {$rt->usuario_id}, familia ID: {$rt->familia_id}", [
+                    'usuario_id' => $rt->usuario_id,
+                    'familia_id' => $rt->familia_id,
+                ]);
+
+                DB::commit();
+
+                throw new ApiException(
+                    401,
+                    'AUTH_TOKEN_REVOKED',
+                    'Reuso de token detectado. Todas las sesiones activas han sido cerradas por seguridad.'
+                );
+            }
+
+            // e. Verificar fecha de expiración
+            if (Carbon::parse($rt->expira_en)->isPast()) {
+                DB::rollBack();
+                throw new ApiException(
+                    401,
+                    'AUTH_TOKEN_EXPIRED',
+                    'El token de refresco ha expirado.'
+                );
+            }
+
+            // f. Rotación de refresh tokens:
+            // Marcamos el token actual como usado para que nunca vuelva a ser válido,
+            // y emitimos un par nuevo (access + refresh) bajo la MISMA familia_id.
+            $rt->usado_en = Carbon::now();
+            $rt->save();
+
+            $usuario = $rt->usuario;
+            if (!$usuario) {
+                DB::rollBack();
+                throw new ApiException(
+                    401,
+                    'AUTH_TOKEN_INVALID',
+                    'El usuario asociado al token no existe.'
+                );
+            }
+
+            $nuevoRefreshToken = $this->tokenService->emitirRefreshToken($usuario, $rt->familia_id);
+            $nuevoAccessToken = $this->tokenService->emitirAccessToken($usuario, $rt->familia_id);
+
+            DB::commit();
+
+            return [
+                'access_token' => $nuevoAccessToken,
+                'refresh_token' => $nuevoRefreshToken,
+                'token_type' => 'Bearer',
+                'expires_in' => $this->tokenService->getExpiresInSeconds(),
+                'usuario' => [
+                    'id' => $usuario->id,
+                    'nombre' => $usuario->nombre,
+                    'correo' => $usuario->correo,
+                    'idioma' => $usuario->idioma,
+                ],
+            ];
+        } catch (ApiException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            throw $e;
+        }
+    }
+
+    /**
+     * Cierra la sesión revocando el access token actual en la blacklist y los refresh tokens de su familia.
+     *
+     * @param Usuario $usuario Usuario autenticado
+     * @param array $claims Claims del access token decodificados por el middleware
+     * @return void
+     */
+    public function logout(Usuario $usuario, array $claims): void
+    {
+        DB::transaction(function () use ($usuario, $claims) {
+            $jti = $claims['jti'];
+            $exp = $claims['exp'];
+            $sid = $claims['sid'];
+
+            // 1. Blacklist del access token actual hasta su expiración natural
+            TokenRevocado::firstOrCreate(
+                ['jti' => $jti],
+                [
+                    'usuario_id' => $usuario->id,
+                    'expira_en' => Carbon::createFromTimestamp($exp),
+                ]
+            );
+
+            // 2. Revocación de todos los refresh tokens activos de esa familia (sesión actual)
+            RefreshToken::where('familia_id', $sid)
+                ->whereNull('revocado_en')
+                ->update(['revocado_en' => Carbon::now()]);
+        });
     }
 }
