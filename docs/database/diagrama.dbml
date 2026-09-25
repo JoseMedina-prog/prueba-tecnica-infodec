@@ -1,0 +1,100 @@
+// Esquema de Base de Datos - Travel App (Infodec)
+// Formato DBML (compatible con dbdiagram.io)
+
+Table monedas {
+  id bigserial [pk, increment]
+  codigo varchar(3) [unique, not null, note: 'Código ISO: GBP, JPY, INR, DKK']
+  nombre varchar(255) [not null]
+  simbolo varchar(255) [not null]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+}
+
+Table paises {
+  id bigserial [pk, increment]
+  nombre varchar(255) [not null]
+  codigo varchar(2) [unique, not null, note: 'Código ISO: GB, JP, IN, DK']
+  moneda_id bigint [not null, ref: > monedas.id]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+}
+
+Table ciudades {
+  id bigserial [pk, increment]
+  pais_id bigint [not null, ref: > paises.id]
+  nombre varchar(255) [not null]
+  latitud decimal(9,6) [not null]
+  longitud decimal(9,6) [not null]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  indexes {
+    (pais_id, nombre) [unique]
+  }
+}
+
+Table usuarios {
+  id bigserial [pk, increment]
+  nombre varchar(255) [not null]
+  correo varchar(255) [unique, not null]
+  password_hash varchar(255) [not null]
+  idioma varchar(2) [default: 'es', not null, note: 'es o de']
+  created_at timestamp [null]
+  updated_at timestamp [null]
+}
+
+Table consultas {
+  id bigserial [pk, increment]
+  usuario_id bigint [not null, ref: > usuarios.id]
+  ciudad_id bigint [not null, ref: > ciudades.id]
+  presupuesto_cop decimal(15,2) [not null]
+  clima_temperatura decimal(5,2) [null]
+  clima_descripcion varchar(255) [null]
+  tasa decimal(20,10) [null]
+  valor_convertido decimal(18,2) [null]
+  fecha_tasa timestamp [null]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  indexes {
+    (usuario_id, created_at)
+  }
+}
+
+Table tasas_cambio {
+  id bigserial [pk, increment]
+  moneda_origen varchar(3) [not null]
+  moneda_destino varchar(3) [not null]
+  tasa decimal(20,10) [not null]
+  fecha_tasa timestamp [not null]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  indexes {
+    (moneda_origen, moneda_destino, fecha_tasa)
+  }
+}
+
+Table refresh_tokens {
+  id bigserial [pk, increment]
+  usuario_id bigint [not null, ref: > usuarios.id]
+  token_hash varchar(64) [unique, not null, note: 'Hash SHA-256']
+  familia_id uuid [not null]
+  expira_en timestamp [not null]
+  usado_en timestamp [null]
+  revocado_en timestamp [null]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  indexes {
+    familia_id
+  }
+}
+
+Table tokens_revocados {
+  id bigserial [pk, increment]
+  jti uuid [unique, not null]
+  usuario_id bigint [not null, ref: > usuarios.id]
+  expira_en timestamp [not null]
+  created_at timestamp [default: `now()`, not null]
+}
