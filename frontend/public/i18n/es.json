@@ -1,0 +1,65 @@
+{
+  "APP": {
+    "TITLE": "Travel App",
+    "SUBTITLE": "Consulta de viaje y clima internacional"
+  },
+  "NAVBAR": {
+    "HISTORIAL": "Ver historial",
+    "LOGOUT": "Cerrar sesión",
+    "LOGIN": "Iniciar sesión",
+    "REGISTRO": "Registrarme",
+    "IDIOMA": "Idioma"
+  },
+  "AUTH": {
+    "LOGIN_TITLE": "Iniciar sesión",
+    "LOGIN_SUBTITLE": "Ingresa tus credenciales para acceder a la aplicación",
+    "REGISTRO_TITLE": "Crear cuenta",
+    "REGISTRO_SUBTITLE": "Regístrate para consultar el clima y conversión de monedas",
+    "NOMBRE": "Nombre completo",
+    "CORREO": "Correo electrónico",
+    "PASSWORD": "Contraseña",
+    "PASSWORD_CONFIRM": "Confirmar contraseña",
+    "ENTRAR": "Entrar",
+    "REGISTRARME": "Registrarme",
+    "YA_TIENES_CUENTA": "¿Ya tienes una cuenta?",
+    "NO_TIENES_CUENTA": "¿No tienes cuenta?",
+    "INICIA_SESION": "Inicia sesión aquí",
+    "REGISTRATE_AQUI": "Regístrate aquí",
+    "REGISTRO_EXITOSO": "¡Cuenta creada exitosamente! Puedes iniciar sesión ahora.",
+    "SESION_EXPIRADA": "Tu sesión ha expirado o no es válida. Por favor, ingresa de nuevo."
+  },
+  "VALIDACION": {
+    "REQUERIDO": "Este campo es obligatorio.",
+    "EMAIL_INVALIDO": "Ingresa un correo electrónico válido.",
+    "PASSWORD_MIN": "La contraseña debe tener al menos 8 caracteres.",
+    "PASSWORD_COMPLEJIDAD": "La contraseña debe contener al menos una mayúscula, una minúscula y un número.",
+    "PASSWORD_MISMATCH": "Las contraseñas no coinciden."
+  },
+  "CONSULTA": {
+    "HOLA": "Hola",
+    "BIENVENIDO": "Bienvenido a Travel App",
+    "TEMPORAL_DESC": "El panel principal de consulta de viajes e historial estará disponible en el Paso 13B."
+  },
+  "ERRORES": {
+    "VALIDATION_ERROR": "Error de validación en los datos enviados.",
+    "AUTH_INVALID_CREDENTIALS": "El correo o la contraseña son incorrectos.",
+    "AUTH_TOKEN_MISSING": "No se proporcionó un token de autenticación.",
+    "AUTH_TOKEN_EXPIRED": "Tu token de sesión ha expirado.",
+    "AUTH_TOKEN_INVALID": "El token de autenticación no es válido.",
+    "AUTH_TOKEN_REVOKED": "La sesión ha sido revocada o cerrada.",
+    "AUTH_USER_NOT_FOUND": "El usuario no fue encontrado.",
+    "ROUTE_NOT_FOUND": "El recurso solicitado no fue encontrado.",
+    "METHOD_NOT_ALLOWED": "Método HTTP no permitido.",
+    "TOO_MANY_ATTEMPTS": "Demasiados intentos. Espera {{segundos}} segundos antes de volver a intentar.",
+    "EXTERNAL_SERVICE_UNAVAILABLE": "El servicio externo no se encuentra disponible temporalmente.",
+    "EXTERNAL_SERVICE_TIMEOUT": "El servicio externo tardó demasiado en responder.",
+    "INTERNAL_SERVER_ERROR": "Ocurrió un error interno en el servidor. Intenta de nuevo más tarde.",
+    "ERROR_RED": "No se pudo conectar con el servidor. Verifica tu conexión a internet o que el backend esté activo.",
+    "ERROR_DESCONOCIDO": "Ocurrió un error inesperado.",
+    "REFERENCIA": "Código de referencia"
+  },
+  "AVISOS": {
+    "CLIMA_NO_DISPONIBLE": "Información meteorológica no disponible actualmente para esta ciudad.",
+    "CONVERSION_NO_DISPONIBLE": "No fue posible realizar la conversión de moneda para el país seleccionado."
+  }
+}

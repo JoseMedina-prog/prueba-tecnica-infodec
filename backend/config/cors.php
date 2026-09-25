@@ -25,7 +25,7 @@ return [
 
     'allowed_headers' => ['*'],
 
-    'exposed_headers' => [],
+    'exposed_headers' => ['X-Trace-Id', 'Retry-After'],
 
     'max_age' => 0,
 
