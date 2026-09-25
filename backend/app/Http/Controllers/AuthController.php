@@ -7,6 +7,7 @@ use App\Http\Requests\RegistroRequest;
 use App\Services\AuthService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 /**
  * Controlador para la gestión de autenticación, registro e inicio de sesión de usuarios.
@@ -46,5 +47,20 @@ class AuthController extends Controller
         );
 
         return $this->successResponse($data, 200);
+    }
+
+    /**
+     * Retorna los datos del usuario autenticado actualmente a través de AuthTokenMiddleware.
+     */
+    public function me(Request $request): JsonResponse
+    {
+        $usuario = $request->user();
+
+        return $this->successResponse([
+            'id' => $usuario->id,
+            'nombre' => $usuario->nombre,
+            'correo' => $usuario->correo,
+            'idioma' => $usuario->idioma,
+        ], 200);
     }
 }
