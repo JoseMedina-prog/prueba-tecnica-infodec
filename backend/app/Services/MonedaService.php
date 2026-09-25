@@ -24,7 +24,7 @@ class MonedaService
     {
         $destino = strtoupper(trim($destino));
         $baseUrl = rtrim(config('services.exchange.base_url', 'https://v6.exchangerate-api.com/v6'), '/');
-        $apiKey = config('services.exchange.key') ?? config('services.exchange.api_key');
+        $apiKey = config('services.exchange.key');
         $timeout = (float) config('services.exchange.timeout', 5.0);
 
         $esErrorConexion = false;

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ConsultaController;
 use App\Http\Controllers\ExternasController;
 use App\Http\Controllers\PaisController;
 use Illuminate\Support\Facades\Route;
@@ -34,6 +35,13 @@ Route::middleware('auth.token')->group(function () {
     Route::get('/paises/{id}/ciudades', [PaisController::class, 'ciudades'])
         ->whereNumber('id')
         ->name('paises.ciudades');
+
+    // Consultas turísticas y conversiones de presupuesto
+    // NOTA: El paso 12 del PDF especifica POST /api/consultas y el Anexo A indica POST /api/conversion.
+    // Se registran ambas apuntando al mismo método del controlador para compatibilidad total.
+    Route::get('/consultas/historial', [ConsultaController::class, 'historial'])->name('consultas.historial');
+    Route::post('/consultas', [ConsultaController::class, 'crear'])->name('consultas.crear');
+    Route::post('/conversion', [ConsultaController::class, 'crear'])->name('conversion.crear');
 
     // APIs externas directas para pruebas y diagnóstico
     Route::prefix('externas')->group(function () {

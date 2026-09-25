@@ -21,6 +21,7 @@ return [
     ],
     'integer' => 'El campo :attribute debe ser un número entero.',
     'exists' => 'El campo :attribute seleccionado no existe.',
+    'decimal' => 'El campo :attribute debe tener :decimal decimales.',
 
     'custom' => [
         'password' => [

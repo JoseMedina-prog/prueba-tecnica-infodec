@@ -17,7 +17,9 @@ return [
     'INTERNAL_ERROR' => 'Ein interner Serverfehler ist aufgetreten.',
     'METHOD_NOT_ALLOWED' => 'Die HTTP-Methode ist für diese Route nicht zulässig.',
 
-    // Spezielle Meldungen
+    // Spezielle Meldungen und Hinweise
     'AUTH_TOKEN_REUSED' => 'Token-Wiederverwendung erkannt. Alle aktiven Sitzungen wurden aus Sicherheitsgründen beendet.',
     'SESSION_LOGOUT_SUCCESS' => 'Sitzung erfolgreich beendet.',
+    'CLIMA_NO_DISPONIBLE' => 'Wetter nicht verfügbar',
+    'CONVERSION_NO_DISPONIBLE' => 'Umrechnung nicht verfügbar',
 ];

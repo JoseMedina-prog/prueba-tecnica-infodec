@@ -17,7 +17,9 @@ return [
     'INTERNAL_ERROR' => 'Ocurrió un error interno en el servidor.',
     'METHOD_NOT_ALLOWED' => 'El método HTTP no está permitido para esta ruta.',
 
-    // Mensajes especiales
+    // Mensajes especiales y avisos
     'AUTH_TOKEN_REUSED' => 'Reuso de token detectado. Todas las sesiones activas han sido cerradas por seguridad.',
     'SESSION_LOGOUT_SUCCESS' => 'Sesión cerrada correctamente.',
+    'CLIMA_NO_DISPONIBLE' => 'Clima no disponible',
+    'CONVERSION_NO_DISPONIBLE' => 'Conversión no disponible',
 ];

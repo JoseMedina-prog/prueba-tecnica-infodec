@@ -22,7 +22,7 @@ class ClimaService
     public function obtenerClima(Ciudad $ciudad, string $idioma = 'es'): array
     {
         $baseUrl = rtrim(config('services.weather.base_url', 'https://api.openweathermap.org/data/2.5'), '/');
-        $apiKey = config('services.weather.key') ?? config('services.weather.api_key');
+        $apiKey = config('services.weather.key');
         $timeout = (float) config('services.weather.timeout', 5.0);
 
         $lang = in_array(strtolower($idioma), ['es', 'de']) ? strtolower($idioma) : 'es';

@@ -21,6 +21,7 @@ return [
     ],
     'integer' => 'Das Feld :attribute muss eine ganze Zahl sein.',
     'exists' => 'Der ausgewählte Wert für :attribute ist nicht vorhanden.',
+    'decimal' => 'Das Feld :attribute muss :decimal Dezimalstellen haben.',
 
     'custom' => [
         'password' => [
