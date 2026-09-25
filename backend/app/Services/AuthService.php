@@ -154,9 +154,7 @@ class AuthService
 
         RateLimiter::hit($throttleKey, 60);
 
-        DB::beginTransaction();
-
-        try {
+        $resultado = DB::transaction(function () use ($refreshPlano) {
             $tokenHash = hash('sha256', $refreshPlano);
 
             // Por qué lockForUpdate: Bloquea la fila del refresh token en la base de datos a nivel de transacción
@@ -165,7 +163,6 @@ class AuthService
 
             // a y b. No existe el hash
             if (!$rt) {
-                DB::rollBack();
                 throw new ApiException(401, 'AUTH_TOKEN_INVALID');
             }
 
@@ -173,7 +170,6 @@ class AuthService
             // Este paso va ANTES de la detección de reuso para no invalidar todas las sesiones
             // si el usuario simplemente presentó un token que ya había sido cerrado legítimamente.
             if ($rt->revocado_en !== null) {
-                DB::rollBack();
                 throw new ApiException(401, 'AUTH_TOKEN_REVOKED');
             }
 
@@ -181,6 +177,7 @@ class AuthService
             // Si un refresh token que ya tiene 'usado_en' se vuelve a presentar, indica que hubo una interceptación
             // o duplicación del token (un atacante o un cliente desfasado). Para proteger la cuenta,
             // se invalidan de inmediato TODAS las sesiones activas del usuario y se persiste en BD.
+            // Retornamos un indicador en vez de lanzar la excepción para que DB::transaction haga commit.
             if ($rt->usado_en !== null) {
                 RefreshToken::where('usuario_id', $rt->usuario_id)
                     ->whereNull('revocado_en')
@@ -192,14 +189,11 @@ class AuthService
                     'familia_id' => $rt->familia_id,
                 ]);
 
-                DB::commit();
-
-                throw new ApiException(401, 'AUTH_TOKEN_REVOKED', 'AUTH_TOKEN_REUSED');
+                return ['reuso' => true];
             }
 
             // e. Verificar fecha de expiración
             if (Carbon::parse($rt->expira_en)->isPast()) {
-                DB::rollBack();
                 throw new ApiException(401, 'AUTH_TOKEN_EXPIRED');
             }
 
@@ -211,33 +205,35 @@ class AuthService
 
             $usuario = $rt->usuario;
             if (!$usuario) {
-                DB::rollBack();
                 throw new ApiException(401, 'AUTH_TOKEN_INVALID');
             }
 
             $nuevoRefreshToken = $this->tokenService->emitirRefreshToken($usuario, $rt->familia_id);
             $nuevoAccessToken = $this->tokenService->emitirAccessToken($usuario, $rt->familia_id);
 
-            DB::commit();
-
             return [
-                'access_token' => $nuevoAccessToken,
-                'refresh_token' => $nuevoRefreshToken,
-                'token_type' => 'Bearer',
-                'expires_in' => $this->tokenService->getExpiresInSeconds(),
-                'usuario' => [
-                    'id' => $usuario->id,
-                    'nombre' => $usuario->nombre,
-                    'correo' => $usuario->correo,
-                    'idioma' => $usuario->idioma,
+                'reuso' => false,
+                'data' => [
+                    'access_token' => $nuevoAccessToken,
+                    'refresh_token' => $nuevoRefreshToken,
+                    'token_type' => 'Bearer',
+                    'expires_in' => $this->tokenService->getExpiresInSeconds(),
+                    'usuario' => [
+                        'id' => $usuario->id,
+                        'nombre' => $usuario->nombre,
+                        'correo' => $usuario->correo,
+                        'idioma' => $usuario->idioma,
+                    ],
                 ],
             ];
-        } catch (ApiException $e) {
-            throw $e;
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            throw $e;
+        });
+
+        // Fuera de la transacción: si hubo reuso, la revocación ya fue persistida (commit)
+        if (!empty($resultado['reuso'])) {
+            throw new ApiException(401, 'AUTH_TOKEN_REVOKED', 'AUTH_TOKEN_REUSED');
         }
+
+        return $resultado['data'];
     }
 
     /**

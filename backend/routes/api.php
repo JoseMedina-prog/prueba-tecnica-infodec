@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\PaisController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -23,4 +24,12 @@ Route::prefix('auth')->group(function () {
         Route::get('/me', [AuthController::class, 'me'])->name('auth.me');
         Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout');
     });
+});
+
+// Rutas de países y ciudades (protegidas por auth.token)
+Route::middleware('auth.token')->group(function () {
+    Route::get('/paises', [PaisController::class, 'index'])->name('paises.index');
+    Route::get('/paises/{id}/ciudades', [PaisController::class, 'ciudades'])
+        ->whereNumber('id')
+        ->name('paises.ciudades');
 });
