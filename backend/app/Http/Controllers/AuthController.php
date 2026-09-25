@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegistroRequest;
 use App\Services\AuthService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 
 /**
- * Controlador para la gestión de autenticación y registro de usuarios.
+ * Controlador para la gestión de autenticación, registro e inicio de sesión de usuarios.
  */
 class AuthController extends Controller
 {
@@ -31,5 +32,19 @@ class AuthController extends Controller
             'correo' => $usuario->correo,
             'idioma' => $usuario->idioma,
         ], 201);
+    }
+
+    /**
+     * Autentica a un usuario y entrega tokens de acceso y refresco.
+     */
+    public function login(LoginRequest $request): JsonResponse
+    {
+        $data = $this->authService->login(
+            $request->validated('correo'),
+            $request->validated('password'),
+            $request->ip() ?? '127.0.0.1'
+        );
+
+        return $this->successResponse($data, 200);
     }
 }
