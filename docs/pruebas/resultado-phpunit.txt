@@ -1,0 +1,57 @@
+﻿PHPUnit 10.5.65 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.9
+Configuration: C:\Users\Jose Medina\Documents\proyectos\infodec\prueba-tecnica-infodec\backend\phpunit.xml
+
+.........................                                         25 / 25 (100%)
+
+Time: 00:03.079, Memory: 50.00 MB
+
+Consulta Creacion (Tests\Feature\Consultas\ConsultaCreacion)
+ Ô£ö La conversion da el valor correcto con tasa simulada
+ Ô£ö Si la api de moneda falla se usa la ultima tasa guardada de respaldo
+ Ô£ö Si falla solo el clima responde con aviso y conversion normal
+ Ô£ö Si fallan las dos apis sin respaldo responde 502 y no guarda consulta
+ Ô£ö Timeout de api externa devuelve 504
+
+Consulta Validacion (Tests\Feature\Consultas\ConsultaValidacion)
+ Ô£ö Presupuesto invalido devuelve error de validacion with data set "presupuesto vac├¡o"
+ Ô£ö Presupuesto invalido devuelve error de validacion with data set "presupuesto negativo"
+ Ô£ö Presupuesto invalido devuelve error de validacion with data set "presupuesto con letras"
+ Ô£ö Json mal formado devuelve bad request
+
+Convertir (Tests\Unit\Convertir)
+ Ô£ö Moneda service convertir calcula y redondea a dos decimales
+
+Historial (Tests\Feature\Consultas\Historial)
+ Ô£ö Historial aislado por usuario y maximo 5 consultas
+
+Login (Tests\Feature\Auth\Login)
+ Ô£ö Contrasena incorrecta bloquea al sexto intento con retry after
+
+Logout (Tests\Feature\Auth\Logout)
+ Ô£ö Un token usado despues del logout es rechazado
+ Ô£ö Logout de una sesion no afecta otra sesion del mismo usuario
+
+Pais (Tests\Feature\Paises\Pais)
+ Ô£ö Pais inexistente devuelve 404 con traduccion segun idioma
+ Ô£ö Listado de paises precarga monedas
+
+Refresh (Tests\Feature\Auth\Refresh)
+ Ô£ö Un refresh token usado dos veces es revocado y cierra todas las sesiones
+
+Registro (Tests\Feature\Auth\Registro)
+ Ô£ö Registro con correo duplicado devuelve 409
+ Ô£ö Registro exitoso crea usuario
+
+Token (Tests\Feature\Auth\Token)
+ Ô£ö Un token valido es aceptado y devuelve el usuario correcto
+ Ô£ö Un token con un solo caracter cambiado en el medio es rechazado
+ Ô£ö Un token creado con otro secreto es rechazado
+ Ô£ö Un token vencido es rechazado
+ Ô£ö Un token con algoritmo none es rechazado
+
+Token Service (Tests\Unit\TokenService)
+ Ô£ö Token service emite y valida access tokens
+
+OK (25 tests, 131 assertions)
