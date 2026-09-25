@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ExternasController;
 use App\Http\Controllers\PaisController;
 use Illuminate\Support\Facades\Route;
 
@@ -26,10 +27,21 @@ Route::prefix('auth')->group(function () {
     });
 });
 
-// Rutas de países y ciudades (protegidas por auth.token)
+// Rutas protegidas por AuthTokenMiddleware
 Route::middleware('auth.token')->group(function () {
+    // Países y ciudades
     Route::get('/paises', [PaisController::class, 'index'])->name('paises.index');
     Route::get('/paises/{id}/ciudades', [PaisController::class, 'ciudades'])
         ->whereNumber('id')
         ->name('paises.ciudades');
+
+    // APIs externas directas para pruebas y diagnóstico
+    Route::prefix('externas')->group(function () {
+        Route::get('/clima/{ciudadId}', [ExternasController::class, 'clima'])
+            ->whereNumber('ciudadId')
+            ->name('externas.clima');
+
+        Route::get('/tasa/{codigoMoneda}', [ExternasController::class, 'tasa'])
+            ->name('externas.tasa');
+    });
 });

@@ -156,8 +156,17 @@ return Application::configure(basePath: dirname(__DIR__))
                 }
 
                 // Fallback 500: registrar excepción real en el log con clase, archivo y línea
-                // (el trace_id ya está en el contexto del log via Log::withContext)
-                Log::error("Error 500 interno: " . $e->getMessage(), [
+                // Si llega una excepción del cliente HTTP sin atrapar, omitir su mensaje para proteger claves de API
+                $isHttpClientException = ($e instanceof \Illuminate\Http\Client\RequestException ||
+                                          $e instanceof \Illuminate\Http\Client\ConnectionException ||
+                                          str_contains(get_class($e), 'HttpClient') ||
+                                          str_contains(get_class($e), 'Guzzle'));
+
+                $mensajeLog = $isHttpClientException
+                    ? 'Excepción del cliente HTTP externo (detalles omitidos para proteger credenciales)'
+                    : $e->getMessage();
+
+                Log::error("Error 500 interno: " . $mensajeLog, [
                     'exception' => get_class($e),
                     'file' => $e->getFile(),
                     'line' => $e->getLine(),

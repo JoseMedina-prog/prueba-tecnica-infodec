@@ -33,14 +33,16 @@ return [
 
     'weather' => [
         'key' => env('WEATHER_API_KEY'),
-        'base_url' => env('WEATHER_API_URL', 'https://api.weatherapi.com/v1'),
-        'timeout' => (float) env('WEATHER_API_TIMEOUT', 5.0),
+        'api_key' => env('WEATHER_API_KEY'),
+        'base_url' => env('WEATHER_BASE_URL', env('WEATHER_API_URL', 'https://api.openweathermap.org/data/2.5')),
+        'timeout' => (float) env('WEATHER_TIMEOUT', env('WEATHER_API_TIMEOUT', 5.0)),
     ],
 
     'exchange' => [
         'key' => env('EXCHANGE_API_KEY'),
-        'base_url' => env('EXCHANGE_API_URL', 'https://v6.exchangerate-api.com/v6'),
-        'timeout' => (float) env('EXCHANGE_API_TIMEOUT', 5.0),
+        'api_key' => env('EXCHANGE_API_KEY'),
+        'base_url' => env('EXCHANGE_BASE_URL', env('EXCHANGE_API_URL', 'https://v6.exchangerate-api.com/v6')),
+        'timeout' => (float) env('EXCHANGE_TIMEOUT', env('EXCHANGE_API_TIMEOUT', 5.0)),
     ],
 
 ];

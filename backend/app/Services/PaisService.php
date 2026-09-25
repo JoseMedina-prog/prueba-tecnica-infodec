@@ -16,11 +16,16 @@ class PaisService
      */
     public function listar(): Collection
     {
-        return Pais::with('moneda')->orderBy('nombre', 'asc')->get();
+        $paises = Pais::with('moneda')->get();
+
+        return $paises->sortBy(function ($pais) {
+            $traducido = __("lugares.paises.{$pais->codigo}");
+            return ($traducido !== "lugares.paises.{$pais->codigo}") ? $traducido : $pais->nombre;
+        }, SORT_LOCALE_STRING)->values();
     }
 
     /**
-     * Retorna las ciudades pertenecientes a un país específico, ordenadas por nombre.
+     * Retorna las ciudades pertenecientes a un país específico, ordenadas por su nombre traducido.
      *
      * @param int $paisId Identificador del país
      * @return Collection
@@ -34,6 +39,11 @@ class PaisService
             throw new ApiException(404, 'NOT_FOUND');
         }
 
-        return $pais->ciudades()->orderBy('nombre', 'asc')->get();
+        $ciudades = $pais->ciudades()->get();
+
+        return $ciudades->sortBy(function ($ciudad) {
+            $traducido = __("lugares.ciudades.{$ciudad->nombre}");
+            return ($traducido !== "lugares.ciudades.{$ciudad->nombre}") ? $traducido : $ciudad->nombre;
+        }, SORT_LOCALE_STRING)->values();
     }
 }
