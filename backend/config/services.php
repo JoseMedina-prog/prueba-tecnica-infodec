@@ -31,4 +31,16 @@ return [
         ],
     ],
 
+    'weather' => [
+        'key' => env('WEATHER_API_KEY'),
+        'base_url' => env('WEATHER_API_URL', 'https://api.weatherapi.com/v1'),
+        'timeout' => (float) env('WEATHER_API_TIMEOUT', 5.0),
+    ],
+
+    'exchange' => [
+        'key' => env('EXCHANGE_API_KEY'),
+        'base_url' => env('EXCHANGE_API_URL', 'https://v6.exchangerate-api.com/v6'),
+        'timeout' => (float) env('EXCHANGE_API_TIMEOUT', 5.0),
+    ],
+
 ];
