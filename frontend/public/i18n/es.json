@@ -8,7 +8,8 @@
     "LOGOUT": "Cerrar sesión",
     "LOGIN": "Iniciar sesión",
     "REGISTRO": "Registrarme",
-    "IDIOMA": "Idioma"
+    "IDIOMA": "Idioma",
+    "CONSULTA": "Consultar viaje"
   },
   "AUTH": {
     "LOGIN_TITLE": "Iniciar sesión",
@@ -28,17 +29,109 @@
     "REGISTRO_EXITOSO": "¡Cuenta creada exitosamente! Puedes iniciar sesión ahora.",
     "SESION_EXPIRADA": "Tu sesión ha expirado o no es válida. Por favor, ingresa de nuevo."
   },
+  "PASOS": {
+    "DESTINO": "Destino",
+    "PRESUPUESTO": "Presupuesto",
+    "RESULTADO": "Resultado"
+  },
+  "DESTINO": {
+    "TITULO": "Selecciona tu destino",
+    "SUBTITULO": "Elige el país y la ciudad a la que planeas viajar",
+    "PAIS": "País de destino",
+    "SELECCIONAR_PAIS": "-- Selecciona un país --",
+    "CIUDAD": "Ciudad de destino",
+    "SELECCIONAR_CIUDAD": "-- Selecciona una ciudad --",
+    "MONEDA_OFICIAL": "Moneda oficial",
+    "ERROR_PAIS_REQUERIDO": "Debes seleccionar un país.",
+    "ERROR_CIUDAD_REQUERIDA": "Debes seleccionar una ciudad.",
+    "ERROR_CARGA_PAISES": "No se pudieron cargar los destinos. Verifica tu conexión.",
+    "REINTENTAR": "Reintentar",
+    "ATRAS": "Atrás",
+    "SIGUIENTE": "Siguiente",
+    "CARGANDO_CIUDADES": "Cargando ciudades...",
+    "CARGANDO_PAISES": "Cargando países...",
+    "ERROR_CARGA_CIUDADES": "No se pudieron cargar las ciudades."
+  },
+  "PRESUPUESTO": {
+    "TITULO": "Define tu presupuesto",
+    "SUBTITULO": "Indica el monto que deseas destinar para tu viaje",
+    "RESUMEN_DESTINO": "Destino seleccionado",
+    "CAMPO_LABEL": "Presupuesto en pesos colombianos (COP)",
+    "AYUDA": "Escribe solo números, por ejemplo 1500000",
+    "PREVIA": "Vista previa estimada",
+    "CONSULTANDO": "Consultando servicios...",
+    "ERROR_REQUERIDO": "El presupuesto es obligatorio.",
+    "ERROR_MAYOR_CERO": "El presupuesto debe ser mayor a 0.",
+    "ERROR_FORMATO": "Formato inválido. Escribe solo dígitos con un único punto o coma decimal.",
+    "ERROR_MAX_DECIMALES": "El presupuesto permite un máximo de 2 decimales.",
+    "ERROR_MAXIMO": "El presupuesto excede el límite permitido."
+  },
+  "RESULTADO": {
+    "TITULO": "Resultado de la consulta",
+    "SUBTITULO": "Información climática y económica de tu destino",
+    "TARJETA_DESTINO": "Destino",
+    "TARJETA_PRESUPUESTO": "Presupuesto inicial (COP)",
+    "TARJETA_CLIMA": "Clima de hoy",
+    "CLIMA_NO_DISPONIBLE": "Clima no disponible",
+    "CLIMA_NOTA": "La descripción del clima refleja el idioma en el que se realizó la consulta.",
+    "TARJETA_MONEDA": "Moneda local",
+    "TARJETA_CONVERSION": "Presupuesto convertido",
+    "CONVERSION_NO_DISPONIBLE": "Conversión no disponible",
+    "TASA_APLICADA": "Tasa aplicada",
+    "FECHA_TASA": "Fecha de la tasa",
+    "TASA_RESPALDO": "Última tasa guardada",
+    "AVISOS_TITULO": "Avisos del sistema",
+    "VOLVER_INICIO": "Volver al inicio",
+    "MONEDA_NOMBRE": "Nombre",
+    "MONEDA_SIMBOLO": "Símbolo",
+    "MONEDA_CODIGO": "Código",
+    "CLIMA_IDIOMA": "Idioma de la consulta"
+  },
+  "HISTORIAL": {
+    "TITULO": "Historial de consultas",
+    "SUBTITULO": "Tus últimas 5 consultas de viaje realizadas",
+    "VACIO": "Aún no has hecho consultas",
+    "NUEVA_CONSULTA": "Nueva consulta",
+    "TABLA_FECHA": "Fecha",
+    "TABLA_DESTINO": "Destino",
+    "TABLA_PRESUPUESTO": "Presupuesto (COP)",
+    "TABLA_CLIMA": "Clima",
+    "TABLA_CONVERSION": "Conversión",
+    "NO_DISPONIBLE": "No disponible",
+    "CARGANDO": "Cargando historial...",
+    "ERROR_CARGA": "No se pudo cargar el historial.",
+    "TASA": "Tasa"
+  },
+  "LUGARES": {
+    "PAISES": {
+      "GB": "Inglaterra",
+      "JP": "Japón",
+      "IN": "India",
+      "DK": "Dinamarca"
+    },
+    "CIUDADES": {
+      "1": "Londres",
+      "2": "Mánchester",
+      "3": "Tokio",
+      "4": "Osaka",
+      "5": "Nueva Delhi",
+      "6": "Bombay",
+      "7": "Copenhague",
+      "8": "Aarhus"
+    },
+    "MONEDAS": {
+      "GBP": "Libra esterlina",
+      "JPY": "Yen japonés",
+      "INR": "Rupia india",
+      "DKK": "Corona danesa"
+    }
+  },
   "VALIDACION": {
     "REQUERIDO": "Este campo es obligatorio.",
     "EMAIL_INVALIDO": "Ingresa un correo electrónico válido.",
     "PASSWORD_MIN": "La contraseña debe tener al menos 8 caracteres.",
     "PASSWORD_COMPLEJIDAD": "La contraseña debe contener al menos una mayúscula, una minúscula y un número.",
     "PASSWORD_MISMATCH": "Las contraseñas no coinciden."
-  },
-  "CONSULTA": {
-    "HOLA": "Hola",
-    "BIENVENIDO": "Bienvenido a Travel App",
-    "TEMPORAL_DESC": "El panel principal de consulta de viajes e historial estará disponible en el Paso 13B."
   },
   "ERRORES": {
     "VALIDATION_ERROR": "Error de validación en los datos enviados.",
@@ -56,7 +149,11 @@
     "INTERNAL_SERVER_ERROR": "Ocurrió un error interno en el servidor. Intenta de nuevo más tarde.",
     "ERROR_RED": "No se pudo conectar con el servidor. Verifica tu conexión a internet o que el backend esté activo.",
     "ERROR_DESCONOCIDO": "Ocurrió un error inesperado.",
-    "REFERENCIA": "Código de referencia"
+    "REFERENCIA": "Código de referencia",
+    "EXTERNAL_API_ERROR": "No pudimos comunicarnos con los servicios de clima y moneda. Intenta de nuevo en unos minutos.",
+    "EXTERNAL_API_TIMEOUT": "Los servicios de clima y moneda tardaron demasiado en responder. Intenta de nuevo en unos minutos.",
+    "NOT_FOUND": "El recurso solicitado no fue encontrado.",
+    "INTERNAL_ERROR": "Ocurrió un error interno en el servidor. Intenta de nuevo más tarde."
   },
   "AVISOS": {
     "CLIMA_NO_DISPONIBLE": "Información meteorológica no disponible actualmente para esta ciudad.",

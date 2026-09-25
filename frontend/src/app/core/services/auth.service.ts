@@ -13,6 +13,7 @@ import {
 } from '../models';
 import { IdiomaService } from './idioma.service';
 import { TokenStorageService } from './token-storage.service';
+import { ConsultaStateService } from './consulta-state.service';
 
 @Injectable({
   providedIn: 'root'
@@ -22,6 +23,7 @@ export class AuthService {
   private readonly router = inject(Router);
   private readonly tokenStorage = inject(TokenStorageService);
   private readonly idiomaService = inject(IdiomaService);
+  private readonly consultaState = inject(ConsultaStateService);
 
   private readonly apiUrl = environment.apiUrl;
 
@@ -150,6 +152,7 @@ export class AuthService {
   limpiarSesion(mensajeExpirada: boolean = false): void {
     this.tokenStorage.clear();
     this.usuarioSignal.set(null);
+    this.consultaState.reiniciar();
     if (mensajeExpirada) {
       this.router.navigate(['/login'], { state: { sesionExpirada: true } });
     } else {
@@ -160,6 +163,7 @@ export class AuthService {
   private completarCierreSesion(): void {
     this.tokenStorage.clear();
     this.usuarioSignal.set(null);
+    this.consultaState.reiniciar();
     this.router.navigate(['/login']);
   }
 }

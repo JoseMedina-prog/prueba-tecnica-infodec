@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
+import { consultaPasoGuard } from './core/guards/consulta-paso.guard';
 import { invitadoGuard } from './core/guards/invitado.guard';
 
 export const routes: Routes = [
@@ -23,14 +24,36 @@ export const routes: Routes = [
   {
     path: 'consulta',
     canActivate: [authGuard],
-    loadComponent: () =>
-      import('./features/consulta/consulta.component').then((m) => m.ConsultaComponent)
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        redirectTo: 'destino'
+      },
+      {
+        path: 'destino',
+        loadComponent: () =>
+          import('./features/consulta/destino/destino.component').then((m) => m.DestinoComponent)
+      },
+      {
+        path: 'presupuesto',
+        canActivate: [consultaPasoGuard],
+        loadComponent: () =>
+          import('./features/consulta/presupuesto/presupuesto.component').then((m) => m.PresupuestoComponent)
+      },
+      {
+        path: 'resultado',
+        canActivate: [consultaPasoGuard],
+        loadComponent: () =>
+          import('./features/consulta/resultado/resultado.component').then((m) => m.ResultadoComponent)
+      }
+    ]
   },
   {
     path: 'historial',
     canActivate: [authGuard],
     loadComponent: () =>
-      import('./features/consulta/consulta.component').then((m) => m.ConsultaComponent)
+      import('./features/historial/historial.component').then((m) => m.HistorialComponent)
   },
   {
     path: '**',

@@ -11,11 +11,16 @@ import { TokenStorageService } from '../services/token-storage.service';
 let renovacionEnCurso$: Observable<string | null> | null = null;
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
+  // Las peticiones que no van a la API (p. ej. /i18n/es.json) pasan sin cambios. Además evita una
+  // dependencia circular al arrancar: TranslateService carga el JSON mientras AuthService se construye.
+  if (!req.url.startsWith(environment.apiUrl)) {
+    return next(req);
+  }
+
   const tokenStorage = inject(TokenStorageService);
   const authService = inject(AuthService);
   const idiomaService = inject(IdiomaService);
 
-  const esPeticionApi = req.url.startsWith(environment.apiUrl);
   const esRutaPublicaAuth =
     req.url.includes('/auth/login') ||
     req.url.includes('/auth/register') ||
@@ -25,7 +30,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   let headers = req.headers.set('Accept-Language', idiomaService.getIdioma());
 
   // 2. Agregar Authorization: Bearer <token> a peticiones de la API excepto auth públicas
-  if (esPeticionApi && !esRutaPublicaAuth) {
+  if (!esRutaPublicaAuth) {
     const token = tokenStorage.getAccessToken();
     if (token) {
       headers = headers.set('Authorization', `Bearer ${token}`);

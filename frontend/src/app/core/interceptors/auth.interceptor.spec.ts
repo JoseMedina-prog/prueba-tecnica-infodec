@@ -55,6 +55,16 @@ describe('authInterceptor', () => {
     req.flush({ success: true, data: [] });
   });
 
+  it('no debe modificar peticiones fuera de la API (archivos de traducción)', () => {
+    tokenStorage.setTokens('access-token-123', 'refresh-token-456');
+
+    http.get('/i18n/es.json').subscribe();
+
+    const req = httpMock.expectOne('/i18n/es.json');
+    expect(req.request.headers.has('Authorization')).toBeFalse();
+    req.flush({});
+  });
+
   it('b) ante AUTH_TOKEN_EXPIRED debe llamar a /auth/refresh una vez y repetir la petición con el nuevo token', () => {
     tokenStorage.setTokens('token-expirado', 'refresh-token-valido');
 

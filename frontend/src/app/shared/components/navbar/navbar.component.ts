@@ -41,7 +41,7 @@ import { IdiomaService } from '../../../core/services/idioma.service';
                   routerLinkActive="active"
                   (click)="cerrarMenuMovil()"
                 >
-                  {{ 'APP.TITLE' | translate }}
+                  {{ 'NAVBAR.CONSULTA' | translate }}
                 </a>
               </li>
               <li class="nav-item">

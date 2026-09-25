@@ -1,6 +1,7 @@
 export interface ClimaInfo {
-  temperatura?: number | null;
-  descripcion?: string | null;
+  temperatura: number;
+  descripcion: string;
+  /** Solo viene al crear la consulta; el historial no lo guarda. */
   icono?: string | null;
 }
 
@@ -14,16 +15,20 @@ export interface ConversionInfo {
   valor: number;
   tasa: number;
   fecha_tasa: string;
-  fuente: 'api' | 'bd' | string;
+  fuente?: 'api' | 'respaldo' | string;
+}
+
+export interface ConsultaAviso {
+  code: string;
+  message: string;
 }
 
 export interface ConsultaRequest {
   ciudad_id: number;
   presupuesto: number;
-  idioma?: string;
 }
 
-export interface ConsultaItem {
+export interface ConsultaResultado {
   id: number;
   fecha: string;
   pais: {
@@ -35,8 +40,8 @@ export interface ConsultaItem {
     nombre: string;
   };
   presupuesto_cop: number;
-  clima: ClimaInfo;
+  clima: ClimaInfo | null;
   moneda: MonedaInfo;
-  conversion: ConversionInfo;
-  avisos?: string[];
+  conversion: ConversionInfo | null;
+  avisos?: ConsultaAviso[];
 }

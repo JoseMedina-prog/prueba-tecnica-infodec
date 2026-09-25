@@ -1,1 +1,99 @@
 @import 'bootstrap/dist/css/bootstrap.min.css';
+
+/* Estilo común de la app: un color principal (primary de Bootstrap) y las mismas tarjetas y espacios. */
+:root {
+  --app-radio: 0.75rem;
+}
+
+body {
+  background-color: var(--bs-tertiary-bg);
+}
+
+.contenedor-flujo {
+  max-width: 40rem;
+}
+
+.contenedor-resultado {
+  max-width: 64rem;
+}
+
+.tarjeta {
+  border: 1px solid var(--bs-border-color-translucent);
+  border-radius: var(--app-radio);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+.tarjeta-destacada {
+  border-color: var(--bs-primary-border-subtle);
+  background-color: var(--bs-primary-bg-subtle);
+}
+
+.etiqueta {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--bs-secondary-color);
+  margin-bottom: 0.5rem;
+}
+
+.valor-convertido {
+  font-size: clamp(1.75rem, 6vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--bs-primary);
+  overflow-wrap: anywhere;
+}
+
+.resumen-destino,
+.info-moneda {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--bs-border-color);
+  border-radius: 0.5rem;
+  background-color: var(--bs-light);
+}
+
+.info-moneda {
+  font-size: 0.875rem;
+}
+
+.resumen-destino {
+  padding: 0.75rem 1rem;
+}
+
+.acciones-flujo {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--bs-border-color);
+}
+
+.no-disponible {
+  padding: 1rem;
+  border-radius: 0.5rem;
+  text-align: center;
+  color: var(--bs-secondary-color);
+  background-color: var(--bs-secondary-bg);
+}
+
+.nota {
+  font-size: 0.8rem;
+  font-style: italic;
+  color: var(--bs-secondary-color);
+}
+
+.icono-clima {
+  border-radius: 50%;
+  background-color: var(--bs-primary-bg-subtle);
+}
+
+.table > :not(caption) > * > * {
+  padding: 0.85rem 1rem;
+}

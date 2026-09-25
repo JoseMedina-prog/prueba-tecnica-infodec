@@ -1,65 +1,162 @@
 {
   "APP": {
     "TITLE": "Travel App",
-    "SUBTITLE": "Reiseabfrage und internationales Wetter"
+    "SUBTITLE": "Internationale Reise- und Wetterabfrage"
   },
   "NAVBAR": {
     "HISTORIAL": "Verlauf anzeigen",
     "LOGOUT": "Abmelden",
     "LOGIN": "Anmelden",
     "REGISTRO": "Registrieren",
-    "IDIOMA": "Sprache"
+    "IDIOMA": "Sprache",
+    "CONSULTA": "Reise abfragen"
   },
   "AUTH": {
     "LOGIN_TITLE": "Anmelden",
-    "LOGIN_SUBTITLE": "Geben Sie Ihre Anmeldedaten ein, um auf die App zuzugreifen",
+    "LOGIN_SUBTITLE": "Gib deine Zugangsdaten ein, um auf die Anwendung zuzugreifen",
     "REGISTRO_TITLE": "Konto erstellen",
-    "REGISTRO_SUBTITLE": "Registrieren Sie sich, um Wetter und Währungsumrechnungen abzufragen",
+    "REGISTRO_SUBTITLE": "Registriere dich, um Wetter und Währungsumrechnung abzufragen",
     "NOMBRE": "Vollständiger Name",
     "CORREO": "E-Mail-Adresse",
     "PASSWORD": "Passwort",
     "PASSWORD_CONFIRM": "Passwort bestätigen",
     "ENTRAR": "Anmelden",
     "REGISTRARME": "Registrieren",
-    "YA_TIENES_CUENTA": "Haben Sie bereits ein Konto?",
-    "NO_TIENES_CUENTA": "Noch kein Konto?",
+    "YA_TIENES_CUENTA": "Hast du bereits ein Konto?",
+    "NO_TIENES_CUENTA": "Hast du noch kein Konto?",
     "INICIA_SESION": "Hier anmelden",
     "REGISTRATE_AQUI": "Hier registrieren",
-    "REGISTRO_EXITOSO": "Konto erfolgreich erstellt! Sie können sich jetzt anmelden.",
-    "SESION_EXPIRADA": "Ihre Sitzung ist abgelaufen oder ungültig. Bitte melden Sie sich erneut an."
+    "REGISTRO_EXITOSO": "Konto erfolgreich erstellt! Du kannst dich jetzt anmelden.",
+    "SESION_EXPIRADA": "Deine Sitzung ist abgelaufen oder ungültig. Bitte melde dich erneut an."
+  },
+  "PASOS": {
+    "DESTINO": "Reiseziel",
+    "PRESUPUESTO": "Budget",
+    "RESULTADO": "Ergebnis"
+  },
+  "DESTINO": {
+    "TITULO": "Wähle dein Reiseziel",
+    "SUBTITULO": "Wähle das Land und die Stadt, in die du reisen möchtest",
+    "PAIS": "Zielland",
+    "SELECCIONAR_PAIS": "-- Wähle ein Land --",
+    "CIUDAD": "Zielstadt",
+    "SELECCIONAR_CIUDAD": "-- Wähle eine Stadt --",
+    "MONEDA_OFICIAL": "Offizielle Währung",
+    "ERROR_PAIS_REQUERIDO": "Du musst ein Land auswählen.",
+    "ERROR_CIUDAD_REQUERIDA": "Du musst eine Stadt auswählen.",
+    "ERROR_CARGA_PAISES": "Reiseziele konnten nicht geladen werden. Bitte Verbindung prüfen.",
+    "REINTENTAR": "Erneut versuchen",
+    "ATRAS": "Zurück",
+    "SIGUIENTE": "Weiter",
+    "CARGANDO_CIUDADES": "Städte werden geladen...",
+    "CARGANDO_PAISES": "Länder werden geladen...",
+    "ERROR_CARGA_CIUDADES": "Die Städte konnten nicht geladen werden."
+  },
+  "PRESUPUESTO": {
+    "TITULO": "Definiere dein Budget",
+    "SUBTITULO": "Gib den Betrag ein, den du für deine Reise einplanst",
+    "RESUMEN_DESTINO": "Ausgewähltes Reiseziel",
+    "CAMPO_LABEL": "Budget in kolumbianischen Pesos (COP)",
+    "AYUDA": "Schreibe nur Zahlen, zum Beispiel 1500000",
+    "PREVIA": "Geschätzte Vorschau",
+    "CONSULTANDO": "Dienste werden abgefragt...",
+    "ERROR_REQUERIDO": "Das Budget ist erforderlich.",
+    "ERROR_MAYOR_CERO": "Das Budget muss größer als 0 sein.",
+    "ERROR_FORMATO": "Ungültiges Format. Schreibe nur Ziffern mit einem einzigen Dezimaltrennzeichen.",
+    "ERROR_MAX_DECIMALES": "Das Budget erlaubt maximal 2 Dezimalstellen.",
+    "ERROR_MAXIMO": "Das Budget überschreitet das zulässige Limit."
+  },
+  "RESULTADO": {
+    "TITULO": "Abfrageergebnis",
+    "SUBTITULO": "Wetter- und Wirtschaftsinformationen zu deinem Reiseziel",
+    "TARJETA_DESTINO": "Reiseziel",
+    "TARJETA_PRESUPUESTO": "Ursprüngliches Budget (COP)",
+    "TARJETA_CLIMA": "Heutiges Wetter",
+    "CLIMA_NO_DISPONIBLE": "Wetter nicht verfügbar",
+    "CLIMA_NOTA": "Die Wetterbeschreibung spiegelt die Sprache wider, in der die Abfrage durchgeführt wurde.",
+    "TARJETA_MONEDA": "Lokale Währung",
+    "TARJETA_CONVERSION": "Umgerechnetes Budget",
+    "CONVERSION_NO_DISPONIBLE": "Umrechnung nicht verfügbar",
+    "TASA_APLICADA": "Angewendeter Wechselkurs",
+    "FECHA_TASA": "Datum des Wechselkurses",
+    "TASA_RESPALDO": "Zuletzt gespeicherter Wechselkurs",
+    "AVISOS_TITULO": "Systemhinweise",
+    "VOLVER_INICIO": "Zurück zum Anfang",
+    "MONEDA_NOMBRE": "Name",
+    "MONEDA_SIMBOLO": "Symbol",
+    "MONEDA_CODIGO": "Code",
+    "CLIMA_IDIOMA": "Sprache der Abfrage"
+  },
+  "HISTORIAL": {
+    "TITULO": "Abfrageverlauf",
+    "SUBTITULO": "Deine letzten 5 durchgeführten Reiseabfragen",
+    "VACIO": "Du hast noch keine Abfragen gemacht",
+    "NUEVA_CONSULTA": "Neue Abfrage",
+    "TABLA_FECHA": "Datum",
+    "TABLA_DESTINO": "Reiseziel",
+    "TABLA_PRESUPUESTO": "Budget (COP)",
+    "TABLA_CLIMA": "Wetter",
+    "TABLA_CONVERSION": "Umrechnung",
+    "NO_DISPONIBLE": "Nicht verfügbar",
+    "CARGANDO": "Verlauf wird geladen...",
+    "ERROR_CARGA": "Der Verlauf konnte nicht geladen werden.",
+    "TASA": "Kurs"
+  },
+  "LUGARES": {
+    "PAISES": {
+      "GB": "England",
+      "JP": "Japan",
+      "IN": "Indien",
+      "DK": "Dänemark"
+    },
+    "CIUDADES": {
+      "1": "London",
+      "2": "Manchester",
+      "3": "Tokio",
+      "4": "Osaka",
+      "5": "Neu-Delhi",
+      "6": "Mumbai",
+      "7": "Kopenhagen",
+      "8": "Aarhus"
+    },
+    "MONEDAS": {
+      "GBP": "Britisches Pfund",
+      "JPY": "Japanischer Yen",
+      "INR": "Indische Rupie",
+      "DKK": "Dänische Krone"
+    }
   },
   "VALIDACION": {
-    "REQUERIDO": "Dieses Feld ist erforderlich.",
-    "EMAIL_INVALIDO": "Bitte geben Sie eine gültige E-Mail-Adresse ein.",
+    "REQUERIDO": "Dieses Feld ist obligatorisch.",
+    "EMAIL_INVALIDO": "Gib eine gültige E-Mail-Adresse ein.",
     "PASSWORD_MIN": "Das Passwort muss mindestens 8 Zeichen lang sein.",
     "PASSWORD_COMPLEJIDAD": "Das Passwort muss mindestens einen Großbuchstaben, einen Kleinbuchstaben und eine Zahl enthalten.",
     "PASSWORD_MISMATCH": "Die Passwörter stimmen nicht überein."
   },
-  "CONSULTA": {
-    "HOLA": "Hallo",
-    "BIENVENIDO": "Willkommen bei Travel App",
-    "TEMPORAL_DESC": "Das Haupt-Dashboard für Reiseabfragen und den Verlauf wird in Schritt 13B bereitgestellt."
-  },
   "ERRORES": {
-    "VALIDATION_ERROR": "Validierungsfehler bei den übermittelten Daten.",
+    "VALIDATION_ERROR": "Validierungsfehler in den gesendeten Daten.",
     "AUTH_INVALID_CREDENTIALS": "Die E-Mail-Adresse oder das Passwort ist falsch.",
-    "AUTH_TOKEN_MISSING": "Es wurde kein Authentifizierungstoken bereitgestellt.",
-    "AUTH_TOKEN_EXPIRED": "Ihr Sitzungstoken ist abgelaufen.",
+    "AUTH_TOKEN_MISSING": "Kein Authentifizierungstoken bereitgestellt.",
+    "AUTH_TOKEN_EXPIRED": "Dein Sitzungstoken ist abgelaufen.",
     "AUTH_TOKEN_INVALID": "Das Authentifizierungstoken ist ungültig.",
     "AUTH_TOKEN_REVOKED": "Die Sitzung wurde widerrufen oder beendet.",
-    "AUTH_USER_NOT_FOUND": "Benutzer nicht gefunden.",
+    "AUTH_USER_NOT_FOUND": "Der Benutzer wurde nicht gefunden.",
     "ROUTE_NOT_FOUND": "Die angeforderte Ressource wurde nicht gefunden.",
     "METHOD_NOT_ALLOWED": "HTTP-Methode nicht erlaubt.",
-    "TOO_MANY_ATTEMPTS": "Zu viele Versuche. Bitte warten Sie {{segundos}} Sekunden, bevor Sie es erneut versuchen.",
+    "TOO_MANY_ATTEMPTS": "Zu viele Versuche. Warte {{segundos}} Sekunden, bevor du es erneut versuchst.",
     "EXTERNAL_SERVICE_UNAVAILABLE": "Der externe Dienst ist vorübergehend nicht verfügbar.",
-    "EXTERNAL_SERVICE_TIMEOUT": "Der externe Dienst hat zu lange gebraucht, um zu antworten.",
-    "INTERNAL_SERVER_ERROR": "Ein interner Serverfehler ist aufgetreten. Bitte versuchen Sie es später erneut.",
-    "ERROR_RED": "Verbindung zum Server fehlgeschlagen. Bitte überprüfen Sie Ihre Internetverbindung oder ob das Backend aktiv ist.",
+    "EXTERNAL_SERVICE_TIMEOUT": "Der externe Dienst hat zu lange für eine Antwort gebraucht.",
+    "INTERNAL_SERVER_ERROR": "Ein interner Serverfehler ist aufgetreten. Bitte versuche es später erneut.",
+    "ERROR_RED": "Verbindung zum Server fehlgeschlagen. Bitte Internetverbindung oder Backend prüfen.",
     "ERROR_DESCONOCIDO": "Ein unerwarteter Fehler ist aufgetreten.",
-    "REFERENCIA": "Referenzcode"
+    "REFERENCIA": "Referenzcode",
+    "EXTERNAL_API_ERROR": "Die Wetter- und Währungsdienste sind nicht erreichbar. Bitte versuche es in einigen Minuten erneut.",
+    "EXTERNAL_API_TIMEOUT": "Die Wetter- und Währungsdienste haben zu lange gebraucht. Bitte versuche es in einigen Minuten erneut.",
+    "NOT_FOUND": "Die angeforderte Ressource wurde nicht gefunden.",
+    "INTERNAL_ERROR": "Ein interner Serverfehler ist aufgetreten. Bitte versuche es später erneut."
   },
   "AVISOS": {
     "CLIMA_NO_DISPONIBLE": "Wetterinformationen sind für diese Stadt derzeit nicht verfügbar.",
-    "CONVERSION_NO_DISPONIBLE": "Die Währungsumrechnung für das ausgewählte Land konnte nicht durchgeführt werden."
+    "CONVERSION_NO_DISPONIBLE": "Die Währungsumrechnung für das ausgewählte Land war nicht möglich."
   }
 }
