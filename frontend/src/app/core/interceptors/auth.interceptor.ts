@@ -1,7 +1,8 @@
 import { HttpErrorResponse, HttpInterceptorFn, HttpRequest } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { Observable, catchError, finalize, map, of, shareReplay, switchMap, throwError } from 'rxjs';
+import { Observable, catchError, finalize, map, of, shareReplay, switchMap, tap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { SIN_MANEJO_DE_SESION } from './contexto-auth';
 import { AuthService } from '../services/auth.service';
 import { IdiomaService } from '../services/idioma.service';
 import { TokenStorageService } from '../services/token-storage.service';
@@ -39,6 +40,11 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   const peticionConCabeceras = req.clone({ headers });
 
+  // Peticiones cuyo 401 maneja quien las hace (inicializador de la app): sin renovar ni redirigir.
+  if (req.context.get(SIN_MANEJO_DE_SESION)) {
+    return next(peticionConCabeceras);
+  }
+
   return next(peticionConCabeceras).pipe(
     catchError((err: unknown) => {
       if (!(err instanceof HttpErrorResponse) || err.status !== 401) {
@@ -52,9 +58,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
       const codigoError = err.error?.error?.code;
 
-      // Si el 401 ocurrió dentro de la propia llamada a /auth/refresh, limpiar y navegar a login
+      // 401 de la propia llamada a /auth/refresh: lo resuelve la renovación en curso (abajo),
+      // que limpia la sesión una sola vez.
       if (req.url.includes('/auth/refresh')) {
-        authService.limpiarSesion(true);
         return throwError(() => err);
       }
 
@@ -69,15 +75,14 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         // Si ya hay una renovación en curso, reutilizarla; si no, crearla
         if (!renovacionEnCurso$) {
           renovacionEnCurso$ = authService.refrescarToken().pipe(
-            map((res) => {
-              if (res.success && res.data?.access_token) {
-                return res.data.access_token;
+            map((res) => (res.success && res.data?.access_token ? res.data.access_token : null)),
+            catchError(() => of(null)),
+            // Dentro del flujo compartido: aunque varias peticiones esperen la renovación, la sesión
+            // se limpia UNA vez. limpiarSesion borra sessionStorage antes de redirigir al login.
+            tap((nuevoToken) => {
+              if (!nuevoToken) {
+                authService.limpiarSesion(true);
               }
-              return null;
-            }),
-            catchError(() => {
-              authService.limpiarSesion(true);
-              return of(null);
             }),
             finalize(() => {
               renovacionEnCurso$ = null;
@@ -89,7 +94,6 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         return renovacionEnCurso$.pipe(
           switchMap((nuevoToken) => {
             if (!nuevoToken) {
-              authService.limpiarSesion(true);
               return throwError(() => err);
             }
 

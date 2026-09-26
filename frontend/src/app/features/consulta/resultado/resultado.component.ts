@@ -155,8 +155,9 @@ import { CapitalizarPrimeraPipe } from '../../../shared/pipes/capitalizar-primer
     </div>
   `,
   styles: `
+    @use '../../../../styles/perforacion' as *;
+
     .pasabordo {
-      --muesca: 1rem;
       position: relative;
       display: grid;
       grid-template-columns: minmax(0, 1fr) 17rem;
@@ -246,31 +247,11 @@ import { CapitalizarPrimeraPipe } from '../../../shared/pipes/capitalizar-primer
 
     /* Talón separado por una línea perforada con muescas como recortes en el papel */
     .talon {
-      position: relative;
+      @include talon-perforado(1rem);
       display: flex;
       flex-direction: column;
       gap: 1.25rem;
       padding: 1.75rem 1.5rem;
-      border-left: 2px dashed var(--line-strong);
-    }
-    .talon::before,
-    .talon::after {
-      content: '';
-      position: absolute;
-      width: calc(var(--muesca) * 2);
-      height: calc(var(--muesca) * 2);
-      border-radius: 50%;
-      background: var(--paper);
-      border: none;
-      box-shadow: none;
-      z-index: 2;
-      left: calc(var(--muesca) * -1 - 1px);
-    }
-    .talon::before {
-      top: calc(var(--muesca) * -1 - 1px);
-    }
-    .talon::after {
-      bottom: calc(var(--muesca) * -1 - 1px);
     }
     .codigo-barras {
       height: 3.25rem;
@@ -333,21 +314,7 @@ import { CapitalizarPrimeraPipe } from '../../../shared/pipes/capitalizar-primer
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
       .talon {
-        border-left: 0;
-        border-top: 2px dashed var(--line-strong);
         padding: 1.5rem 1.25rem;
-      }
-      .talon::before,
-      .talon::after {
-        top: calc(var(--muesca) * -1 - 1px);
-        bottom: auto;
-      }
-      .talon::before {
-        left: calc(var(--muesca) * -1 - 1px);
-      }
-      .talon::after {
-        left: auto;
-        right: calc(var(--muesca) * -1 - 1px);
       }
       .talon-datos {
         grid-template-columns: repeat(2, minmax(0, 1fr));

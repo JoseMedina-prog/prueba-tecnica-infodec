@@ -1,8 +1,9 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpContext } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable, catchError, firstValueFrom, map, of, tap } from 'rxjs';
+import { Observable, catchError, firstValueFrom, of, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { SIN_MANEJO_DE_SESION } from '../interceptors/contexto-auth';
 import {
   ApiResponse,
   LoginRequest,
@@ -39,7 +40,10 @@ export class AuthService {
   });
 
   /**
-   * Intenta restaurar la sesión al arrancar la app usando el refresh token de sessionStorage
+   * Intenta restaurar la sesión al arrancar la app usando el refresh token de sessionStorage.
+   * Si el backend lo rechaza, borra todo en silencio (tokens y estado de la consulta) y no muestra
+   * el aviso de sesión expirada: el usuario solo recargó. No navega aquí porque la navegación
+   * inicial aún no empieza; los guards llevan al login limpio cualquier ruta protegida.
    */
   async inicializarSesion(): Promise<void> {
     const refreshToken = this.tokenStorage.getRefreshToken();
@@ -48,34 +52,35 @@ export class AuthService {
       return;
     }
 
+    // El interceptor no maneja estos 401: el fallo se resuelve aquí, sin aviso ni redirección.
+    const context = new HttpContext().set(SIN_MANEJO_DE_SESION, true);
+
     try {
       // 1. Renovar access token
       const refreshRes = await firstValueFrom(
-        this.http.post<ApiResponse<RefreshResponse>>(`${this.apiUrl}/auth/refresh`, {
-          refresh_token: refreshToken
-        })
+        this.http.post<ApiResponse<RefreshResponse>>(
+          `${this.apiUrl}/auth/refresh`,
+          { refresh_token: refreshToken },
+          { context }
+        )
       );
 
-      if (refreshRes?.success && refreshRes.data) {
-        this.tokenStorage.setTokens(refreshRes.data.access_token, refreshRes.data.refresh_token);
+      if (!refreshRes?.success || !refreshRes.data) {
+        this.borrarDatosDeSesion();
+        return;
+      }
 
-        // 2. Cargar perfil del usuario (/auth/me devuelve el usuario directamente en data)
-        const meRes = await firstValueFrom(
-          this.http.get<ApiResponse<Usuario>>(`${this.apiUrl}/auth/me`)
-        );
+      this.tokenStorage.setTokens(refreshRes.data.access_token, refreshRes.data.refresh_token);
 
-        // Al recargar se conserva el idioma elegido en este navegador; el del perfil se aplica al iniciar sesión.
-        if (meRes?.success && meRes.data) {
-          this.usuarioSignal.set(meRes.data);
-        }
-      } else {
-        this.tokenStorage.clear();
-        this.usuarioSignal.set(null);
+      // 2. Cargar perfil del usuario (/auth/me devuelve el usuario directamente en data)
+      const meRes = await firstValueFrom(this.http.get<ApiResponse<Usuario>>(`${this.apiUrl}/auth/me`, { context }));
+
+      // Al recargar se conserva el idioma elegido en este navegador; el del perfil se aplica al iniciar sesión.
+      if (meRes?.success && meRes.data) {
+        this.usuarioSignal.set(meRes.data);
       }
     } catch {
-      // Si falla la renovación al inicio, se limpia todo de forma silenciosa
-      this.tokenStorage.clear();
-      this.usuarioSignal.set(null);
+      this.borrarDatosDeSesion();
     } finally {
       this.inicializadoSignal.set(true);
     }
@@ -99,6 +104,10 @@ export class AuthService {
     return this.http.post<ApiResponse<{ usuario: Usuario }>>(`${this.apiUrl}/auth/register`, datos);
   }
 
+  /**
+   * Renueva los tokens. Si falla no limpia nada por su cuenta: el interceptor, que es quien la llama,
+   * limpia la sesión una sola vez y lleva al login con el aviso.
+   */
   refrescarToken(): Observable<ApiResponse<RefreshResponse>> {
     const refreshToken = this.tokenStorage.getRefreshToken();
     if (!refreshToken) {
@@ -116,13 +125,7 @@ export class AuthService {
         tap((res) => {
           if (res.success && res.data) {
             this.tokenStorage.setTokens(res.data.access_token, res.data.refresh_token);
-          } else {
-            this.limpiarSesion();
           }
-        }),
-        catchError((err) => {
-          this.limpiarSesion();
-          throw err;
         })
       );
   }
@@ -149,10 +152,13 @@ export class AuthService {
     );
   }
 
+  /**
+   * Cierra la sesión local y lleva al login. Primero borra sessionStorage (refresh token y estado
+   * de la consulta) y después redirige, para que un F5 posterior no intente renovar con un token revocado.
+   * Con `mensajeExpirada` el login muestra una vez el aviso de sesión expirada.
+   */
   limpiarSesion(mensajeExpirada: boolean = false): void {
-    this.tokenStorage.clear();
-    this.usuarioSignal.set(null);
-    this.consultaState.reiniciar();
+    this.borrarDatosDeSesion();
     if (mensajeExpirada) {
       this.router.navigate(['/login'], { state: { sesionExpirada: true } });
     } else {
@@ -161,9 +167,14 @@ export class AuthService {
   }
 
   private completarCierreSesion(): void {
-    this.tokenStorage.clear();
-    this.usuarioSignal.set(null);
-    this.consultaState.reiniciar();
+    this.borrarDatosDeSesion();
     this.router.navigate(['/login']);
+  }
+
+  /** Access token en memoria, refresh token y estado de la consulta en sessionStorage, y el usuario. */
+  private borrarDatosDeSesion(): void {
+    this.tokenStorage.clear();
+    this.consultaState.reiniciar();
+    this.usuarioSignal.set(null);
   }
 }

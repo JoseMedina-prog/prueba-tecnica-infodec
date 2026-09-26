@@ -39,7 +39,8 @@
     "REGLA_MINUSCULA": "Una minúscula",
     "REGLA_NUMERO": "Un número",
     "REGLA_CUMPLIDA": "cumplido",
-    "REGLA_PENDIENTE": "pendiente"
+    "REGLA_PENDIENTE": "pendiente",
+    "CERRAR_AVISO": "Cerrar aviso"
   },
   "PASOS": {
     "DESTINO": "Destino",
@@ -103,17 +104,18 @@
     "SUBTITULO": "Tus últimas 5 consultas, de la más reciente a la más antigua.",
     "VACIO": "Aún no has despegado",
     "NUEVA_CONSULTA": "Nueva consulta",
-    "TABLA_FECHA": "Fecha",
-    "TABLA_DESTINO": "Destino",
-    "TABLA_PRESUPUESTO": "Presupuesto",
-    "TABLA_CLIMA": "Clima",
-    "TABLA_CONVERSION": "En destino",
     "CARGANDO": "Cargando tus viajes…",
     "ERROR_CARGA": "No pudimos cargar tu historial.",
     "VACIO_DETALLE": "Cuando hagas tu primera consulta, aparecerá aquí como en un tablero de salidas.",
     "PRIMERA_CONSULTA": "Planear mi primer viaje",
     "REPETIR_CONSULTA": "Repetir consulta",
-    "TABLA_ACCIONES": "Acción"
+    "FECHA": "Fecha",
+    "PRESUPUESTO": "Presupuesto",
+    "CLIMA": "Clima",
+    "EN_DESTINO": "En destino",
+    "ULTIMA_CONSULTA": "Última consulta",
+    "REPETIR_A": "Repetir consulta a {{ciudad}}",
+    "TALON_TITULO": "Viaje a {{ciudad}}, {{pais}} · {{fecha}}"
   },
   "LUGARES": {
     "PAISES": {

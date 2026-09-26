@@ -1,10 +1,12 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ApiHttpError } from '../../../core/models';
 import { ApiErrorService } from '../../../core/services/api-error.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { consumirEstadoLogin } from '../../../core/utils/estado-login';
 import { AlertaErrorComponent } from '../../../shared/components/alerta-error/alerta-error.component';
 import { CampoErrorComponent } from '../../../shared/components/campo-error/campo-error.component';
 import { AuthShellComponent } from '../../../shared/components/auth-shell/auth-shell.component';
@@ -29,6 +31,18 @@ import { BotonVerPasswordComponent } from '../../../shared/components/boton-ver-
             <h1 class="titulo-pantalla">{{ 'AUTH.LOGIN_TITLE' | translate }}</h1>
             <p class="bajada">{{ 'AUTH.LOGIN_SUBTITLE' | translate }}</p>
           </header>
+
+          @if (avisoSesionExpirada()) {
+            <div class="alert alert-warning aviso-sesion" role="status">
+              <span>{{ 'AUTH.SESION_EXPIRADA' | translate }}</span>
+              <button
+                type="button"
+                class="btn-close"
+                [attr.aria-label]="'AUTH.CERRAR_AVISO' | translate"
+                (click)="cerrarAviso()"
+              ></button>
+            </div>
+          }
 
           @if (mensajeExito()) {
             <div class="alert alert-success small" role="status">{{ mensajeExito() }}</div>
@@ -89,6 +103,18 @@ import { BotonVerPasswordComponent } from '../../../shared/components/boton-ver-
           </p>
         </div>
     </app-auth-shell>
+  `,
+  styles: `
+    .aviso-sesion {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+    .aviso-sesion .btn-close {
+      flex: none;
+      margin-top: 0.15rem;
+    }
   `
 })
 export class LoginComponent implements OnInit {
@@ -96,8 +122,9 @@ export class LoginComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly apiErrorService = inject(ApiErrorService);
-  private readonly translate = inject(TranslateService);
+  private readonly destroyRef = inject(DestroyRef);
 
+  readonly avisoSesionExpirada = signal(false);
   readonly cargando = signal<boolean>(false);
   readonly errorGeneral = signal<ApiHttpError | null>(null);
   readonly erroresCampos = signal<Record<string, string>>({});
@@ -110,20 +137,21 @@ export class LoginComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    // Si viene desde registro con correo prellenado o aviso de sesión expirada
-    const navegacion = history.state;
-    if (navegacion?.correo) {
-      this.form.patchValue({ correo: navegacion.correo });
-      this.mensajeExito.set(navegacion.mensajeExito || null);
+    // Correo prellenado desde el registro o aviso de sesión expirada. Se leen una sola vez:
+    // consumirEstadoLogin los borra de history.state para que un F5 no los repita.
+    const estado = consumirEstadoLogin();
+    if (estado.correo) {
+      this.form.patchValue({ correo: estado.correo });
+      this.mensajeExito.set(estado.mensajeExito);
     }
+    this.avisoSesionExpirada.set(estado.sesionExpirada);
 
-    if (navegacion?.sesionExpirada) {
-      this.errorGeneral.set({
-        status: 401,
-        code: 'AUTH_TOKEN_EXPIRED',
-        message: this.translate.instant('AUTH.SESION_EXPIRADA')
-      });
-    }
+    // El aviso se va en cuanto el usuario empieza a escribir.
+    this.form.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.cerrarAviso());
+  }
+
+  cerrarAviso(): void {
+    this.avisoSesionExpirada.set(false);
   }
 
   onSubmit(): void {
@@ -132,6 +160,7 @@ export class LoginComponent implements OnInit {
       return;
     }
 
+    this.cerrarAviso();
     this.cargando.set(true);
     this.errorGeneral.set(null);
     this.erroresCampos.set({});

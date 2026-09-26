@@ -185,4 +185,38 @@ describe('authInterceptor', () => {
     expect(navigateSpy).toHaveBeenCalledWith(['/login'], { state: { sesionExpirada: true } });
     expect(errorRecibido).toBeDefined();
   });
+
+  it('e) si la renovación falla a mitad del uso, sessionStorage ya está limpio al redirigir y se redirige una sola vez', () => {
+    tokenStorage.setTokens('token-expirado', 'refresh-revocado');
+    sessionStorage.setItem('travel_consulta_estado', JSON.stringify({ presupuesto: '1000000' }));
+
+    // Lo que habría en sessionStorage en el momento exacto de la redirección
+    const alRedirigir: (string | null)[][] = [];
+    const navigateSpy = spyOn(router, 'navigate').and.callFake(() => {
+      alRedirigir.push([sessionStorage.getItem('refresh_token'), sessionStorage.getItem('travel_consulta_estado')]);
+      return Promise.resolve(true);
+    });
+
+    // Dos peticiones vencen al tiempo y esperan la misma renovación
+    http.get(`${apiUrl}/consultas`).subscribe({ error: () => {} });
+    http.get(`${apiUrl}/paises`).subscribe({ error: () => {} });
+    for (const url of [`${apiUrl}/consultas`, `${apiUrl}/paises`]) {
+      httpMock
+        .expectOne(url)
+        .flush(
+          { success: false, error: { code: 'AUTH_TOKEN_EXPIRED', message: 'Expirado' } },
+          { status: 401, statusText: 'Unauthorized' }
+        );
+    }
+    httpMock
+      .expectOne(`${apiUrl}/auth/refresh`)
+      .flush(
+        { success: false, error: { code: 'AUTH_TOKEN_REVOKED', message: 'Revocado' } },
+        { status: 401, statusText: 'Unauthorized' }
+      );
+
+    expect(navigateSpy).toHaveBeenCalledTimes(1);
+    expect(navigateSpy).toHaveBeenCalledWith(['/login'], { state: { sesionExpirada: true } });
+    expect(alRedirigir).toEqual([[null, null]]);
+  });
 });

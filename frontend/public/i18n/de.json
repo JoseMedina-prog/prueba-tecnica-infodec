@@ -39,7 +39,8 @@
     "REGLA_MINUSCULA": "Ein Kleinbuchstabe",
     "REGLA_NUMERO": "Eine Zahl",
     "REGLA_CUMPLIDA": "erfüllt",
-    "REGLA_PENDIENTE": "offen"
+    "REGLA_PENDIENTE": "offen",
+    "CERRAR_AVISO": "Hinweis schließen"
   },
   "PASOS": {
     "DESTINO": "Reiseziel",
@@ -103,17 +104,18 @@
     "SUBTITULO": "Deine letzten 5 Abfragen, die neueste zuerst.",
     "VACIO": "Noch nicht abgehoben",
     "NUEVA_CONSULTA": "Neue Abfrage",
-    "TABLA_FECHA": "Datum",
-    "TABLA_DESTINO": "Reiseziel",
-    "TABLA_PRESUPUESTO": "Budget",
-    "TABLA_CLIMA": "Wetter",
-    "TABLA_CONVERSION": "Vor Ort",
     "CARGANDO": "Deine Reisen werden geladen …",
     "ERROR_CARGA": "Dein Verlauf konnte nicht geladen werden.",
     "VACIO_DETALLE": "Sobald du deine erste Abfrage machst, erscheint sie hier wie auf einer Abflugtafel.",
     "PRIMERA_CONSULTA": "Meine erste Reise planen",
     "REPETIR_CONSULTA": "Erneut abfragen",
-    "TABLA_ACCIONES": "Aktion"
+    "FECHA": "Datum",
+    "PRESUPUESTO": "Budget",
+    "CLIMA": "Wetter",
+    "EN_DESTINO": "Vor Ort",
+    "ULTIMA_CONSULTA": "Letzte Abfrage",
+    "REPETIR_A": "Abfrage für {{ciudad}} wiederholen",
+    "TALON_TITULO": "Reise nach {{ciudad}}, {{pais}} · {{fecha}}"
   },
   "LUGARES": {
     "PAISES": {

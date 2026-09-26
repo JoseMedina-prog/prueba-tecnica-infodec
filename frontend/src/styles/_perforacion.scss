@@ -1,0 +1,44 @@
+// Línea perforada con muescas recortadas entre el cuerpo de un boleto y su talón.
+// Se aplica al talón. Desde 768px la línea es vertical (talón a la derecha); en celular es
+// horizontal (talón abajo). Las muescas toman el color del fondo de la página (--paper).
+// Lo usan el pasabordo (resultado) y los talones de "Mis viajes".
+@mixin talon-perforado($muesca: 1rem) {
+  position: relative;
+  border-left: 2px dashed var(--line-strong);
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    left: calc(#{$muesca} * -1 - 1px);
+    z-index: 2;
+    width: calc(#{$muesca} * 2);
+    height: calc(#{$muesca} * 2);
+    border-radius: 50%;
+    background: var(--paper);
+  }
+
+  &::before {
+    top: calc(#{$muesca} * -1 - 1px);
+  }
+
+  &::after {
+    bottom: calc(#{$muesca} * -1 - 1px);
+  }
+
+  @media (max-width: 767.98px) {
+    border-left: 0;
+    border-top: 2px dashed var(--line-strong);
+
+    &::before,
+    &::after {
+      top: calc(#{$muesca} * -1 - 1px);
+      bottom: auto;
+    }
+
+    &::after {
+      left: auto;
+      right: calc(#{$muesca} * -1 - 1px);
+    }
+  }
+}
