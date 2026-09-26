@@ -1,24 +1,35 @@
 import { Component, computed, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
+import { AuthService } from '../../../core/services/auth.service';
 import { ConsultaStateService } from '../../../core/services/consulta-state.service';
 import { IdiomaService } from '../../../core/services/idioma.service';
-import { formatearCop, formatearFechaHora, formatearMonto, formatearTasa, localeDe } from '../../../core/utils/formato';
+import { codigoCiudad } from '../../../core/utils/codigos';
+import {
+  formatearCop,
+  formatearFechaTalon,
+  formatearMonto,
+  formatearTasaDirecta,
+  formatearTasaInversa,
+  localeDe
+} from '../../../core/utils/formato';
+import { IconoClimaComponent } from '../../../shared/components/icono-clima/icono-clima.component';
 import { PasosIndicadorComponent } from '../../../shared/components/pasos-indicador/pasos-indicador.component';
+import { CapitalizarPrimeraPipe } from '../../../shared/pipes/capitalizar-primera.pipe';
 
 @Component({
   selector: 'app-resultado',
   standalone: true,
-  imports: [TranslatePipe, PasosIndicadorComponent],
+  imports: [TranslatePipe, PasosIndicadorComponent, IconoClimaComponent, CapitalizarPrimeraPipe],
   template: `
     <div class="container py-4 contenedor-resultado">
       <app-pasos-indicador [pasoActual]="3" />
 
       @if (resultado(); as res) {
-        <div class="text-center mb-4">
-          <h1 class="h4 fw-bold text-primary mb-1">{{ 'RESULTADO.TITULO' | translate }}</h1>
-          <p class="text-muted small mb-0">{{ 'RESULTADO.SUBTITULO' | translate }}</p>
-        </div>
+        <header class="encabezado-pantalla">
+          <h1 class="titulo-pantalla">{{ 'RESULTADO.TITULO' | translate }}</h1>
+          <p class="bajada">{{ 'RESULTADO.SUBTITULO' | translate }}</p>
+        </header>
 
         <!-- Nombres traducidos en el front (el resultado no se vuelve a pedir al cambiar el idioma) -->
         @let clavePais = 'LUGARES.PAISES.' + res.pais.codigo;
@@ -28,96 +39,108 @@ import { PasosIndicadorComponent } from '../../../shared/components/pasos-indica
         @let nombreCiudad = (claveCiudad | translate) === claveCiudad ? res.ciudad.nombre : (claveCiudad | translate);
         @let nombreMoneda = (claveMoneda | translate) === claveMoneda ? res.moneda.nombre : (claveMoneda | translate);
 
-        <div aria-live="polite">
-          @for (aviso of res.avisos ?? []; track aviso.code) {
-            <div class="alert alert-warning small" role="status">{{ 'AVISOS.' + aviso.code | translate }}</div>
-          }
-        </div>
+        <article class="pasabordo" [attr.aria-label]="'RESULTADO.PASABORDO' | translate">
+          <div class="cuerpo">
+            <div class="cabecera">
+              <span class="etiqueta">{{ 'RESULTADO.PASABORDO' | translate }}</span>
+              <p class="mono codigo-destino">{{ codigoDestino() }}</p>
+              <p class="lugar">{{ nombreCiudad }} · {{ nombrePais }}</p>
+            </div>
 
-        <div class="row g-3 mb-4">
-          <div class="col-12 col-md-6 col-lg-4">
-            <section class="card tarjeta h-100">
-              <div class="card-body">
-                <h2 class="etiqueta">{{ 'RESULTADO.TARJETA_DESTINO' | translate }}</h2>
-                <p class="h5 fw-bold mb-1">{{ nombreCiudad }}</p>
-                <p class="text-muted mb-0">{{ nombrePais }}</p>
-              </div>
-            </section>
-          </div>
-
-          <div class="col-12 col-md-6 col-lg-4">
-            <section class="card tarjeta h-100">
-              <div class="card-body">
-                <h2 class="etiqueta">{{ 'RESULTADO.TARJETA_PRESUPUESTO' | translate }}</h2>
-                <p class="h5 fw-bold mb-1">{{ presupuestoCop() }}</p>
-                <p class="text-muted small mb-0">{{ fecha(res.fecha) }}</p>
-              </div>
-            </section>
-          </div>
-
-          <div class="col-12 col-md-6 col-lg-4">
-            <section class="card tarjeta h-100">
-              <div class="card-body">
-                <h2 class="etiqueta">{{ 'RESULTADO.TARJETA_MONEDA' | translate }}</h2>
-                <p class="h5 fw-bold mb-1">{{ nombreMoneda }}</p>
-                <p class="text-muted mb-0">{{ res.moneda.simbolo }} · {{ res.moneda.codigo }}</p>
-              </div>
-            </section>
-          </div>
-
-          <div class="col-12 col-md-6 col-lg-5">
-            <section class="card tarjeta h-100">
-              <div class="card-body">
-                <h2 class="etiqueta">{{ 'RESULTADO.TARJETA_CLIMA' | translate }}</h2>
-                @if (res.clima; as clima) {
-                  <div class="d-flex align-items-center gap-3">
-                    @if (clima.icono) {
-                      <img
-                        [src]="'https://openweathermap.org/img/wn/' + clima.icono + '@2x.png'"
-                        [alt]="clima.descripcion"
-                        width="64"
-                        height="64"
-                        class="icono-clima"
-                      />
-                    }
-                    <div>
-                      <p class="h3 fw-bold mb-0">{{ temperatura(clima.temperatura) }} °C</p>
-                      <p class="text-capitalize mb-0" [title]="'RESULTADO.CLIMA_NOTA' | translate">
-                        {{ clima.descripcion }}
-                      </p>
-                    </div>
-                  </div>
-                  <p class="nota mt-3 mb-0">{{ 'RESULTADO.CLIMA_NOTA' | translate }}</p>
-                } @else {
-                  <p class="no-disponible mb-0">{{ 'RESULTADO.CLIMA_NO_DISPONIBLE' | translate }}</p>
-                }
-              </div>
-            </section>
-          </div>
-
-          <div class="col-12 col-lg-7">
-            <section class="card tarjeta tarjeta-destacada h-100">
-              <div class="card-body">
-                <h2 class="etiqueta">{{ 'RESULTADO.TARJETA_CONVERSION' | translate }}</h2>
-                @if (res.conversion; as conversion) {
-                  <p class="valor-convertido mb-2">{{ res.moneda.simbolo }} {{ valorConvertido() }}</p>
-                  <dl class="row small mb-0">
-                    <dt class="col-sm-5 fw-normal text-muted">{{ 'RESULTADO.TASA_APLICADA' | translate }}</dt>
-                    <dd class="col-sm-7 fw-semibold">{{ tasa() }}</dd>
-                    <dt class="col-sm-5 fw-normal text-muted">{{ 'RESULTADO.FECHA_TASA' | translate }}</dt>
-                    <dd class="col-sm-7 mb-0">{{ fecha(conversion.fecha_tasa) }}</dd>
-                  </dl>
-                  @if (conversion.fuente === 'respaldo') {
-                    <span class="badge text-bg-warning mt-2">
-                      {{ 'RESULTADO.TASA_RESPALDO' | translate }} · {{ fecha(conversion.fecha_tasa) }}
+            <!-- Grilla 2x2: Clima, Presupuesto, Moneda, Tasa -->
+            <dl class="casillas">
+              <div class="casilla">
+                <dt class="etiqueta">{{ 'RESULTADO.TARJETA_CLIMA' | translate }}</dt>
+                <dd>
+                  @if (res.clima; as clima) {
+                    <span class="clima">
+                      <app-icono-clima [icono]="clima.icono" [tamanio]="28" />
+                      <span class="mono">{{ temperatura(clima.temperatura) }} °C</span>
                     </span>
+                    <span
+                      class="d-block secundario clima-desc"
+                      tabindex="0"
+                      [title]="'RESULTADO.CLIMA_NOTA' | translate"
+                      [attr.aria-label]="clima.descripcion + '. ' + ('RESULTADO.CLIMA_NOTA' | translate)"
+                    >
+                      {{ clima.descripcion | capitalizarPrimera }}
+                    </span>
+                  } @else {
+                    <span class="aviso-suave">{{ 'RESULTADO.CLIMA_NO_DISPONIBLE' | translate }}</span>
                   }
-                } @else {
-                  <p class="no-disponible mb-0">{{ 'RESULTADO.CONVERSION_NO_DISPONIBLE' | translate }}</p>
-                }
+                </dd>
               </div>
-            </section>
+
+              <div class="casilla">
+                <dt class="etiqueta">{{ 'RESULTADO.TARJETA_PRESUPUESTO' | translate }}</dt>
+                <dd class="mono">{{ presupuestoCop() }}</dd>
+              </div>
+
+              <div class="casilla">
+                <dt class="etiqueta">{{ 'RESULTADO.TARJETA_MONEDA' | translate }}</dt>
+                <dd>
+                  {{ nombreMoneda }}
+                  <span class="d-block mono secundario">{{ res.moneda.simbolo }} · {{ res.moneda.codigo }}</span>
+                </dd>
+              </div>
+
+              <div class="casilla casilla-tasa">
+                <dt class="etiqueta">{{ 'RESULTADO.TASA_APLICADA' | translate }}</dt>
+                <dd>
+                  @if (res.conversion) {
+                    <span class="mono d-block tasa-inversa">{{ tasaInversa() }}</span>
+                    <span class="mono d-block tasa-directa">{{ tasaDirecta() }}</span>
+                  } @else {
+                    <span class="aviso-suave">—</span>
+                  }
+                </dd>
+              </div>
+
+              <div class="casilla casilla-valor">
+                <dt class="etiqueta">{{ 'RESULTADO.RINDE' | translate: { ciudad: nombreCiudad } }}</dt>
+                <dd>
+                  @if (res.conversion) {
+                    <span class="mono valor-convertido">{{ res.moneda.simbolo }} {{ valorConvertido() }}</span>
+                  } @else {
+                    <span class="aviso-suave">{{ 'RESULTADO.CONVERSION_NO_DISPONIBLE' | translate }}</span>
+                  }
+                </dd>
+              </div>
+            </dl>
           </div>
+
+          <div class="talon">
+            <div class="codigo-barras" aria-hidden="true"></div>
+            <dl class="talon-datos">
+              <div>
+                <dt class="etiqueta">{{ 'RESULTADO.FECHA' | translate }}</dt>
+                <dd class="mono fecha-talon">
+                  <span class="fecha-linea">{{ fechaTalon(res.fecha).fecha }}</span>
+                  <span class="fecha-linea">{{ fechaTalon(res.fecha).hora }}</span>
+                </dd>
+              </div>
+              <div>
+                <dt class="etiqueta">{{ 'RESULTADO.PASAJERO' | translate }}</dt>
+                <dd>{{ pasajero() }}</dd>
+              </div>
+              <div>
+                <dt class="etiqueta">{{ 'RESULTADO.VUELO' | translate }}</dt>
+                <dd class="mono">COP → {{ res.moneda.codigo }}</dd>
+              </div>
+            </dl>
+          </div>
+
+          @if (res.conversion?.fuente === 'respaldo') {
+            <p class="sello" role="note">
+              {{ 'RESULTADO.TASA_RESPALDO' | translate }} · {{ fechaTalon(res.conversion!.fecha_tasa).fecha }}
+            </p>
+          }
+        </article>
+
+        <div aria-live="polite" class="mt-3">
+          @for (aviso of res.avisos ?? []; track aviso.code) {
+            <p class="aviso-suave mb-1">{{ 'AVISOS.' + aviso.code | translate }}</p>
+          }
         </div>
 
         <div class="acciones-flujo">
@@ -130,15 +153,227 @@ import { PasosIndicadorComponent } from '../../../shared/components/pasos-indica
         </div>
       }
     </div>
+  `,
+  styles: `
+    .pasabordo {
+      --muesca: 1rem;
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 17rem;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+    }
+    .cuerpo {
+      padding: 1.75rem 2rem 2rem;
+    }
+    .cabecera {
+      padding-bottom: 1.25rem;
+      margin-bottom: 1.25rem;
+      border-bottom: 1px solid var(--line);
+    }
+    .codigo-destino {
+      margin: 0;
+      font-size: clamp(3rem, 12vw, 4.5rem);
+      font-weight: 600;
+      line-height: 1;
+      letter-spacing: 0.04em;
+    }
+    .lugar {
+      margin: 0.35rem 0 0;
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      font-weight: 500;
+    }
+    .casillas {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1.25rem 1.5rem;
+      margin: 0;
+    }
+    .casilla dd {
+      margin: 0;
+      font-weight: 500;
+    }
+    .casilla-tasa {
+      display: flex;
+      flex-direction: column;
+    }
+    .tasa-inversa {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--ink);
+    }
+    .tasa-directa {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 0.15rem;
+    }
+    .casilla-valor {
+      grid-column: 1 / -1;
+      padding-top: 1rem;
+      border-top: 1px dashed var(--line-strong);
+    }
+    .valor-convertido {
+      font-size: clamp(2rem, 8vw, 3rem);
+      font-weight: 600;
+      line-height: 1.1;
+      color: var(--accent);
+      overflow-wrap: anywhere;
+    }
+    .secundario {
+      font-size: 0.85rem;
+      font-weight: 400;
+      color: var(--muted);
+    }
+    .clima {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .clima-desc {
+      cursor: help;
+      display: inline-block;
+      text-decoration: underline dotted var(--muted);
+      text-underline-offset: 3px;
+    }
+    .clima-desc:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+      border-radius: var(--radius-sm);
+    }
+
+    /* Talón separado por una línea perforada con muescas como recortes en el papel */
+    .talon {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      padding: 1.75rem 1.5rem;
+      border-left: 2px dashed var(--line-strong);
+    }
+    .talon::before,
+    .talon::after {
+      content: '';
+      position: absolute;
+      width: calc(var(--muesca) * 2);
+      height: calc(var(--muesca) * 2);
+      border-radius: 50%;
+      background: var(--paper);
+      border: none;
+      box-shadow: none;
+      z-index: 2;
+      left: calc(var(--muesca) * -1 - 1px);
+    }
+    .talon::before {
+      top: calc(var(--muesca) * -1 - 1px);
+    }
+    .talon::after {
+      bottom: calc(var(--muesca) * -1 - 1px);
+    }
+    .codigo-barras {
+      height: 3.25rem;
+      background: repeating-linear-gradient(
+        90deg,
+        var(--ink) 0 2px,
+        transparent 2px 4px,
+        var(--ink) 4px 5px,
+        transparent 5px 8px,
+        var(--ink) 8px 11px,
+        transparent 11px 13px,
+        var(--ink) 13px 14px,
+        transparent 14px 17px
+      );
+    }
+    .talon-datos {
+      display: grid;
+      gap: 0.9rem;
+      margin: 0;
+    }
+    .talon-datos dd {
+      margin: 0;
+      font-weight: 500;
+    }
+    .fecha-talon {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.25;
+    }
+    .fecha-linea {
+      white-space: nowrap;
+    }
+
+    .sello {
+      position: absolute;
+      top: 1.5rem;
+      right: 19rem;
+      margin: 0;
+      padding: 0.35rem 0.75rem;
+      border: 2px solid var(--success);
+      border-radius: var(--radius);
+      color: var(--success);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      transform: rotate(-6deg);
+      background: var(--surface);
+    }
+
+    @media (max-width: 767.98px) {
+      .pasabordo {
+        grid-template-columns: 1fr;
+      }
+      .cuerpo {
+        padding: 1.25rem 1.25rem 1.5rem;
+      }
+      .casillas {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .talon {
+        border-left: 0;
+        border-top: 2px dashed var(--line-strong);
+        padding: 1.5rem 1.25rem;
+      }
+      .talon::before,
+      .talon::after {
+        top: calc(var(--muesca) * -1 - 1px);
+        bottom: auto;
+      }
+      .talon::before {
+        left: calc(var(--muesca) * -1 - 1px);
+      }
+      .talon::after {
+        left: auto;
+        right: calc(var(--muesca) * -1 - 1px);
+      }
+      .talon-datos {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .sello {
+        top: 1rem;
+        right: 1rem;
+      }
+    }
   `
 })
 export class ResultadoComponent {
   private readonly consultaState = inject(ConsultaStateService);
   private readonly idiomaService = inject(IdiomaService);
   private readonly router = inject(Router);
+  private readonly authService = inject(AuthService);
 
   readonly resultado = this.consultaState.resultado;
   private readonly idioma = this.idiomaService.idiomaActual;
+
+  readonly pasajero = computed(() => this.authService.usuario()?.nombre ?? '');
+
+  readonly codigoDestino = computed(() => {
+    const res = this.resultado();
+    return res ? codigoCiudad(res.ciudad.id, res.ciudad.nombre) : '';
+  });
 
   readonly presupuestoCop = computed(() => {
     const res = this.resultado();
@@ -150,13 +385,18 @@ export class ResultadoComponent {
     return res?.conversion ? formatearMonto(res.conversion.valor, res.moneda.codigo, this.idioma()) : '';
   });
 
-  readonly tasa = computed(() => {
+  readonly tasaInversa = computed(() => {
     const res = this.resultado();
-    return res?.conversion ? formatearTasa(res.conversion.tasa, res.moneda.codigo, this.idioma()) : '';
+    return res?.conversion ? formatearTasaInversa(res.conversion.tasa, res.moneda.simbolo, this.idioma()) : '';
   });
 
-  fecha(fechaIso: string | null | undefined): string {
-    return formatearFechaHora(fechaIso, this.idioma());
+  readonly tasaDirecta = computed(() => {
+    const res = this.resultado();
+    return res?.conversion ? formatearTasaDirecta(res.conversion.tasa, res.moneda.codigo, this.idioma()) : '';
+  });
+
+  fechaTalon(fechaIso: string | null | undefined): { fecha: string; hora: string } {
+    return formatearFechaTalon(fechaIso, this.idioma());
   }
 
   temperatura(valor: number): string {

@@ -6,81 +6,89 @@ import { Subscription } from 'rxjs';
 import { ConsultaResultado } from '../../core/models';
 import { ConsultaService } from '../../core/services/consulta.service';
 import { IdiomaService } from '../../core/services/idioma.service';
+import { codigoCiudad } from '../../core/utils/codigos';
 import { formatearCop, formatearFechaHora, formatearMonto, formatearTasa, localeDe } from '../../core/utils/formato';
+
+import { IconoClimaComponent } from '../../shared/components/icono-clima/icono-clima.component';
+import { CapitalizarPrimeraPipe } from '../../shared/pipes/capitalizar-primera.pipe';
 
 @Component({
   selector: 'app-historial',
   standalone: true,
-  imports: [RouterLink, TranslatePipe],
+  imports: [RouterLink, TranslatePipe, IconoClimaComponent, CapitalizarPrimeraPipe],
   template: `
     <div class="container py-4 contenedor-resultado">
-      <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4">
+      <header class="encabezado-pantalla d-flex flex-column flex-sm-row justify-content-between align-items-sm-end gap-3">
         <div>
-          <h1 class="h4 fw-bold text-primary mb-1">{{ 'HISTORIAL.TITULO' | translate }}</h1>
-          <p class="text-muted small mb-0">{{ 'HISTORIAL.SUBTITULO' | translate }}</p>
+          <h1 class="titulo-pantalla">{{ 'HISTORIAL.TITULO' | translate }}</h1>
+          <p class="bajada">{{ 'HISTORIAL.SUBTITULO' | translate }}</p>
         </div>
-        <a routerLink="/consulta/destino" class="btn btn-primary">{{ 'HISTORIAL.NUEVA_CONSULTA' | translate }}</a>
-      </div>
+        @if (!cargando() && consultas().length > 0) {
+          <a routerLink="/consulta/destino" class="btn btn-primary">{{ 'HISTORIAL.NUEVA_CONSULTA' | translate }}</a>
+        }
+      </header>
 
       @if (cargando()) {
-        <div class="text-center py-5 text-muted" role="status">
-          <span class="spinner-border text-primary mb-2" aria-hidden="true"></span>
-          <p class="small mb-0">{{ 'HISTORIAL.CARGANDO' | translate }}</p>
-        </div>
+        <p class="cargando py-4" role="status">
+          <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+          {{ 'HISTORIAL.CARGANDO' | translate }}
+        </p>
       } @else if (error()) {
         <div class="alert alert-danger d-flex flex-wrap align-items-center justify-content-between gap-2" role="alert">
-          <span class="small">{{ 'HISTORIAL.ERROR_CARGA' | translate }}</span>
-          <button type="button" class="btn btn-outline-danger btn-sm" (click)="cargarHistorial()">
+          <span>{{ 'HISTORIAL.ERROR_CARGA' | translate }}</span>
+          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="cargarHistorial()">
             {{ 'DESTINO.REINTENTAR' | translate }}
           </button>
         </div>
       } @else if (consultas().length === 0) {
-        <div class="card tarjeta text-center">
-          <div class="card-body py-5">
-            <p class="h5 fw-semibold mb-3">{{ 'HISTORIAL.VACIO' | translate }}</p>
-            <a routerLink="/consulta/destino" class="btn btn-primary">{{ 'HISTORIAL.NUEVA_CONSULTA' | translate }}</a>
-          </div>
-        </div>
+        <section class="vacio">
+          <p class="mono vacio-codigo" aria-hidden="true">--- → ---</p>
+          <h2 class="h4">{{ 'HISTORIAL.VACIO' | translate }}</h2>
+          <p class="bajada">{{ 'HISTORIAL.VACIO_DETALLE' | translate }}</p>
+          <a routerLink="/consulta/destino" class="btn btn-primary">{{ 'HISTORIAL.PRIMERA_CONSULTA' | translate }}</a>
+        </section>
       } @else {
-        <!-- Tabla: pantallas medianas en adelante -->
-        <div class="card tarjeta d-none d-md-block">
-          <table class="table align-middle mb-0">
+        <!-- Tablet y computador: tablero de salidas -->
+        <div class="tablero d-none d-md-block">
+          <table>
+            <caption class="visually-hidden">{{ 'HISTORIAL.TITULO' | translate }}</caption>
             <thead>
               <tr>
                 <th scope="col">{{ 'HISTORIAL.TABLA_FECHA' | translate }}</th>
                 <th scope="col">{{ 'HISTORIAL.TABLA_DESTINO' | translate }}</th>
-                <th scope="col" class="text-end">{{ 'HISTORIAL.TABLA_PRESUPUESTO' | translate }}</th>
+                <th scope="col" class="num">{{ 'HISTORIAL.TABLA_PRESUPUESTO' | translate }}</th>
                 <th scope="col">{{ 'HISTORIAL.TABLA_CLIMA' | translate }}</th>
-                <th scope="col" class="text-end">{{ 'HISTORIAL.TABLA_CONVERSION' | translate }}</th>
+                <th scope="col" class="num">{{ 'HISTORIAL.TABLA_CONVERSION' | translate }}</th>
               </tr>
             </thead>
             <tbody>
               @for (item of consultas(); track item.id) {
                 <tr>
-                  <td class="small">{{ fecha(item.fecha) }}</td>
+                  <td class="mono fecha">{{ fecha(item.fecha) }}</td>
                   <td>
-                    <div class="fw-semibold">{{ item.ciudad.nombre }}</div>
-                    <div class="small text-muted">{{ item.pais.nombre }}</div>
+                    <span class="mono codigo">{{ codigo(item) }}</span>
+                    <span class="destino">{{ item.ciudad.nombre }}, {{ item.pais.nombre }}</span>
                   </td>
-                  <td class="text-end text-nowrap">{{ cop(item.presupuesto_cop) }}</td>
+                  <td class="num mono">{{ cop(item.presupuesto_cop) }}</td>
                   <td>
                     @if (item.clima; as clima) {
-                      <div class="fw-semibold">{{ temperatura(clima.temperatura) }} °C</div>
-                      <div class="small text-muted text-capitalize">{{ clima.descripcion }}</div>
+                      <div class="d-inline-flex align-items-center gap-2">
+                        <app-icono-clima [icono]="clima.icono" [tamanio]="20" />
+                        <span class="mono">{{ temperatura(clima.temperatura) }} °C</span>
+                      </div>
+                      <span class="secundario d-block">{{ clima.descripcion | capitalizarPrimera }}</span>
                     } @else {
-                      <span class="text-muted">—</span>
-                      <span class="small text-muted d-block">{{ 'RESULTADO.CLIMA_NO_DISPONIBLE' | translate }}</span>
+                      <span aria-hidden="true">—</span>
+                      <span class="secundario">{{ 'RESULTADO.CLIMA_NO_DISPONIBLE' | translate }}</span>
                     }
                   </td>
-                  <td class="text-end">
+                  <td class="num">
                     @if (item.conversion; as conversion) {
-                      <div class="fw-semibold text-primary text-nowrap">
-                        {{ item.moneda.simbolo }} {{ monto(conversion.valor, item.moneda.codigo) }}
-                      </div>
-                      <div class="small text-muted text-nowrap">{{ tasa(conversion.tasa, item.moneda.codigo) }}</div>
+                      <span class="mono valor">{{ item.moneda.simbolo }} {{ monto(conversion.valor, item.moneda.codigo) }}</span>
+                      <span class="mono secundario">{{ tasa(conversion.tasa, item.moneda.codigo) }}</span>
                     } @else {
-                      <span class="text-muted">—</span>
-                      <span class="small text-muted d-block">{{ 'RESULTADO.CONVERSION_NO_DISPONIBLE' | translate }}</span>
+                      <span aria-hidden="true">—</span>
+                      <span class="secundario">{{ 'RESULTADO.CONVERSION_NO_DISPONIBLE' | translate }}</span>
                     }
                   </td>
                 </tr>
@@ -89,47 +97,178 @@ import { formatearCop, formatearFechaHora, formatearMonto, formatearTasa, locale
           </table>
         </div>
 
-        <!-- Tarjetas apiladas: celular -->
-        <ul class="list-unstyled d-md-none d-flex flex-column gap-3 mb-0">
+        <!-- Celular: talones pequeños apilados -->
+        <ul class="talones d-md-none">
           @for (item of consultas(); track item.id) {
-            <li class="card tarjeta">
-              <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
-                  <div>
-                    <p class="fw-semibold mb-0">{{ item.ciudad.nombre }}</p>
-                    <p class="small text-muted mb-0">{{ item.pais.nombre }}</p>
-                  </div>
-                  <span class="small text-muted text-end">{{ fecha(item.fecha) }}</span>
-                </div>
-                <dl class="row small mb-0 g-0">
-                  <dt class="col-5 fw-normal text-muted">{{ 'HISTORIAL.TABLA_PRESUPUESTO' | translate }}</dt>
-                  <dd class="col-7 text-end">{{ cop(item.presupuesto_cop) }}</dd>
-
-                  <dt class="col-5 fw-normal text-muted">{{ 'HISTORIAL.TABLA_CLIMA' | translate }}</dt>
-                  <dd class="col-7 text-end">
-                    @if (item.clima; as clima) {
-                      {{ temperatura(clima.temperatura) }} °C · <span class="text-capitalize">{{ clima.descripcion }}</span>
-                    } @else {
-                      — {{ 'RESULTADO.CLIMA_NO_DISPONIBLE' | translate }}
-                    }
-                  </dd>
-
-                  <dt class="col-5 fw-normal text-muted">{{ 'HISTORIAL.TABLA_CONVERSION' | translate }}</dt>
-                  <dd class="col-7 text-end mb-0">
-                    @if (item.conversion; as conversion) {
-                      <span class="fw-semibold text-primary">{{ item.moneda.simbolo }} {{ monto(conversion.valor, item.moneda.codigo) }}</span>
-                      <span class="d-block text-muted">{{ tasa(conversion.tasa, item.moneda.codigo) }}</span>
-                    } @else {
-                      — {{ 'RESULTADO.CONVERSION_NO_DISPONIBLE' | translate }}
-                    }
-                  </dd>
-                </dl>
+            <li class="talon">
+              <div class="talon-cuerpo">
+                <span class="mono codigo">{{ codigo(item) }}</span>
+                <span class="destino">{{ item.ciudad.nombre }}, {{ item.pais.nombre }}</span>
+                <span class="mono secundario">{{ fecha(item.fecha) }}</span>
+                <span class="secundario d-flex align-items-center gap-1 flex-wrap">
+                  @if (item.clima; as clima) {
+                    <app-icono-clima [icono]="clima.icono" [tamanio]="18" />
+                    <span>{{ temperatura(clima.temperatura) }} °C · {{ clima.descripcion | capitalizarPrimera }}</span>
+                  } @else {
+                    — {{ 'RESULTADO.CLIMA_NO_DISPONIBLE' | translate }}
+                  }
+                </span>
               </div>
+              <dl class="talon-montos">
+                <dt class="etiqueta">{{ 'HISTORIAL.TABLA_PRESUPUESTO' | translate }}</dt>
+                <dd class="mono">{{ cop(item.presupuesto_cop) }}</dd>
+                <dt class="etiqueta">{{ 'HISTORIAL.TABLA_CONVERSION' | translate }}</dt>
+                <dd>
+                  @if (item.conversion; as conversion) {
+                    <span class="mono valor">{{ item.moneda.simbolo }} {{ monto(conversion.valor, item.moneda.codigo) }}</span>
+                    <span class="mono secundario d-block">{{ tasa(conversion.tasa, item.moneda.codigo) }}</span>
+                  } @else {
+                    <span class="secundario">— {{ 'RESULTADO.CONVERSION_NO_DISPONIBLE' | translate }}</span>
+                  }
+                </dd>
+              </dl>
             </li>
           }
         </ul>
       }
     </div>
+  `,
+  styles: `
+    .tablero {
+      background: var(--ink);
+      color: var(--paper);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th {
+      padding: 1rem 1.1rem 0.75rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted-on-ink);
+      text-align: left;
+      border-bottom: 1px solid color-mix(in srgb, var(--paper) 20%, transparent);
+    }
+    td {
+      padding: 0.9rem 1.1rem;
+      vertical-align: top;
+      border-top: 1px solid color-mix(in srgb, var(--paper) 9%, transparent);
+    }
+    tbody tr:hover {
+      background: color-mix(in srgb, var(--paper) 5%, transparent);
+    }
+    .num {
+      text-align: right;
+      white-space: nowrap;
+    }
+    td > span {
+      display: block;
+    }
+    .fecha {
+      font-size: 0.85rem;
+      color: var(--muted-on-ink);
+    }
+    .codigo {
+      font-size: 1.15rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+    }
+    .tablero .codigo {
+      color: var(--accent-on-ink);
+    }
+    .tablero .valor {
+      font-weight: 600;
+    }
+    .tablero .secundario {
+      color: var(--muted-on-ink);
+    }
+    .destino {
+      font-size: 0.9rem;
+    }
+    .secundario {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .talones {
+      display: grid;
+      gap: 0.9rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .talon {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+    }
+    .talon-cuerpo {
+      display: grid;
+      gap: 0.1rem;
+      padding: 0.9rem 1rem;
+    }
+    .talon .codigo {
+      font-size: 1.5rem;
+      line-height: 1.1;
+    }
+    .talon-montos {
+      position: relative;
+      margin: 0;
+      padding: 0.9rem 1rem;
+      text-align: right;
+      border-left: 2px dashed var(--line-strong);
+    }
+    .talon-montos::before,
+    .talon-montos::after {
+      content: '';
+      position: absolute;
+      left: -0.6rem;
+      width: 1.1rem;
+      height: 1.1rem;
+      border-radius: 50%;
+      background: var(--paper);
+      border: 1px solid var(--line);
+    }
+    .talon-montos::before {
+      top: -0.6rem;
+    }
+    .talon-montos::after {
+      bottom: -0.6rem;
+    }
+    .talon-montos dd {
+      margin: 0 0 0.5rem;
+    }
+    .talon-montos dd:last-child {
+      margin: 0;
+    }
+    .talon .valor {
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .vacio {
+      padding: 3rem 1.5rem;
+      text-align: center;
+      background: var(--surface);
+      border: 1px dashed var(--line-strong);
+      border-radius: var(--radius-lg);
+    }
+    .vacio-codigo {
+      font-size: 1.5rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+    }
+    .vacio .bajada {
+      max-width: 28rem;
+      margin: 0 auto 1.5rem;
+    }
   `
 })
 export class HistorialComponent {
@@ -169,6 +308,10 @@ export class HistorialComponent {
           this.cargando.set(false);
         }
       });
+  }
+
+  codigo(item: ConsultaResultado): string {
+    return codigoCiudad(item.ciudad.id, item.ciudad.nombre);
   }
 
   fecha(fechaIso: string): string {

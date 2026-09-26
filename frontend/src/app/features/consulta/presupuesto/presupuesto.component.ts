@@ -9,7 +9,8 @@ import { ApiErrorService } from '../../../core/services/api-error.service';
 import { ConsultaStateService } from '../../../core/services/consulta-state.service';
 import { ConsultaService } from '../../../core/services/consulta.service';
 import { IdiomaService } from '../../../core/services/idioma.service';
-import { formatearCop, normalizarPresupuesto } from '../../../core/utils/formato';
+import { codigoCiudad } from '../../../core/utils/codigos';
+import { formatearCop, localeDe, normalizarPresupuesto } from '../../../core/utils/formato';
 import { AlertaErrorComponent } from '../../../shared/components/alerta-error/alerta-error.component';
 import { PasosIndicadorComponent } from '../../../shared/components/pasos-indicador/pasos-indicador.component';
 import { presupuestoValidator, validarPresupuesto } from './presupuesto.validator';
@@ -23,6 +24,8 @@ const MENSAJES_ERROR: Record<string, string> = {
   maximoExcedido: 'PRESUPUESTO.ERROR_MAXIMO'
 };
 
+const ATAJOS = [500000, 1000000, 3000000];
+
 @Component({
   selector: 'app-presupuesto',
   standalone: true,
@@ -31,83 +34,160 @@ const MENSAJES_ERROR: Record<string, string> = {
     <div class="container py-4 contenedor-flujo">
       <app-pasos-indicador [pasoActual]="2" />
 
-      <div class="card tarjeta">
-        <div class="card-body p-4 p-md-5">
-          <div class="text-center mb-4">
-            <h1 class="h4 fw-bold text-primary mb-1">{{ 'PRESUPUESTO.TITULO' | translate }}</h1>
-            <p class="text-muted small mb-0">{{ 'PRESUPUESTO.SUBTITULO' | translate }}</p>
+      <header class="encabezado-pantalla">
+        <h1 class="titulo-pantalla">{{ 'PRESUPUESTO.TITULO' | translate }}</h1>
+        <p class="bajada">{{ 'PRESUPUESTO.SUBTITULO' | translate }}</p>
+      </header>
+
+      @if (pais() && ciudad()) {
+        <div class="resumen-destino mb-4">
+          <span class="mono resumen-codigo">{{ codigoDestino() }}</span>
+          <div>
+            <span class="etiqueta mb-0">{{ 'PRESUPUESTO.RESUMEN_DESTINO' | translate }}</span>
+            <span class="fw-semibold">{{ ciudad()!.nombre }}, {{ pais()!.nombre }}</span>
           </div>
-
-          @if (pais() && ciudad()) {
-            <div class="resumen-destino mb-4">
-              <div>
-                <div class="etiqueta">{{ 'PRESUPUESTO.RESUMEN_DESTINO' | translate }}</div>
-                <div class="fw-semibold">{{ ciudad()!.nombre }}, {{ pais()!.nombre }}</div>
-              </div>
-              <span class="badge text-bg-light border">{{ pais()!.moneda.simbolo }} {{ pais()!.moneda.codigo }}</span>
-            </div>
-          }
-
-          @if (errorHttp()) {
-            <app-alerta-error [error]="errorHttp()" />
-          }
-
-          <form [formGroup]="form" (ngSubmit)="consultar()" novalidate>
-            <div class="mb-4">
-              <label for="presupuestoInput" class="form-label fw-semibold">
-                {{ 'PRESUPUESTO.CAMPO_LABEL' | translate }}
-              </label>
-              <div class="input-group">
-                <span class="input-group-text">COP</span>
-                <input
-                  id="presupuestoInput"
-                  type="text"
-                  inputmode="decimal"
-                  autocomplete="off"
-                  class="form-control"
-                  placeholder="1500000"
-                  formControlName="presupuesto"
-                  [class.is-invalid]="mensajeError() || errorServidor()"
-                  [attr.aria-invalid]="!!(mensajeError() || errorServidor())"
-                  aria-describedby="presupuestoAyuda presupuestoError"
-                  (input)="limpiarErroresServidor()"
-                />
-              </div>
-              <div id="presupuestoAyuda" class="form-text">{{ 'PRESUPUESTO.AYUDA' | translate }}</div>
-
-              <div id="presupuestoError" class="invalid-feedback d-block" aria-live="polite">
-                @if (errorServidor(); as mensaje) {
-                  {{ mensaje }}
-                } @else if (mensajeError(); as clave) {
-                  {{ clave | translate }}
-                }
-              </div>
-
-              @if (vistaPrevia(); as previa) {
-                <div class="info-moneda mt-2">
-                  <span class="text-muted">{{ 'PRESUPUESTO.PREVIA' | translate }}:</span>
-                  <span class="fw-semibold">{{ previa }}</span>
-                </div>
-              }
-            </div>
-
-            <div class="acciones-flujo">
-              <button type="button" class="btn btn-outline-secondary" (click)="volverAtras()" [disabled]="cargando()">
-                {{ 'DESTINO.ATRAS' | translate }}
-              </button>
-              <button type="submit" class="btn btn-primary d-inline-flex align-items-center gap-2" [disabled]="cargando()">
-                @if (cargando()) {
-                  <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
-                  <span role="status">{{ 'PRESUPUESTO.CONSULTANDO' | translate }}</span>
-                } @else {
-                  {{ 'DESTINO.SIGUIENTE' | translate }}
-                }
-              </button>
-            </div>
-          </form>
+          <span class="mono resumen-moneda">{{ pais()!.moneda.simbolo }} {{ pais()!.moneda.codigo }}</span>
         </div>
-      </div>
+      }
+
+      @if (errorHttp()) {
+        <app-alerta-error [error]="errorHttp()" />
+      }
+
+      <form [formGroup]="form" (ngSubmit)="consultar()" novalidate>
+        <label for="presupuestoInput" class="form-label">{{ 'PRESUPUESTO.CAMPO_LABEL' | translate }}</label>
+        <div class="monto" [class.invalido]="mensajeError() || errorServidor()">
+          <span class="mono monto-prefijo" aria-hidden="true">COP</span>
+          <input
+            id="presupuestoInput"
+            type="text"
+            inputmode="decimal"
+            autocomplete="off"
+            class="mono monto-input"
+            placeholder="1500000"
+            formControlName="presupuesto"
+            [attr.aria-invalid]="!!(mensajeError() || errorServidor())"
+            aria-describedby="presupuestoAyuda presupuestoError"
+            (input)="limpiarErroresServidor()"
+          />
+        </div>
+        <p id="presupuestoAyuda" class="form-text mb-0">{{ 'PRESUPUESTO.AYUDA' | translate }}</p>
+
+        <p id="presupuestoError" class="error-campo" aria-live="polite">
+          @if (errorServidor(); as mensaje) {
+            {{ mensaje }}
+          } @else if (mensajeError(); as clave) {
+            {{ clave | translate }}
+          }
+        </p>
+
+        <div class="atajos" role="group" [attr.aria-label]="'PRESUPUESTO.ATAJOS' | translate">
+          @for (atajo of atajos(); track atajo.valor) {
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-secondary mono"
+              [attr.aria-pressed]="valorActual() === atajo.valor"
+              (click)="usarAtajo(atajo.valor)"
+            >
+              {{ atajo.texto }}
+            </button>
+          }
+        </div>
+
+        @if (vistaPrevia(); as previa) {
+          <p class="nota-linea info-moneda mt-3 mb-0">
+            <span class="text-body-secondary">{{ 'PRESUPUESTO.PREVIA' | translate }}</span>
+            <span class="mono fw-semibold">{{ previa }}</span>
+          </p>
+        }
+
+        <div class="acciones-flujo">
+          <button type="button" class="btn btn-outline-secondary" (click)="volverAtras()" [disabled]="cargando()">
+            {{ 'DESTINO.ATRAS' | translate }}
+          </button>
+          <button type="submit" class="btn btn-primary d-inline-flex align-items-center gap-2" [disabled]="cargando()">
+            @if (cargando()) {
+              <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+              <span role="status">{{ 'PRESUPUESTO.CONSULTANDO' | translate }}</span>
+            } @else {
+              {{ 'DESTINO.SIGUIENTE' | translate }}
+            }
+          </button>
+        </div>
+      </form>
     </div>
+  `,
+  styles: `
+    .resumen-destino {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem 1rem;
+      background: var(--surface);
+      border: 1px dashed var(--line-strong);
+      border-radius: var(--radius-lg);
+    }
+    .resumen-destino > div {
+      display: grid;
+      flex: 1;
+      min-width: 0;
+    }
+    .resumen-codigo {
+      font-size: 1.6rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: var(--accent);
+    }
+    .resumen-moneda {
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+    .monto {
+      display: flex;
+      align-items: center;
+      background: var(--surface);
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius-lg);
+    }
+    .monto:focus-within {
+      border-color: var(--accent);
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+    .monto.invalido {
+      border-color: var(--danger);
+    }
+    .monto-prefijo {
+      padding: 0 0 0 1.1rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .monto-input {
+      flex: 1;
+      min-width: 0;
+      padding: 0.9rem 1rem 0.9rem 0.75rem;
+      border: 0;
+      background: transparent;
+      color: var(--ink);
+      font-size: clamp(1.5rem, 6vw, 2rem);
+      font-weight: 500;
+    }
+    .monto-input:focus {
+      outline: none;
+    }
+    .monto-input::placeholder {
+      color: var(--line-strong);
+    }
+    .atajos {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .atajos .btn[aria-pressed='true'] {
+      background: var(--ink);
+      color: var(--paper);
+    }
   `
 })
 export class PresupuestoComponent {
@@ -145,6 +225,24 @@ export class PresupuestoComponent {
     if (validarPresupuesto(valor)) return null;
     return formatearCop(normalizarPresupuesto(valor), this.idiomaService.idiomaActual());
   });
+
+  readonly valorActual = computed(() => this.valor().trim());
+
+  readonly codigoDestino = computed(() => {
+    const ciudad = this.ciudad();
+    return ciudad ? codigoCiudad(ciudad.id, ciudad.nombre) : '';
+  });
+
+  /** Montos rápidos: llenan el campo con el número sin separadores, igual que si se escribiera. */
+  readonly atajos = computed(() => {
+    const formato = new Intl.NumberFormat(localeDe(this.idiomaService.idiomaActual()));
+    return ATAJOS.map((valor) => ({ valor: String(valor), texto: formato.format(valor) }));
+  });
+
+  usarAtajo(valor: string): void {
+    this.presupuesto.setValue(valor);
+    this.limpiarErroresServidor();
+  }
 
   limpiarErroresServidor(): void {
     this.errorServidor.set(null);

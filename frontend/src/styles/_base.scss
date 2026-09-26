@@ -1,0 +1,176 @@
+// Estilos compartidos por todas las pantallas. Solo usan variables de _tema.scss.
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--paper);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+.titulo-pantalla {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+// Números, montos y códigos siempre en mono con cifras tabulares.
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+// Foco visible y consistente en toda la app (también en radios ocultos vía su tarjeta).
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  box-shadow: none;
+}
+
+.form-control:focus,
+.form-select:focus {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+// Enlace para saltar la navegación con teclado: visible solo al recibir foco.
+.saltar-contenido {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 1100;
+  padding: 0.5rem 0.9rem;
+  background: var(--paper);
+  color: var(--ink);
+  font-weight: 600;
+  border-radius: var(--radius);
+  transform: translateY(-200%);
+
+  &:focus {
+    transform: none;
+  }
+}
+
+main:focus {
+  outline: none;
+}
+
+// Etiqueta pequeña en mayúsculas (casillas del boleto, encabezados de tablero).
+.etiqueta {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+// Contenedores de las pantallas
+.contenedor-flujo {
+  max-width: 44rem;
+}
+
+.contenedor-resultado {
+  max-width: 64rem;
+}
+
+.encabezado-pantalla {
+  margin-bottom: 1.75rem;
+
+  .titulo-pantalla {
+    font-size: clamp(1.75rem, 5vw, 2.4rem);
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: 0.4rem;
+  }
+
+  .bajada {
+    color: var(--muted);
+    margin-bottom: 0;
+  }
+}
+
+// Superficie base: un solo estilo de panel en toda la app.
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+}
+
+.acciones-flujo {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 2rem;
+}
+
+// Nota informativa en línea (moneda del país, vista previa)
+.nota-linea {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+  padding: 0.6rem 0.9rem;
+  border-left: 3px solid var(--accent-vivid);
+  background: var(--surface);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  font-size: 0.9rem;
+}
+
+// Aviso discreto cuando falta un dato (clima o conversión)
+.aviso-suave {
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.error-campo {
+  min-height: 1.25rem;
+  margin-top: 0.35rem;
+  font-size: 0.875rem;
+  color: var(--danger);
+}
+
+.alert {
+  border-width: 0 0 0 3px;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.alert-danger {
+  border-color: var(--danger);
+}
+
+.alert-warning {
+  border-color: var(--accent-vivid);
+}
+
+.alert-success {
+  border-color: var(--success);
+}
+
+// Estado de carga compartido
+.cargando {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.btn-link {
+  font-weight: 600;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}

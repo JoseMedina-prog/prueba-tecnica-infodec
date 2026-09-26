@@ -1,99 +1,65 @@
-@import 'bootstrap/dist/css/bootstrap.min.css';
+// Bootstrap 5 personalizado con Sass: las variables se sobrescriben ANTES de importarlo.
+@import 'styles/tema';
 
-/* Estilo común de la app: un color principal (primary de Bootstrap) y las mismas tarjetas y espacios. */
-:root {
-  --app-radio: 0.75rem;
-}
+$primary: $acento;
+$secondary: $tinta;
+$success: $exito;
+$danger: $peligro;
+$light: $papel;
+$dark: $tinta;
 
-body {
-  background-color: var(--bs-tertiary-bg);
-}
+$body-bg: $papel;
+$body-color: $tinta;
+$body-secondary-color: $gris;
+$link-color: $acento;
+$link-hover-color: $acento-hover;
+$border-color: $linea;
 
-.contenedor-flujo {
-  max-width: 40rem;
-}
+$font-family-sans-serif: $fuente-texto;
+$font-family-monospace: $fuente-mono;
+$headings-font-family: $fuente-titulos;
+$headings-font-weight: 700;
+$headings-color: $tinta;
+$font-size-base: 1rem;
+$line-height-base: 1.55;
 
-.contenedor-resultado {
-  max-width: 64rem;
-}
+$border-radius: 0.375rem;
+$border-radius-sm: 0.25rem;
+$border-radius-lg: 0.75rem;
+$box-shadow: 0 1px 2px rgba($tinta, 0.06);
+$box-shadow-sm: 0 1px 2px rgba($tinta, 0.06);
+$enable-shadows: false;
 
-.tarjeta {
-  border: 1px solid var(--bs-border-color-translucent);
-  border-radius: var(--app-radio);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-  overflow: hidden;
-}
+$btn-font-weight: 600;
+$btn-padding-x: 1.25rem;
+$btn-padding-y: 0.6rem;
+$btn-focus-box-shadow: 0 0 0 3px $papel, 0 0 0 5px $acento;
 
-.tarjeta-destacada {
-  border-color: var(--bs-primary-border-subtle);
-  background-color: var(--bs-primary-bg-subtle);
-}
+$input-bg: $superficie;
+$input-color: $tinta;
+$input-border-color: $linea-fuerte;
+$input-placeholder-color: $gris;
+$input-focus-border-color: $acento;
+$input-focus-box-shadow: 0 0 0 3px rgba($acento, 0.2);
+$form-label-font-weight: 600;
+$form-text-color: $gris;
+$form-feedback-invalid-color: $peligro;
 
-.etiqueta {
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--bs-secondary-color);
-  margin-bottom: 0.5rem;
-}
+$table-bg: transparent;
+$table-color: $tinta;
+$table-border-color: $linea;
+$table-cell-padding-y: 0.9rem;
+$table-cell-padding-x: 1rem;
+$table-hover-bg: rgba($tinta, 0.035);
+$table-th-font-weight: 600;
 
-.valor-convertido {
-  font-size: clamp(1.75rem, 6vw, 2.5rem);
-  font-weight: 700;
-  line-height: 1.1;
-  color: var(--bs-primary);
-  overflow-wrap: anywhere;
-}
+$card-bg: $superficie;
+$card-border-color: $linea;
+$card-border-radius: 0.75rem;
 
-.resumen-destino,
-.info-moneda {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid var(--bs-border-color);
-  border-radius: 0.5rem;
-  background-color: var(--bs-light);
-}
+$alert-border-radius: 0.375rem;
+$badge-font-weight: 600;
 
-.info-moneda {
-  font-size: 0.875rem;
-}
-
-.resumen-destino {
-  padding: 0.75rem 1rem;
-}
-
-.acciones-flujo {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--bs-border-color);
-}
-
-.no-disponible {
-  padding: 1rem;
-  border-radius: 0.5rem;
-  text-align: center;
-  color: var(--bs-secondary-color);
-  background-color: var(--bs-secondary-bg);
-}
-
-.nota {
-  font-size: 0.8rem;
-  font-style: italic;
-  color: var(--bs-secondary-color);
-}
-
-.icono-clima {
-  border-radius: 50%;
-  background-color: var(--bs-primary-bg-subtle);
-}
-
-.table > :not(caption) > * > * {
-  padding: 0.85rem 1rem;
-}
+@import 'bootstrap/scss/bootstrap';
+@import 'styles/base';
+@import 'styles/auth';

@@ -1,4 +1,7 @@
-<app-navbar />
-<main class="min-vh-100 bg-light">
+<a class="saltar-contenido" href="#contenido">{{ 'NAVBAR.SALTAR' | translate }}</a>
+@if (mostrarNavbar()) {
+  <app-navbar />
+}
+<main id="contenido" tabindex="-1" #contenido>
   <router-outlet />
 </main>

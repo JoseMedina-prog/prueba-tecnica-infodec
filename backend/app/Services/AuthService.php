@@ -139,9 +139,9 @@ class AuthService
      */
     public function refrescar(string $refreshPlano, string $ip): array
     {
-        // Rate limiting por IP: máximo 10 peticiones de refresco por minuto
+        // Rate limiting por IP: máximo 30 peticiones de refresco por minuto
         $throttleKey = "refresh:{$ip}";
-        if (RateLimiter::tooManyAttempts($throttleKey, 10)) {
+        if (RateLimiter::tooManyAttempts($throttleKey, 30)) {
             $segundos = RateLimiter::availableIn($throttleKey);
             throw new ApiException(
                 429,

@@ -59,14 +59,14 @@ export class AuthService {
       if (refreshRes?.success && refreshRes.data) {
         this.tokenStorage.setTokens(refreshRes.data.access_token, refreshRes.data.refresh_token);
 
-        // 2. Cargar perfil del usuario
+        // 2. Cargar perfil del usuario (/auth/me devuelve el usuario directamente en data)
         const meRes = await firstValueFrom(
-          this.http.get<ApiResponse<{ usuario: Usuario }>>(`${this.apiUrl}/auth/me`)
+          this.http.get<ApiResponse<Usuario>>(`${this.apiUrl}/auth/me`)
         );
 
-        if (meRes?.success && meRes.data?.usuario) {
-          this.usuarioSignal.set(meRes.data.usuario);
-          this.idiomaService.aplicarIdiomaUsuario(meRes.data.usuario.idioma);
+        // Al recargar se conserva el idioma elegido en este navegador; el del perfil se aplica al iniciar sesión.
+        if (meRes?.success && meRes.data) {
+          this.usuarioSignal.set(meRes.data);
         }
       } else {
         this.tokenStorage.clear();
@@ -127,12 +127,12 @@ export class AuthService {
       );
   }
 
-  obtenerPerfil(): Observable<ApiResponse<{ usuario: Usuario }>> {
-    return this.http.get<ApiResponse<{ usuario: Usuario }>>(`${this.apiUrl}/auth/me`).pipe(
+  obtenerPerfil(): Observable<ApiResponse<Usuario>> {
+    return this.http.get<ApiResponse<Usuario>>(`${this.apiUrl}/auth/me`).pipe(
       tap((res) => {
-        if (res.success && res.data?.usuario) {
-          this.usuarioSignal.set(res.data.usuario);
-          this.idiomaService.aplicarIdiomaUsuario(res.data.usuario.idioma);
+        if (res.success && res.data) {
+          this.usuarioSignal.set(res.data);
+          this.idiomaService.aplicarIdiomaUsuario(res.data.idioma);
         }
       })
     );

@@ -1,0 +1,12 @@
+// Formularios de login y registro (la pantalla dividida vive en AuthShellComponent).
+.auth-pie {
+  margin-top: 1.75rem;
+  padding-top: 1.25rem;
+  border-top: 1px dashed var(--line-strong);
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.requerido {
+  color: var(--danger);
+}

@@ -1,3 +1,5 @@
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { TranslateService, provideTranslateService } from '@ngx-translate/core';
@@ -19,6 +21,8 @@ describe('ResultadoComponent', () => {
       imports: [ResultadoComponent],
       providers: [
         ConsultaStateService,
+        provideHttpClient(),
+        provideHttpClientTesting(),
         provideTranslateService(),
         { provide: Router, useValue: routerSpy }
       ]
@@ -133,7 +137,7 @@ describe('ResultadoComponent', () => {
 
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain('19,5 °C');
-    expect(compiled.textContent).toContain('parcialmente nublado');
+    expect(compiled.textContent).toContain('Parcialmente nublado');
     expect(compiled.textContent).not.toContain('Clima no disponible');
     expect(compiled.textContent).not.toContain('Conversión no disponible');
     expect(compiled.textContent).not.toContain('Última tasa guardada');
@@ -154,6 +158,7 @@ describe('ResultadoComponent', () => {
 
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain('Última tasa guardada');
-    expect(compiled.textContent).toContain('1 COP = 0,04832 JPY');
+    expect(compiled.textContent).toContain('1 COP = 0,04832000 JPY');
+    expect(compiled.textContent).toContain('1 ¥ = 20,70 COP');
   });
 });

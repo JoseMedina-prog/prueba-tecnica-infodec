@@ -17,6 +17,7 @@ export class IdiomaService {
     this.translate.addLangs(['es', 'de']);
     this.translate.setFallbackLang('es');
     this.translate.use(this.idiomaSignal());
+    document.documentElement.lang = this.idiomaSignal();
   }
 
   cambiarIdioma(nuevoIdioma: string): void {
@@ -24,6 +25,7 @@ export class IdiomaService {
     this.idiomaSignal.set(lang);
     localStorage.setItem(this.STORAGE_KEY, lang);
     this.translate.use(lang);
+    document.documentElement.lang = lang;
   }
 
   aplicarIdiomaUsuario(idiomaUsuario?: string): void {

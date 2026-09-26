@@ -8,6 +8,7 @@ import { Ciudad, Pais } from '../../../core/models';
 import { ConsultaStateService } from '../../../core/services/consulta-state.service';
 import { IdiomaService } from '../../../core/services/idioma.service';
 import { PaisService } from '../../../core/services/pais.service';
+import { codigoCiudad } from '../../../core/utils/codigos';
 import { PasosIndicadorComponent } from '../../../shared/components/pasos-indicador/pasos-indicador.component';
 
 @Component({
@@ -18,100 +19,193 @@ import { PasosIndicadorComponent } from '../../../shared/components/pasos-indica
     <div class="container py-4 contenedor-flujo">
       <app-pasos-indicador [pasoActual]="1" />
 
-      <div class="card tarjeta">
-        <div class="card-body p-4 p-md-5">
-          <div class="text-center mb-4">
-            <h1 class="h4 fw-bold text-primary mb-1">{{ 'DESTINO.TITULO' | translate }}</h1>
-            <p class="text-muted small mb-0">{{ 'DESTINO.SUBTITULO' | translate }}</p>
-          </div>
+      <header class="encabezado-pantalla">
+        <h1 class="titulo-pantalla">{{ 'DESTINO.TITULO' | translate }}</h1>
+        <p class="bajada">{{ 'DESTINO.SUBTITULO' | translate }}</p>
+      </header>
 
-          @if (errorCarga()) {
-            <div class="alert alert-danger d-flex flex-wrap align-items-center justify-content-between gap-2" role="alert">
-              <span class="small">{{ errorCarga()! | translate }}</span>
-              <button type="button" class="btn btn-outline-danger btn-sm" (click)="reintentar()">
-                {{ 'DESTINO.REINTENTAR' | translate }}
-              </button>
+      @if (errorCarga()) {
+        <div class="alert alert-danger d-flex flex-wrap align-items-center justify-content-between gap-2" role="alert">
+          <span>{{ errorCarga()! | translate }}</span>
+          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="reintentar()">
+            {{ 'DESTINO.REINTENTAR' | translate }}
+          </button>
+        </div>
+      }
+
+      <form [formGroup]="form" (ngSubmit)="avanzar()" novalidate>
+        <fieldset class="mb-4" aria-describedby="paisError">
+          <legend class="etiqueta">{{ 'DESTINO.PAIS' | translate }}</legend>
+          @if (cargandoPaises()) {
+            <p class="cargando" role="status">
+              <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+              {{ 'DESTINO.CARGANDO_PAISES' | translate }}
+            </p>
+          } @else {
+            <div class="paises">
+              @for (pais of paises(); track pais.id) {
+                <label class="pais" [class.elegido]="form.controls.paisId.value === pais.id">
+                  <input
+                    type="radio"
+                    class="visually-hidden"
+                    name="paisId"
+                    formControlName="paisId"
+                    [value]="pais.id"
+                    [attr.aria-invalid]="errorPais()"
+                  />
+                  <span class="mono pais-codigo">{{ pais.codigo }}</span>
+                  <span class="mono pais-simbolo" aria-hidden="true">{{ pais.moneda.simbolo }}</span>
+                  <span class="pais-nombre">{{ pais.nombre }}</span>
+                </label>
+              }
             </div>
           }
+          <p id="paisError" class="error-campo" aria-live="polite">
+            @if (errorPais()) {
+              {{ 'DESTINO.ERROR_PAIS_REQUERIDO' | translate }}
+            }
+          </p>
 
-          <form [formGroup]="form" (ngSubmit)="avanzar()" novalidate>
-            <div class="mb-4">
-              <label for="paisSelect" class="form-label fw-semibold">{{ 'DESTINO.PAIS' | translate }}</label>
-              @if (cargandoPaises()) {
-                <div class="form-control d-flex align-items-center gap-2 text-muted" role="status">
-                  <span class="spinner-border spinner-border-sm text-primary" aria-hidden="true"></span>
-                  <span>{{ 'DESTINO.CARGANDO_PAISES' | translate }}</span>
-                </div>
-              } @else {
-                <select
-                  id="paisSelect"
-                  class="form-select"
-                  formControlName="paisId"
-                  [class.is-invalid]="errorPais()"
-                  [attr.aria-invalid]="errorPais()"
-                  aria-describedby="paisError"
-                >
-                  <option [ngValue]="null">{{ 'DESTINO.SELECCIONAR_PAIS' | translate }}</option>
-                  @for (pais of paises(); track pais.id) {
-                    <option [ngValue]="pais.id">{{ pais.nombre }}</option>
-                  }
-                </select>
-              }
-              <div id="paisError" class="invalid-feedback d-block" aria-live="polite">
-                @if (errorPais()) {
-                  {{ 'DESTINO.ERROR_PAIS_REQUERIDO' | translate }}
-                }
-              </div>
+          @if (paisSeleccionado(); as pais) {
+            <p class="nota-linea info-moneda">
+              <span class="text-body-secondary">{{ 'DESTINO.MONEDA_OFICIAL' | translate }}</span>
+              <span class="fw-semibold">{{ pais.moneda.nombre }} <span class="mono">({{ pais.moneda.simbolo }})</span></span>
+            </p>
+          }
+        </fieldset>
 
-              @if (paisSeleccionado(); as pais) {
-                <div class="info-moneda mt-2">
-                  <span class="text-muted">{{ 'DESTINO.MONEDA_OFICIAL' | translate }}:</span>
-                  <span class="fw-semibold">{{ pais.moneda.nombre }} ({{ pais.moneda.simbolo }})</span>
-                </div>
+        <fieldset aria-describedby="ciudadError">
+          <legend class="etiqueta">{{ 'DESTINO.CIUDAD' | translate }}</legend>
+          @if (cargandoCiudades()) {
+            <p class="cargando" role="status">
+              <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+              {{ 'DESTINO.CARGANDO_CIUDADES' | translate }}
+            </p>
+          } @else if (!paisSeleccionado()) {
+            <p class="aviso-suave">{{ 'DESTINO.ELIGE_PAIS_PRIMERO' | translate }}</p>
+          } @else {
+            <div class="ciudades">
+              @for (ciudad of ciudades(); track ciudad.id) {
+                <label class="chip" [class.elegido]="form.controls.ciudadId.value === ciudad.id">
+                  <input
+                    type="radio"
+                    class="visually-hidden"
+                    name="ciudadId"
+                    formControlName="ciudadId"
+                    [value]="ciudad.id"
+                    [attr.aria-invalid]="errorCiudad()"
+                  />
+                  <span class="mono chip-codigo">{{ codigo(ciudad) }}</span>
+                  <span>{{ ciudad.nombre }}</span>
+                </label>
               }
             </div>
+          }
+          <p id="ciudadError" class="error-campo" aria-live="polite">
+            @if (errorCiudad()) {
+              {{ 'DESTINO.ERROR_CIUDAD_REQUERIDA' | translate }}
+            }
+          </p>
+        </fieldset>
 
-            <div class="mb-4">
-              <label for="ciudadSelect" class="form-label fw-semibold">{{ 'DESTINO.CIUDAD' | translate }}</label>
-              @if (cargandoCiudades()) {
-                <div class="form-control d-flex align-items-center gap-2 text-muted" role="status">
-                  <span class="spinner-border spinner-border-sm text-primary" aria-hidden="true"></span>
-                  <span>{{ 'DESTINO.CARGANDO_CIUDADES' | translate }}</span>
-                </div>
-              } @else {
-                <select
-                  id="ciudadSelect"
-                  class="form-select"
-                  formControlName="ciudadId"
-                  [class.is-invalid]="errorCiudad()"
-                  [attr.aria-invalid]="errorCiudad()"
-                  aria-describedby="ciudadError"
-                >
-                  <option [ngValue]="null">{{ 'DESTINO.SELECCIONAR_CIUDAD' | translate }}</option>
-                  @for (ciudad of ciudades(); track ciudad.id) {
-                    <option [ngValue]="ciudad.id">{{ ciudad.nombre }}</option>
-                  }
-                </select>
-              }
-              <div id="ciudadError" class="invalid-feedback d-block" aria-live="polite">
-                @if (errorCiudad()) {
-                  {{ 'DESTINO.ERROR_CIUDAD_REQUERIDA' | translate }}
-                }
-              </div>
-            </div>
-
-            <div class="acciones-flujo">
-              <button type="button" class="btn btn-outline-secondary" disabled>
-                {{ 'DESTINO.ATRAS' | translate }}
-              </button>
-              <button type="submit" class="btn btn-primary" [disabled]="cargandoPaises() || cargandoCiudades()">
-                {{ 'DESTINO.SIGUIENTE' | translate }}
-              </button>
-            </div>
-          </form>
+        <div class="acciones-flujo">
+          <button type="button" class="btn btn-outline-secondary" disabled>
+            {{ 'DESTINO.ATRAS' | translate }}
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="cargandoPaises() || cargandoCiudades()">
+            {{ 'DESTINO.SIGUIENTE' | translate }}
+          </button>
         </div>
-      </div>
+      </form>
     </div>
+  `,
+  styles: `
+    .paises {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.75rem;
+    }
+    @media (min-width: 576px) {
+      .paises {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+    }
+    .pais {
+      display: grid;
+      gap: 0.15rem;
+      padding: 0.9rem 1rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      cursor: pointer;
+      transition: border-color 0.15s ease, transform 0.15s ease;
+    }
+    .pais:hover {
+      border-color: var(--line-strong);
+      transform: translateY(-1px);
+    }
+    .pais-codigo {
+      font-size: 0.75rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+    }
+    .pais-simbolo {
+      font-size: 2.25rem;
+      font-weight: 500;
+      line-height: 1.2;
+      color: var(--ink);
+    }
+    .pais-nombre {
+      font-weight: 600;
+    }
+    .pais.elegido {
+      border: 2px solid var(--accent);
+      padding: calc(0.9rem - 1px) calc(1rem - 1px) calc(1rem - 1px);
+    }
+    .pais.elegido .pais-simbolo {
+      color: var(--accent);
+    }
+    .ciudades {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.5rem 1rem 0.5rem 0.5rem;
+      background: var(--surface);
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    .chip-codigo {
+      padding: 0.1rem 0.45rem;
+      border-radius: 999px;
+      background: var(--paper);
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+    }
+    .chip.elegido {
+      background: var(--ink);
+      border-color: var(--ink);
+      color: var(--paper);
+    }
+    .chip.elegido .chip-codigo {
+      background: var(--accent-on-ink);
+      color: var(--ink);
+    }
+    .pais:has(input:focus-visible),
+    .chip:has(input:focus-visible) {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+    }
+    fieldset {
+      min-width: 0;
+    }
   `
 })
 export class DestinoComponent implements OnInit {
@@ -240,6 +334,10 @@ export class DestinoComponent implements OnInit {
     if (pais && ciudad && this.consultaState.ciudad()?.id === ciudad.id) {
       this.consultaState.setDestino(pais, ciudad);
     }
+  }
+
+  codigo(ciudad: Ciudad): string {
+    return codigoCiudad(ciudad.id, ciudad.nombre);
   }
 
   avanzar(): void {

@@ -30,8 +30,29 @@
               }
             ],
             "styles": [
+              "node_modules/@fontsource/inter/latin-400.css",
+              "node_modules/@fontsource/inter/latin-500.css",
+              "node_modules/@fontsource/inter/latin-600.css",
+              "node_modules/@fontsource/space-grotesk/latin-500.css",
+              "node_modules/@fontsource/space-grotesk/latin-700.css",
+              "node_modules/@fontsource/ibm-plex-mono/latin-400.css",
+              "node_modules/@fontsource/ibm-plex-mono/latin-500.css",
+              "node_modules/@fontsource/ibm-plex-mono/latin-600.css",
+              "node_modules/@fontsource/ibm-plex-mono/latin-ext-400.css",
+              "node_modules/@fontsource/ibm-plex-mono/latin-ext-500.css",
+              "node_modules/@fontsource/ibm-plex-mono/latin-ext-600.css",
               "src/styles.scss"
-            ]
+            ],
+            "stylePreprocessorOptions": {
+              "sass": {
+                "silenceDeprecations": [
+                  "import",
+                  "global-builtin",
+                  "color-functions",
+                  "mixed-decls"
+                ]
+              }
+            }
           },
           "configurations": {
             "production": {
@@ -88,8 +109,29 @@
               }
             ],
             "styles": [
+              "node_modules/@fontsource/inter/latin-400.css",
+              "node_modules/@fontsource/inter/latin-500.css",
+              "node_modules/@fontsource/inter/latin-600.css",
+              "node_modules/@fontsource/space-grotesk/latin-500.css",
+              "node_modules/@fontsource/space-grotesk/latin-700.css",
+              "node_modules/@fontsource/ibm-plex-mono/latin-400.css",
+              "node_modules/@fontsource/ibm-plex-mono/latin-500.css",
+              "node_modules/@fontsource/ibm-plex-mono/latin-600.css",
+              "node_modules/@fontsource/ibm-plex-mono/latin-ext-400.css",
+              "node_modules/@fontsource/ibm-plex-mono/latin-ext-500.css",
+              "node_modules/@fontsource/ibm-plex-mono/latin-ext-600.css",
               "src/styles.scss"
-            ]
+            ],
+            "stylePreprocessorOptions": {
+              "sass": {
+                "silenceDeprecations": [
+                  "import",
+                  "global-builtin",
+                  "color-functions",
+                  "mixed-decls"
+                ]
+              }
+            }
           }
         }
       }

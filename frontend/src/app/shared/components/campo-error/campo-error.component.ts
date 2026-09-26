@@ -8,6 +8,7 @@ import { TranslatePipe } from '@ngx-translate/core';
   standalone: true,
   imports: [CommonModule, TranslatePipe],
   template: `
+    <div aria-live="polite">
     @if (mensajeServidor()) {
       <div class="invalid-feedback d-block">
         {{ mensajeServidor() }}
@@ -29,6 +30,7 @@ import { TranslatePipe } from '@ngx-translate/core';
         }
       </div>
     }
+    </div>
   `
 })
 export class CampoErrorComponent {
