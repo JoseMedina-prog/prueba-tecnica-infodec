@@ -21,6 +21,10 @@ class SalidaResource extends JsonResource
             'codigo_iata' => $this->codigo_iata,
             'ciudad' => $this->traducir('ciudades', $this->nombre, $this->nombre),
             'pais' => $this->traducir('paises', $this->pais->codigo, $this->pais->nombre),
+            'moneda' => [
+                'codigo' => $this->pais->moneda?->codigo,
+                'simbolo' => $this->pais->moneda?->simbolo,
+            ],
         ];
     }
 

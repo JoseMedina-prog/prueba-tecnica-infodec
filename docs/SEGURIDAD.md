@@ -61,7 +61,7 @@ Este documento detalla las medidas de seguridad defensiva implementadas en **Pas
 | `/api/auth/refresh` | POST | 200 | `access_token`, `refresh_token`, `token_type`, `expires_in`, `usuario: { id, nombre, correo, idioma }` | `token_hash`, `familia_id`, hashes internos |
 | `/api/auth/me` | GET | 200 | `id`, `nombre`, `correo`, `idioma` | `password_hash`, timestamps internos |
 | `/api/auth/logout` | POST | 200 | `message` | Datos de sesión, claims de tokens |
-| `/api/salidas` (público) | GET | 200 | Array de 8 `[{ codigo_iata, ciudad, pais }]` (nombres traducidos) | `id`, `pais_id`, coordenadas, moneda, timestamps |
+| `/api/salidas` (público) | GET | 200 | Array de 8 `[{ codigo_iata, ciudad, pais, moneda: { codigo, simbolo } }]` (nombres traducidos) | `id`, `pais_id`, coordenadas, timestamps |
 | `/api/paises` | GET | 200 | Array de `[{ id, codigo, nombre, moneda: { codigo, nombre, simbolo } }]` | Timestamps, llaves foráneas no requeridas |
 | `/api/paises/{id}/ciudades` | GET | 200 | Array de `[{ id, nombre, codigo_iata }]` | `pais_id`, coordenadas internas no solicitadas en combo, timestamps |
 | `/api/consultas` / `/conversion` | POST | 201 | `id`, `fecha`, `pais: { id, codigo, nombre }`, `ciudad: { id, nombre, codigo_iata }`, `presupuesto_cop`, `clima: { temperatura, descripcion, icono, obtenido_en, fuente }`, `moneda`, `conversion: { valor, tasa, fecha_tasa, fuente }`, `avisos` | `usuario_id`, `updated_at`, IDs de auditoría interna |
@@ -78,7 +78,7 @@ Todo lo demás exige `Authorization: Bearer` (middleware `auth.token`). Estos so
 | `/api/auth/register` | POST | Crear la cuenta ocurre, por definición, antes de tener sesión. Es un flujo de negocio sensible (OWASP API6): se limita para que no se automatice la creación masiva de cuentas. | 10 / min y 30 / hora por IP (limitador `registro`, cuenta toda petición), más validación estricta del cuerpo (422) y correo único (409) |
 | `/api/auth/login` | POST | Obtener el primer par de tokens. | 5 intentos / min por `correo + IP` |
 | `/api/auth/refresh` | POST | Renovar el access token vencido; se autentica con el refresh token del cuerpo, no con la cabecera. | 30 / min por IP |
-| `/api/salidas` | GET | Alimenta el tablero de salidas del login, que se muestra antes de iniciar sesión. **Datos no sensibles:** solo el código IATA y los nombres traducidos de las 8 ciudades destino, que ya son públicos en la propia interfaz; sin ids, coordenadas ni datos de usuarios. **Solo lectura:** GET sin parámetros, sin efectos sobre la base de datos. | 30 / min por IP (limitador `salidas`) |
+| `/api/salidas` | GET | Alimenta el tablero de destinos del login, que se muestra antes de iniciar sesión. **Datos no sensibles:** el código IATA, nombres traducidos de las 8 ciudades destino y la moneda oficial (código y símbolo), que ya son públicos en la propia interfaz; sin ids, coordenadas ni datos de usuarios. **Solo lectura:** GET sin parámetros, sin efectos sobre la base de datos. | 30 / min por IP (limitador `salidas`) |
 
 ---
 

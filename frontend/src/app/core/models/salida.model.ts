@@ -3,4 +3,8 @@ export interface DestinoSalida {
   codigo_iata: string;
   ciudad: string;
   pais: string;
+  moneda: {
+    codigo: string;
+    simbolo: string;
+  };
 }

@@ -1,7 +1,6 @@
 import {
   AfterViewInit,
   Component,
-  DestroyRef,
   ElementRef,
   ViewChild,
   inject,
@@ -13,15 +12,6 @@ import { catchError, of, switchMap } from 'rxjs';
 import { DestinoSalida } from '../../../core/models';
 import { IdiomaService } from '../../../core/services/idioma.service';
 import { SalidaService } from '../../../core/services/salida.service';
-import {
-  Estado,
-  RELOJ_COLOMBIA,
-  RELOJ_FN,
-  Salida,
-  actualizarEstados,
-  generarSalidas,
-  obtenerMinutosColombia
-} from '../../../core/utils/salidas';
 import { SplitFlapComponent } from '../split-flap/split-flap.component';
 
 @Component({
@@ -29,63 +19,56 @@ import { SplitFlapComponent } from '../split-flap/split-flap.component';
   standalone: true,
   imports: [TranslatePipe, SplitFlapComponent],
   template: `
-    @if (salidas().length > 0) {
-      <section class="carrusel-seccion" [attr.aria-label]="'TABLERO.PROXIMAS_SALIDAS' | translate">
+    @if (destinos().length > 0) {
+      <section class="carrusel-seccion" [attr.aria-label]="'TABLERO.DESTINOS_DISPONIBLES' | translate">
         <header class="carrusel-header">
-        <div class="carrusel-titulo-wrap">
-          <h2 class="carrusel-titulo">{{ 'TABLERO.PROXIMAS_SALIDAS' | translate }}</h2>
-          <span class="reloj-vivo mono">BOGOTÁ · {{ hora() }}</span>
-        </div>
-        <div class="carrusel-nav">
-          <button
-            type="button"
-            class="btn-nav"
-            [disabled]="enInicio()"
-            [attr.aria-label]="'TABLERO.ANTERIOR' | translate"
-            (click)="anterior()"
-          >
-            <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M10 13L5 8l5-5" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            class="btn-nav"
-            [disabled]="enFin()"
-            [attr.aria-label]="'TABLERO.SIGUIENTE' | translate"
-            (click)="siguiente()"
-          >
-            <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M6 3l5 5-5 5" />
-            </svg>
-          </button>
-        </div>
-      </header>
+          <h2 class="carrusel-titulo">{{ 'TABLERO.DESTINOS_DISPONIBLES' | translate }}</h2>
+          <div class="carrusel-header-der">
+            <span class="carrusel-monedas mono" aria-label="Monedas de destino">COP → £ ¥ ₹ kr</span>
+            <div class="carrusel-nav">
+              <button
+                type="button"
+                class="btn-nav"
+                [disabled]="enInicio()"
+                [attr.aria-label]="'TABLERO.ANTERIOR' | translate"
+                (click)="anterior()"
+              >
+                <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M10 13L5 8l5-5" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                class="btn-nav"
+                [disabled]="enFin()"
+                [attr.aria-label]="'TABLERO.SIGUIENTE' | translate"
+                (click)="siguiente()"
+              >
+                <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M6 3l5 5-5 5" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </header>
 
-      <div class="carrusel-track" #track (scroll)="alHacerScroll()">
-        @for (salida of salidas(); track salida.codigo) {
-          <article
-            class="tarjeta-salida"
-            [attr.aria-label]="($index + 1) + ' ' + ('TABLERO.DE' | translate) + ' ' + salidas().length"
-          >
-            <div class="salida-fila-superior">
-              <app-split-flap class="codigo mono" [texto]="salida.codigo" [delayMs]="$index * 60" />
-              <time class="hora mono">{{ salida.hora }}</time>
-            </div>
-            <div class="ciudad">{{ salida.ciudad }}</div>
-            <div class="salida-fila-inferior">
-              <span class="chip-estado" [class]="obtenerClaseChip(salida.estado)" [attr.data-estado]="salida.estado">
-                @if (salida.estado === 'ABORDANDO') {
-                  <span class="punto-parpadeo" aria-hidden="true"></span>
-                }
-                <span>{{ 'TABLERO.' + salida.estado | translate }}</span>
-              </span>
-            </div>
-          </article>
-        }
-      </div>
-    </section>
-  }
+        <div class="carrusel-track" #track (scroll)="alHacerScroll()">
+          @for (destino of destinos(); track destino.codigo_iata) {
+            <article
+              class="tarjeta-salida"
+              [attr.aria-label]="($index + 1) + ' ' + ('TABLERO.DE' | translate) + ' ' + destinos().length"
+            >
+              <div class="salida-fila-superior">
+                <app-split-flap class="codigo mono" [texto]="destino.codigo_iata" [delayMs]="$index * 60" />
+                <span class="salida-moneda mono">{{ destino.moneda.codigo }} {{ destino.moneda.simbolo }}</span>
+              </div>
+              <div class="ciudad">{{ destino.ciudad }}</div>
+              <div class="pais">{{ destino.pais }}</div>
+            </article>
+          }
+        </div>
+      </section>
+    }
   `,
   styles: `
     :host {
@@ -105,12 +88,6 @@ import { SplitFlapComponent } from '../split-flap/split-flap.component';
       margin-bottom: 0.85rem;
       padding: 0 0.25rem;
     }
-    .carrusel-titulo-wrap {
-      display: flex;
-      align-items: baseline;
-      gap: 0.85rem;
-      flex-wrap: wrap;
-    }
     .carrusel-titulo {
       margin: 0;
       font-family: var(--font-display);
@@ -120,10 +97,21 @@ import { SplitFlapComponent } from '../split-flap/split-flap.component';
       text-transform: uppercase;
       color: var(--ink);
     }
-    .reloj-vivo {
-      font-size: 0.8rem;
+    .carrusel-header-der {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .carrusel-monedas {
+      font-size: 0.75rem;
       font-weight: 600;
+      letter-spacing: 0.06em;
       color: var(--muted);
+      background: var(--paper);
+      padding: 0.3rem 0.65rem;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      white-space: nowrap;
     }
     .carrusel-nav {
       display: flex;
@@ -180,7 +168,6 @@ import { SplitFlapComponent } from '../split-flap/split-flap.component';
       min-width: 0;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
       background: var(--surface);
       border: 1px solid var(--line);
       border-radius: 12px;
@@ -195,9 +182,10 @@ import { SplitFlapComponent } from '../split-flap/split-flap.component';
     }
     .salida-fila-superior {
       display: flex;
-      align-items: baseline;
+      align-items: center;
       justify-content: space-between;
       gap: 0.5rem;
+      margin-bottom: 0.65rem;
     }
     .codigo {
       font-size: 1.25rem;
@@ -205,80 +193,38 @@ import { SplitFlapComponent } from '../split-flap/split-flap.component';
       letter-spacing: 0.04em;
       color: var(--ink);
     }
-    .hora {
-      font-size: 0.9rem;
+    .salida-moneda {
+      font-size: 0.8rem;
       font-weight: 600;
-      color: var(--muted);
+      color: var(--accent);
+      letter-spacing: 0.04em;
+      background: rgba(184, 64, 28, 0.08);
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
     }
     .ciudad {
-      margin: 0.6rem 0 0.85rem;
-      font-size: 0.95rem;
-      font-weight: 600;
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 700;
       color: var(--ink);
       line-height: 1.25;
-      min-height: 2.4rem;
-      display: -webkit-box;
-      -webkit-box-orient: vertical;
-      word-break: normal;
-      white-space: normal;
-    }
-    .salida-fila-inferior {
-      display: flex;
-      align-items: center;
-    }
-    .chip-estado {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 3px 8px;
-      border-radius: 4px;
-      font-family: var(--font-mono);
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
+      margin-bottom: 0.2rem;
       white-space: nowrap;
-      line-height: 1.3;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-    .chip-despego {
-      background: transparent;
-      color: #6b6b6b;
-      border: 1px solid var(--line);
-    }
-    .chip-abordando {
-      background: var(--accent);
-      color: #ffffff;
-      border: 1px solid var(--accent);
-    }
-    .punto-parpadeo {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: #ffffff;
-      animation: punto-pulso 1s ease-in-out infinite;
-    }
-    @keyframes punto-pulso {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.2; }
-    }
-    .chip-a-tiempo {
-      background: rgba(31, 122, 111, 0.12);
-      color: #1f7a6f;
-      border: 1px solid rgba(31, 122, 111, 0.28);
-    }
-    .chip-programado {
-      background: transparent;
-      color: var(--ink);
-      border: 1px solid var(--line-strong);
+    .pais {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     @media (prefers-reduced-motion: reduce) {
       .tarjeta-salida {
         transition: none !important;
         &:hover { transform: none !important; }
-      }
-      .punto-parpadeo {
-        animation: none !important;
-        opacity: 1 !important;
       }
     }
     @media (max-width: 991.98px) {
@@ -287,6 +233,15 @@ import { SplitFlapComponent } from '../split-flap/split-flap.component';
       }
     }
     @media (max-width: 575.98px) {
+      .carrusel-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+      .carrusel-header-der {
+        width: 100%;
+        justify-content: space-between;
+      }
       .tarjeta-salida {
         flex: 0 0 78%;
       }
@@ -294,19 +249,16 @@ import { SplitFlapComponent } from '../split-flap/split-flap.component';
   `
 })
 export class CarruselSalidasComponent implements AfterViewInit {
-  private readonly relojFn = inject(RELOJ_FN);
   private readonly salidaService = inject(SalidaService);
   private readonly idioma = inject(IdiomaService).idiomaActual;
 
   @ViewChild('track') trackRef?: ElementRef<HTMLDivElement>;
 
-  readonly hora = signal(RELOJ_COLOMBIA.format(this.relojFn()));
-  readonly salidas = signal<Salida[]>([]);
+  readonly destinos = signal<DestinoSalida[]>([]);
+  // Alias de compatibilidad para pruebas y plantillas
+  readonly salidas = this.destinos;
   readonly enInicio = signal(true);
   readonly enFin = signal(false);
-
-  private destinos: DestinoSalida[] = [];
-  private ultimoMinuto = -1;
 
   constructor() {
     toObservable(this.idioma)
@@ -321,25 +273,6 @@ export class CarruselSalidasComponent implements AfterViewInit {
       .subscribe((destinos) => {
         this.recibirDestinos(destinos ?? []);
       });
-
-    this.ultimoMinuto = obtenerMinutosColombia(this.relojFn());
-    const interval = setInterval(() => {
-      const ahora = this.relojFn();
-      this.hora.set(RELOJ_COLOMBIA.format(ahora));
-      const minActual = obtenerMinutosColombia(ahora);
-      if (minActual !== this.ultimoMinuto) {
-        this.ultimoMinuto = minActual;
-        const actual = this.salidas();
-        if (actual.length === 0) return;
-        if (minActual - actual[0].minutos > 45 || actual.every((s) => s.minutos < minActual)) {
-          this.salidas.set(generarSalidas(this.destinos, ahora, actual));
-        } else {
-          this.salidas.set(actualizarEstados(actual, ahora));
-        }
-      }
-    }, 1000);
-
-    inject(DestroyRef).onDestroy(() => clearInterval(interval));
   }
 
   ngAfterViewInit(): void {
@@ -381,27 +314,12 @@ export class CarruselSalidasComponent implements AfterViewInit {
     setTimeout(() => this.actualizarExtremos(), 100);
   }
 
-  obtenerClaseChip(estado: Estado): string {
-    switch (estado) {
-      case 'DESPEGO':
-        return 'chip-despego';
-      case 'ABORDANDO':
-        return 'chip-abordando';
-      case 'A_TIEMPO':
-        return 'chip-a-tiempo';
-      case 'PROGRAMADO':
-        return 'chip-programado';
-    }
-  }
-
   private recibirDestinos(destinos: DestinoSalida[]): void {
     if (!destinos || destinos.length === 0) {
-      this.destinos = [];
-      this.salidas.set([]);
+      this.destinos.set([]);
       return;
     }
-    this.destinos = destinos;
-    this.salidas.set(generarSalidas(destinos, this.relojFn(), this.salidas()));
+    this.destinos.set(destinos);
     setTimeout(() => this.actualizarExtremos(), 0);
   }
 }

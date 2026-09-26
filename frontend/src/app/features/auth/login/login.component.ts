@@ -1,11 +1,14 @@
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { ApiHttpError } from '../../../core/models';
+import { catchError, of, switchMap } from 'rxjs';
+import { ApiHttpError, DestinoSalida } from '../../../core/models';
 import { ApiErrorService } from '../../../core/services/api-error.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { IdiomaService } from '../../../core/services/idioma.service';
+import { SalidaService } from '../../../core/services/salida.service';
 import { consumirEstadoLogin } from '../../../core/utils/estado-login';
 import { RELOJ_FN, obtenerFechaColombia } from '../../../core/utils/salidas';
 import { AlertaErrorComponent } from '../../../shared/components/alerta-error/alerta-error.component';
@@ -74,7 +77,7 @@ import { LogoComponent } from '../../../shared/components/logo/logo.component';
 
           <div class="mb-3">
             <label for="correo" class="form-label label-mono">
-              {{ 'AUTH.PASAJERO_CORREO' | translate }} <span class="requerido" aria-hidden="true">*</span>
+              {{ 'AUTH.CORREO_LABEL' | translate }} <span class="requerido" aria-hidden="true">*</span>
             </label>
             <input
               type="email"
@@ -90,7 +93,7 @@ import { LogoComponent } from '../../../shared/components/logo/logo.component';
 
           <div class="mb-2">
             <label for="password" class="form-label label-mono">
-              {{ 'AUTH.CLAVE_ABORDAJE' | translate }} <span class="requerido" aria-hidden="true">*</span>
+              {{ 'AUTH.PASSWORD_LABEL' | translate }} <span class="requerido" aria-hidden="true">*</span>
             </label>
             <div class="campo-password-wrap">
               <input
@@ -122,18 +125,19 @@ import { LogoComponent } from '../../../shared/components/logo/logo.component';
         <aside class="ticket-talon">
           <div class="talon-header mono">
             <span class="talon-titulo">{{ 'AUTH.TALON' | translate }}</span>
-            <span class="talon-subtitulo">{{ 'AUTH.NUMERO_VUELO' | translate }}</span>
           </div>
 
           <div class="talon-info-grid mono">
             <div class="talon-dato">
-              <span class="talon-label">{{ 'AUTH.PUERTA' | translate }}</span>
-              <span class="talon-valor">A4</span>
+              <span class="talon-label">{{ 'AUTH.MONEDA_ORIGEN' | translate }}</span>
+              <span class="talon-valor">COP</span>
             </div>
-            <div class="talon-dato">
-              <span class="talon-label">{{ 'AUTH.ASIENTO' | translate }}</span>
-              <span class="talon-valor">12C</span>
-            </div>
+            @if (resumenDestinos(); as res) {
+              <div class="talon-dato talon-dato-ancho">
+                <span class="talon-label">{{ 'AUTH.DESTINOS' | translate }}</span>
+                <span class="talon-valor">{{ 'AUTH.DESTINOS_RESUMEN' | translate: { paises: res.paises, ciudades: res.ciudades } }}</span>
+              </div>
+            }
             <div class="talon-dato talon-dato-fecha">
               <span class="talon-label">{{ 'AUTH.FECHA' | translate }}</span>
               <span class="talon-valor">{{ fechaColombia() }}</span>
@@ -223,6 +227,8 @@ export class LoginComponent implements OnInit {
   private readonly apiErrorService = inject(ApiErrorService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly relojFn = inject(RELOJ_FN);
+  private readonly salidaService = inject(SalidaService);
+  private readonly idioma = inject(IdiomaService).idiomaActual;
 
   readonly avisoSesionExpirada = signal(false);
   readonly cargando = signal<boolean>(false);
@@ -230,8 +236,30 @@ export class LoginComponent implements OnInit {
   readonly erroresCampos = signal<Record<string, string>>({});
   readonly mensajeExito = signal<string | null>(null);
   readonly mostrarPassword = signal(false);
+  readonly resumenDestinos = signal<{ paises: number; ciudades: number } | null>(null);
 
   readonly fechaColombia = computed(() => obtenerFechaColombia(this.relojFn()));
+
+  constructor() {
+    toObservable(this.idioma)
+      .pipe(
+        switchMap(() =>
+          this.salidaService.getSalidas().pipe(
+            catchError(() => of<DestinoSalida[]>([]))
+          )
+        ),
+        takeUntilDestroyed()
+      )
+      .subscribe((destinos) => {
+        if (destinos && destinos.length > 0) {
+          const ciudades = destinos.length;
+          const paises = new Set(destinos.map((d) => d.pais)).size;
+          this.resumenDestinos.set({ paises, ciudades });
+        } else {
+          this.resumenDestinos.set(null);
+        }
+      });
+  }
 
   readonly form: FormGroup = this.fb.group({
     correo: ['', [Validators.required, Validators.email]],

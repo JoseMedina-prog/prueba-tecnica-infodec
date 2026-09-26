@@ -29,10 +29,10 @@ class SalidaTest extends TestCase
     }
 
     /**
-     * /api/salidas es público: responde sin token, con las 8 ciudades y SOLO
-     * codigo_iata, ciudad y pais, en el formato estándar y con las cabeceras de seguridad.
+     * /api/salidas es público: responde sin token, con las 8 ciudades y
+     * codigo_iata, ciudad, pais y moneda, en el formato estándar y con las cabeceras de seguridad.
      */
-    public function test_salidas_responde_sin_token_con_8_ciudades_y_solo_3_campos(): void
+    public function test_salidas_responde_sin_token_con_8_ciudades_y_datos_de_moneda(): void
     {
         $response = $this->getJson('/api/salidas');
 
@@ -44,7 +44,10 @@ class SalidaTest extends TestCase
             ->assertHeader('X-Trace-Id');
 
         foreach ($response->json('data') as $salida) {
-            $this->assertSame(['codigo_iata', 'ciudad', 'pais'], array_keys($salida));
+            $this->assertSame(['codigo_iata', 'ciudad', 'pais', 'moneda'], array_keys($salida));
+            $this->assertSame(['codigo', 'simbolo'], array_keys($salida['moneda']));
+            $this->assertNotEmpty($salida['moneda']['codigo']);
+            $this->assertNotEmpty($salida['moneda']['simbolo']);
         }
 
         $codigos = collect($response->json('data'))->pluck('codigo_iata')->sort()->values()->all();
@@ -61,8 +64,17 @@ class SalidaTest extends TestCase
         $londresDe = collect($this->withHeader('Accept-Language', 'de')->getJson('/api/salidas')->json('data'))
             ->firstWhere('codigo_iata', 'LON');
 
-        $this->assertSame(['codigo_iata' => 'TYO', 'ciudad' => 'Tokio', 'pais' => 'Japón'], $tokioEs);
+        $this->assertSame([
+            'codigo_iata' => 'TYO',
+            'ciudad' => 'Tokio',
+            'pais' => 'Japón',
+            'moneda' => [
+                'codigo' => 'JPY',
+                'simbolo' => '¥',
+            ],
+        ], $tokioEs);
         $this->assertSame('London', $londresDe['ciudad']);
+        $this->assertSame(['codigo' => 'GBP', 'simbolo' => '£'], $londresDe['moneda']);
     }
 
     /**

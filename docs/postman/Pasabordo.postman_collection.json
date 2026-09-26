@@ -368,13 +368,16 @@
                   "pm.test('Status code es 200 OK sin token', function () {",
                   "    pm.response.to.have.status(200);",
                   "});",
-                  "pm.test('Retorna las 8 salidas con solo codigo_iata, ciudad y pais', function () {",
+                  "pm.test('Retorna las 8 salidas con codigo_iata, ciudad, pais y moneda', function () {",
                   "    const json = pm.response.json();",
                   "    pm.expect(json.success).to.be.true;",
                   "    pm.expect(json.data).to.be.an('array').with.lengthOf(8);",
                   "    json.data.forEach(s => {",
-                  "        pm.expect(Object.keys(s)).to.have.members(['codigo_iata', 'ciudad', 'pais']).and.to.have.lengthOf(3);",
+                  "        pm.expect(Object.keys(s)).to.have.members(['codigo_iata', 'ciudad', 'pais', 'moneda']).and.to.have.lengthOf(4);",
                   "        pm.expect(s.codigo_iata).to.match(/^[A-Z]{3}$/);",
+                  "        pm.expect(s.moneda).to.be.an('object');",
+                  "        pm.expect(s.moneda.codigo).to.be.a('string');",
+                  "        pm.expect(s.moneda.simbolo).to.be.a('string');",
                   "    });",
                   "    pm.expect(json.data.map(s => s.codigo_iata)).to.include.members(['LON', 'TYO', 'DEL', 'CPH']);",
                   "});",
@@ -410,7 +413,7 @@
                 "salidas"
               ]
             },
-            "description": "Tablero de salidas del login. Endpoint PÚBLICO de solo lectura (sin token): devuelve el código IATA y los nombres traducidos de ciudad y país. Límite de 30 peticiones por minuto por IP."
+            "description": "Tablero de destinos del login. Endpoint PÚBLICO de solo lectura (sin token): devuelve el código IATA, nombres traducidos de ciudad y país, y la moneda oficial (código y símbolo). Límite de 30 peticiones por minuto por IP."
           }
         }
       ]

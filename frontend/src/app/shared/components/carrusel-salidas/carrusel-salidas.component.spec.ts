@@ -3,26 +3,23 @@ import { TranslateService, provideTranslateService } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { DestinoSalida } from '../../../core/models';
 import { SalidaService } from '../../../core/services/salida.service';
-import { RELOJ_FN } from '../../../core/utils/salidas';
 import { CarruselSalidasComponent } from './carrusel-salidas.component';
 
 const DESTINOS_PRUEBA: DestinoSalida[] = [
-  { codigo_iata: 'LON', ciudad: 'Londres', pais: 'Inglaterra' },
-  { codigo_iata: 'CPH', ciudad: 'Copenhague', pais: 'Dinamarca' },
-  { codigo_iata: 'TYO', ciudad: 'Tokio', pais: 'Japón' },
-  { codigo_iata: 'DEL', ciudad: 'Nueva Delhi', pais: 'India' },
-  { codigo_iata: 'BOM', ciudad: 'Bombay', pais: 'India' },
-  { codigo_iata: 'MAN', ciudad: 'Mánchester', pais: 'Inglaterra' },
-  { codigo_iata: 'AAR', ciudad: 'Aarhus', pais: 'Dinamarca' },
-  { codigo_iata: 'OSA', ciudad: 'Osaka', pais: 'Japón' }
+  { codigo_iata: 'LON', ciudad: 'Londres', pais: 'Inglaterra', moneda: { codigo: 'GBP', simbolo: '£' } },
+  { codigo_iata: 'CPH', ciudad: 'Copenhague', pais: 'Dinamarca', moneda: { codigo: 'DKK', simbolo: 'kr' } },
+  { codigo_iata: 'TYO', ciudad: 'Tokio', pais: 'Japón', moneda: { codigo: 'JPY', simbolo: '¥' } },
+  { codigo_iata: 'DEL', ciudad: 'Nueva Delhi', pais: 'India', moneda: { codigo: 'INR', simbolo: '₹' } },
+  { codigo_iata: 'BOM', ciudad: 'Bombay', pais: 'India', moneda: { codigo: 'INR', simbolo: '₹' } },
+  { codigo_iata: 'MAN', ciudad: 'Mánchester', pais: 'Inglaterra', moneda: { codigo: 'GBP', simbolo: '£' } },
+  { codigo_iata: 'AAR', ciudad: 'Aarhus', pais: 'Dinamarca', moneda: { codigo: 'DKK', simbolo: 'kr' } },
+  { codigo_iata: 'OSA', ciudad: 'Osaka', pais: 'Japón', moneda: { codigo: 'JPY', simbolo: '¥' } }
 ];
 
 describe('CarruselSalidasComponent', () => {
   let fixture: ComponentFixture<CarruselSalidasComponent>;
   let component: CarruselSalidasComponent;
   let salidaService: jasmine.SpyObj<SalidaService>;
-
-  const fechaSimulada = new Date('2026-09-25T19:00:00Z'); // 14:00 Bogotá
 
   beforeEach(async () => {
     salidaService = jasmine.createSpyObj<SalidaService>('SalidaService', ['getSalidas']);
@@ -32,7 +29,6 @@ describe('CarruselSalidasComponent', () => {
       imports: [CarruselSalidasComponent],
       providers: [
         provideTranslateService(),
-        { provide: RELOJ_FN, useValue: () => fechaSimulada },
         { provide: SalidaService, useValue: salidaService }
       ]
     }).compileComponents();
@@ -40,14 +36,10 @@ describe('CarruselSalidasComponent', () => {
     const translate = TestBed.inject(TranslateService);
     translate.setTranslation('es', {
       TABLERO: {
-        PROXIMAS_SALIDAS: 'Próximas salidas',
-        ANTERIOR: 'Salidas anteriores',
-        SIGUIENTE: 'Siguientes salidas',
-        DE: 'de',
-        DESPEGO: 'Despegó',
-        ABORDANDO: 'Abordando',
-        A_TIEMPO: 'A tiempo',
-        PROGRAMADO: 'Programado'
+        DESTINOS_DISPONIBLES: 'Destinos disponibles',
+        ANTERIOR: 'Anterior',
+        SIGUIENTE: 'Siguiente',
+        DE: 'de'
       }
     });
     translate.use('es');
@@ -59,8 +51,8 @@ describe('CarruselSalidasComponent', () => {
 
   it('el carrusel avanza y retrocede con los botones y los deshabilita en los extremos', fakeAsync(() => {
     const el = fixture.nativeElement as HTMLElement;
-    const btnAnterior: HTMLButtonElement = el.querySelector('.btn-nav[aria-label="Salidas anteriores"]')!;
-    const btnSiguiente: HTMLButtonElement = el.querySelector('.btn-nav[aria-label="Siguientes salidas"]')!;
+    const btnAnterior: HTMLButtonElement = el.querySelector('.btn-nav[aria-label="Anterior"]')!;
+    const btnSiguiente: HTMLButtonElement = el.querySelector('.btn-nav[aria-label="Siguiente"]')!;
     const track = el.querySelector('.carrusel-track') as HTMLElement;
 
     // Al inicio: botón anterior deshabilitado, botón siguiente habilitado
@@ -108,18 +100,19 @@ describe('CarruselSalidasComponent', () => {
     expect(btnSiguiente.disabled).toBeFalse();
   }));
 
-  it('el chip de estado aplica la clase correcta para cada estado en fondo blanco', () => {
-    const chips: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('.chip-estado'));
-    expect(chips.length).toBe(DESTINOS_PRUEBA.length);
+  it('cada tarjeta muestra la moneda con su código y símbolo', () => {
+    const monedas: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('.salida-moneda'));
+    expect(monedas.length).toBe(DESTINOS_PRUEBA.length);
+    expect(monedas[0].textContent?.trim()).toBe('GBP £');
+    expect(monedas[1].textContent?.trim()).toBe('DKK kr');
+    expect(monedas[2].textContent?.trim()).toBe('JPY ¥');
+    expect(monedas[3].textContent?.trim()).toBe('INR ₹');
+  });
 
-    expect(chips[0].classList.contains('chip-despego')).toBeTrue();
-    expect(chips[1].classList.contains('chip-abordando')).toBeTrue();
-    expect(chips[1].querySelector('.punto-parpadeo')).toBeTruthy();
-
-    expect(component.obtenerClaseChip('DESPEGO')).toBe('chip-despego');
-    expect(component.obtenerClaseChip('ABORDANDO')).toBe('chip-abordando');
-    expect(component.obtenerClaseChip('A_TIEMPO')).toBe('chip-a-tiempo');
-    expect(component.obtenerClaseChip('PROGRAMADO')).toBe('chip-programado');
+  it('el encabezado muestra el texto COP → £ ¥ ₹ kr', () => {
+    const indicador = fixture.nativeElement.querySelector('.carrusel-monedas');
+    expect(indicador).toBeTruthy();
+    expect(indicador.textContent?.trim()).toBe('COP → £ ¥ ₹ kr');
   });
 
   it('cada tarjeta tiene aria-label accesible con formato X de Y', () => {
@@ -129,15 +122,15 @@ describe('CarruselSalidasComponent', () => {
     expect(tarjetas[2].getAttribute('aria-label')).toBe('3 de 8');
   });
 
-  it('el carrusel muestra una tarjeta por cada salida que devuelve el servicio (con datos simulados)', () => {
+  it('el carrusel muestra una tarjeta por cada destino que devuelve el servicio', () => {
     const tarjetas = fixture.nativeElement.querySelectorAll('.tarjeta-salida');
     expect(tarjetas.length).toBe(DESTINOS_PRUEBA.length);
 
     // Con otra cantidad simulada (ej. 3 destinos)
     const tresDestinos: DestinoSalida[] = [
-      { codigo_iata: 'LON', ciudad: 'Londres', pais: 'Inglaterra' },
-      { codigo_iata: 'CPH', ciudad: 'Copenhague', pais: 'Dinamarca' },
-      { codigo_iata: 'TYO', ciudad: 'Tokio', pais: 'Japón' }
+      { codigo_iata: 'LON', ciudad: 'Londres', pais: 'Inglaterra', moneda: { codigo: 'GBP', simbolo: '£' } },
+      { codigo_iata: 'CPH', ciudad: 'Copenhague', pais: 'Dinamarca', moneda: { codigo: 'DKK', simbolo: 'kr' } },
+      { codigo_iata: 'TYO', ciudad: 'Tokio', pais: 'Japón', moneda: { codigo: 'JPY', simbolo: '¥' } }
     ];
     salidaService.getSalidas.and.returnValue(of(tresDestinos));
     const fixture2 = TestBed.createComponent(CarruselSalidasComponent);
@@ -157,7 +150,7 @@ describe('CarruselSalidasComponent', () => {
     expect(titulo).toBeNull();
     const flechas = errorFixture.nativeElement.querySelectorAll('.btn-nav');
     expect(flechas.length).toBe(0);
-    expect(errorFixture.componentInstance.salidas().length).toBe(0);
+    expect(errorFixture.componentInstance.destinos().length).toBe(0);
   });
 
   it('con respuesta vacía de la API la tira no aparece', () => {

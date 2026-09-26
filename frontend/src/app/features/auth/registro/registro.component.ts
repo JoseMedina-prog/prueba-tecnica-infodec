@@ -79,7 +79,7 @@ export function passwordMatchValidator(group: AbstractControl): ValidationErrors
 
           <div class="mb-3">
             <label for="nombre" class="form-label label-mono">
-              {{ 'AUTH.PASAJERO_NOMBRE' | translate }} <span class="requerido" aria-hidden="true">*</span>
+              {{ 'AUTH.NOMBRE_LABEL' | translate }} <span class="requerido" aria-hidden="true">*</span>
             </label>
             <input
               type="text"
@@ -95,7 +95,7 @@ export function passwordMatchValidator(group: AbstractControl): ValidationErrors
 
           <div class="mb-3">
             <label for="correo" class="form-label label-mono">
-              {{ 'AUTH.PASAJERO_CORREO' | translate }} <span class="requerido" aria-hidden="true">*</span>
+              {{ 'AUTH.CORREO_LABEL' | translate }} <span class="requerido" aria-hidden="true">*</span>
             </label>
             <input
               type="email"
@@ -111,7 +111,7 @@ export function passwordMatchValidator(group: AbstractControl): ValidationErrors
 
           <div class="mb-3">
             <label for="password" class="form-label label-mono">
-              {{ 'AUTH.CLAVE_ABORDAJE' | translate }} <span class="requerido" aria-hidden="true">*</span>
+              {{ 'AUTH.PASSWORD_LABEL' | translate }} <span class="requerido" aria-hidden="true">*</span>
             </label>
             <div class="campo-password-wrap">
               <input
@@ -149,7 +149,7 @@ export function passwordMatchValidator(group: AbstractControl): ValidationErrors
 
           <div class="mb-3">
             <label for="password_confirmation" class="form-label label-mono">
-              {{ 'AUTH.CONFIRMAR_CLAVE' | translate }} <span class="requerido" aria-hidden="true">*</span>
+              {{ 'AUTH.PASSWORD_CONFIRM_LABEL' | translate }} <span class="requerido" aria-hidden="true">*</span>
             </label>
             <div class="campo-password-wrap">
               <input
@@ -188,9 +188,9 @@ export function passwordMatchValidator(group: AbstractControl): ValidationErrors
           </div>
 
           <div class="talon-info-grid mono">
-            <div class="talon-dato talon-dato-ancho">
-              <span class="talon-label">{{ 'AUTH.PASAJERO_NUEVO' | translate }}</span>
-              <span class="talon-valor">CLASE TURISTA</span>
+            <div class="talon-dato">
+              <span class="talon-label">{{ 'AUTH.MONEDA_ORIGEN' | translate }}</span>
+              <span class="talon-valor">COP</span>
             </div>
             <div class="talon-dato talon-dato-fecha">
               <span class="talon-label">{{ 'AUTH.FECHA' | translate }}</span>

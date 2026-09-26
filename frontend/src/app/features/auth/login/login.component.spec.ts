@@ -3,6 +3,9 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { provideTranslateService } from '@ngx-translate/core';
+import { of, throwError } from 'rxjs';
+import { DestinoSalida } from '../../../core/models';
+import { SalidaService } from '../../../core/services/salida.service';
 import { LoginComponent } from './login.component';
 
 describe('LoginComponent - aviso de sesión expirada', () => {
@@ -111,10 +114,38 @@ describe('LoginComponent - aviso de sesión expirada', () => {
     expect(boton.getAttribute('aria-label')).toBe('AUTH.MOSTRAR_PASSWORD');
   });
 
-  it('el login muestra la tira de próximas salidas debajo de la tarjeta', () => {
+  it('el login muestra la tira de destinos disponibles debajo de la tarjeta', () => {
     crear();
     const carrusel = fixture.nativeElement.querySelector('app-carrusel-salidas');
     expect(carrusel).toBeTruthy();
+  });
+
+  it('el talón calcula el número de destinos con los datos del servicio', () => {
+    const salidaService = TestBed.inject(SalidaService);
+    const destinosMock: DestinoSalida[] = [
+      { codigo_iata: 'LON', ciudad: 'Londres', pais: 'Inglaterra', moneda: { codigo: 'GBP', simbolo: '£' } },
+      { codigo_iata: 'MAN', ciudad: 'Mánchester', pais: 'Inglaterra', moneda: { codigo: 'GBP', simbolo: '£' } },
+      { codigo_iata: 'TYO', ciudad: 'Tokio', pais: 'Japón', moneda: { codigo: 'JPY', simbolo: '¥' } }
+    ];
+    spyOn(salidaService, 'getSalidas').and.returnValue(of(destinosMock));
+
+    crear();
+
+    expect(fixture.componentInstance.resumenDestinos()).toEqual({ paises: 2, ciudades: 3 });
+    const datoDestinos: HTMLElement | null = fixture.nativeElement.querySelector('.talon-dato-ancho');
+    expect(datoDestinos).toBeTruthy();
+    expect(datoDestinos!.textContent).toContain('AUTH.DESTINOS');
+  });
+
+  it('el talón no muestra el dato de destinos si el servicio de salidas falla', () => {
+    const salidaService = TestBed.inject(SalidaService);
+    spyOn(salidaService, 'getSalidas').and.returnValue(throwError(() => new Error('Error')));
+
+    crear();
+
+    expect(fixture.componentInstance.resumenDestinos()).toBeNull();
+    const datoDestinos: HTMLElement | null = fixture.nativeElement.querySelector('.talon-dato-ancho');
+    expect(datoDestinos).toBeNull();
   });
 
   it('el botón Entrar está en el talón y es type="submit" del form', () => {

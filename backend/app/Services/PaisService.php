@@ -33,7 +33,7 @@ class PaisService
      */
     public function salidas(): Collection
     {
-        return Ciudad::with('pais')->orderBy('codigo_iata')->get();
+        return Ciudad::with('pais.moneda')->orderBy('codigo_iata')->get();
     }
 
     /**
