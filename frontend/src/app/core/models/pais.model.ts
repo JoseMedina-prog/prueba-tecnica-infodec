@@ -7,6 +7,8 @@ export interface Moneda {
 export interface Ciudad {
   id: number;
   nombre: string;
+  /** Código IATA de 3 letras (LON, TYO…), guardado en la base de datos. */
+  codigo_iata: string;
 }
 
 export interface Pais {

@@ -34,6 +34,11 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(30)->by($clave);
         });
 
+        // Limitador del tablero de salidas público (sin sesión): 30 por minuto por IP
+        RateLimiter::for('salidas', function (Request $request) {
+            return Limit::perMinute(30)->by('salidas:' . $request->ip());
+        });
+
         // Limitador general de respaldo para el resto de rutas protegidas: 60 por minuto por usuario
         RateLimiter::for('api', function (Request $request) {
             $clave = $request->user()?->id ?: ($request->attributes->get('token_claims')['sub'] ?? $request->ip());

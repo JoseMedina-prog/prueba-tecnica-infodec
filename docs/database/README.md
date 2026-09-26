@@ -47,6 +47,7 @@ erDiagram
         decimal(9_6) longitud
         timestamp created_at
         timestamp updated_at
+        char(3) codigo_iata UK
     }
 
     usuarios {

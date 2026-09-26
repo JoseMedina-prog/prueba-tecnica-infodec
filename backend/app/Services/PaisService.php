@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Exceptions\ApiException;
+use App\Models\Ciudad;
 use App\Models\Pais;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -22,6 +23,17 @@ class PaisService
             $traducido = __("lugares.paises.{$pais->codigo}");
             return ($traducido !== "lugares.paises.{$pais->codigo}") ? $traducido : $pais->nombre;
         }, SORT_LOCALE_STRING)->values();
+    }
+
+    /**
+     * Retorna todas las ciudades destino para el tablero de salidas, con su país precargado.
+     * Orden estable por código IATA, que no depende de los ids de inserción.
+     *
+     * @return Collection
+     */
+    public function salidas(): Collection
+    {
+        return Ciudad::with('pais')->orderBy('codigo_iata')->get();
     }
 
     /**

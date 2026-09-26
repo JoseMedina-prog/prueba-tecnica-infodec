@@ -10,7 +10,7 @@ describe('TalonViajeComponent', () => {
     id: 7,
     fecha: '2026-09-26T01:45:00Z',
     pais: { id: 2, codigo: 'JP', nombre: 'Japón' },
-    ciudad: { id: 3, nombre: 'Tokio' },
+    ciudad: { id: 3, nombre: 'Tokio', codigo_iata: 'TYO' },
     presupuesto_cop: 1000000,
     clima: { temperatura: 19.6, descripcion: 'lluvia ligera', icono: '10n' },
     moneda: { codigo: 'JPY', nombre: 'Yen japonés', simbolo: '¥' },

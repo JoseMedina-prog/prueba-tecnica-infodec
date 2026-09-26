@@ -142,7 +142,8 @@ export class HistorialComponent {
     };
     const ciudad: Ciudad = {
       id: item.ciudad.id,
-      nombre: item.ciudad.nombre
+      nombre: item.ciudad.nombre,
+      codigo_iata: item.ciudad.codigo_iata
     };
     this.consultaState.setDestino(pais, ciudad);
     this.consultaState.setPresupuesto(String(item.presupuesto_cop));

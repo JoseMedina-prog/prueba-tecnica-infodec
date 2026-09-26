@@ -4,7 +4,6 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { AuthService } from '../../../core/services/auth.service';
 import { ConsultaStateService } from '../../../core/services/consulta-state.service';
 import { IdiomaService } from '../../../core/services/idioma.service';
-import { codigoCiudad } from '../../../core/utils/codigos';
 import {
   formatearCop,
   formatearFechaTalon,
@@ -33,7 +32,7 @@ import { CapitalizarPrimeraPipe } from '../../../shared/pipes/capitalizar-primer
 
         <!-- Nombres traducidos en el front (el resultado no se vuelve a pedir al cambiar el idioma) -->
         @let clavePais = 'LUGARES.PAISES.' + res.pais.codigo;
-        @let claveCiudad = 'LUGARES.CIUDADES.' + res.ciudad.id;
+        @let claveCiudad = 'LUGARES.CIUDADES.' + res.ciudad.codigo_iata;
         @let claveMoneda = 'LUGARES.MONEDAS.' + res.moneda.codigo;
         @let nombrePais = (clavePais | translate) === clavePais ? res.pais.nombre : (clavePais | translate);
         @let nombreCiudad = (claveCiudad | translate) === claveCiudad ? res.ciudad.nombre : (claveCiudad | translate);
@@ -337,10 +336,7 @@ export class ResultadoComponent {
 
   readonly pasajero = computed(() => this.authService.usuario()?.nombre ?? '');
 
-  readonly codigoDestino = computed(() => {
-    const res = this.resultado();
-    return res ? codigoCiudad(res.ciudad.id, res.ciudad.nombre) : '';
-  });
+  readonly codigoDestino = computed(() => this.resultado()?.ciudad.codigo_iata ?? '');
 
   readonly presupuestoCop = computed(() => {
     const res = this.resultado();

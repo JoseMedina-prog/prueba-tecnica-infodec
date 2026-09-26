@@ -27,6 +27,7 @@ Table ciudades {
   longitud decimal(9,6) [not null]
   created_at timestamp [null]
   updated_at timestamp [null]
+  codigo_iata char(3) [unique, not null, note: 'Código IATA de ciudad: LON, TYO, CPH…']
 
   indexes {
     (pais_id, nombre) [unique]

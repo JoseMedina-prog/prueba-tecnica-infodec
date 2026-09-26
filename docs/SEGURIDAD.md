@@ -43,6 +43,7 @@ Este documento detalla las medidas de seguridad defensiva implementadas en **Pas
 | **Refresh (`/auth/refresh`)** | 30 peticiones / min | `refresh:{ip}` | 429 `TOO_MANY_ATTEMPTS` + `Retry-After` | Evita ataques de denegación de servicio sobre la base de datos y la rotación criptográfica. |
 | **Consultas (`/consultas`, `/conversion`)** | 20 peticiones / min | Usuario autenticado (ID) | 429 `TOO_MANY_ATTEMPTS` + `Retry-After` | Protege la cuota de las APIs externas de clima y divisas, evitando sobrecostos y agotamiento de recursos. |
 | **Diagnóstico (`/externas/*`)** | 30 peticiones / min | Usuario autenticado (ID) | 429 `TOO_MANY_ATTEMPTS` + `Retry-After` | Previene abusos sobre los endpoints de prueba y consumo de APIs de terceros. |
+| **Tablero de salidas (`/salidas`, público)** | 30 peticiones / min | `salidas:{ip}` | 429 `TOO_MANY_ATTEMPTS` + `Retry-After` | Endpoint sin token: el límite por IP evita el scraping y el abuso anónimo, sin afectar al login, que lo pide una vez por carga o cambio de idioma. |
 | **Rutas protegidas (General)** | 60 peticiones / min | Usuario autenticado (ID) | 429 `TOO_MANY_ATTEMPTS` + `Retry-After` | Respaldo general para mitigar scraping, bucles accidentales de clientes o flooding. |
 | **Tamaño del Cuerpo HTTP** | Máximo 16 KB (16.384 bytes) | Por petición (`CONTENT_LENGTH` o `getContent()`) | 413 `PAYLOAD_TOO_LARGE` | Los payloads válidos pesan < 1 KB; previene ataques de denegación de servicio por memoria o CPU al procesar JSON gigante. |
 | **Historial de Consultas** | Máximo 5 registros | Consulta SQL (`LIMIT 5`) | 200 con array de ≤ 5 elementos | Requerimiento estricto del caso de uso; evita carga excesiva de memoria y tráfico de red innecesario. |
@@ -58,12 +59,24 @@ Este documento detalla las medidas de seguridad defensiva implementadas en **Pas
 | `/api/auth/refresh` | POST | 200 | `access_token`, `refresh_token`, `token_type`, `expires_in`, `usuario: { id, nombre, correo, idioma }` | `token_hash`, `familia_id`, hashes internos |
 | `/api/auth/me` | GET | 200 | `id`, `nombre`, `correo`, `idioma` | `password_hash`, timestamps internos |
 | `/api/auth/logout` | POST | 200 | `message` | Datos de sesión, claims de tokens |
-| `/api/paises` | GET | 200 | Array de `[{ id, nombre, codigo_iso }]` | Timestamps, llaves foráneas no requeridas |
-| `/api/paises/{id}/ciudades` | GET | 200 | Array de `[{ id, nombre, pais_id }]` | Coordenadas internas no solicitadas en combo, timestamps |
-| `/api/consultas` / `/conversion` | POST | 201 | `id`, `fecha`, `pais: { id, codigo, nombre }`, `ciudad: { id, nombre }`, `presupuesto_cop`, `clima`, `moneda`, `conversion`, `avisos` | `usuario_id`, `updated_at`, IDs de auditoría interna |
-| `/api/consultas/historial` | GET | 200 | Array de 5 items con estructura `ConsultaResource` (`id`, `fecha`, `pais: { id, codigo, nombre }`, `ciudad: { id, nombre }`, `presupuesto_cop`, `clima`, `moneda`, `conversion`) | `usuario_id` (de otros o propio), `updated_at`, timestamps internos |
+| `/api/salidas` (público) | GET | 200 | Array de 8 `[{ codigo_iata, ciudad, pais }]` (nombres traducidos) | `id`, `pais_id`, coordenadas, moneda, timestamps |
+| `/api/paises` | GET | 200 | Array de `[{ id, codigo, nombre, moneda: { codigo, nombre, simbolo } }]` | Timestamps, llaves foráneas no requeridas |
+| `/api/paises/{id}/ciudades` | GET | 200 | Array de `[{ id, nombre, codigo_iata }]` | `pais_id`, coordenadas internas no solicitadas en combo, timestamps |
+| `/api/consultas` / `/conversion` | POST | 201 | `id`, `fecha`, `pais: { id, codigo, nombre }`, `ciudad: { id, nombre, codigo_iata }`, `presupuesto_cop`, `clima`, `moneda`, `conversion`, `avisos` | `usuario_id`, `updated_at`, IDs de auditoría interna |
+| `/api/consultas/historial` | GET | 200 | Array de 5 items con estructura `ConsultaResource` (`id`, `fecha`, `pais: { id, codigo, nombre }`, `ciudad: { id, nombre, codigo_iata }`, `presupuesto_cop`, `clima`, `moneda`, `conversion`) | `usuario_id` (de otros o propio), `updated_at`, timestamps internos |
 | `/api/externas/clima/{ciudadId}` | GET | 200 | `temperatura`, `condicion`, `icono`, `fuente`, `fecha_consulta` | Coordenadas crudas, respuestas HTTP completas de proveedores |
 | `/api/externas/tasa/{codigoMoneda}` | GET | 200 | `moneda_origen`, `moneda_destino`, `tasa`, `fuente`, `fecha_actualizacion` | Respuestas completas de proveedor, códigos HTTP ajenos |
+
+### 4.1. Endpoints públicos (sin token)
+
+Todo lo demás exige `Authorization: Bearer` (middleware `auth.token`). Estos son los únicos endpoints que responden sin token; todos pasan por las cabeceras de seguridad, el límite de tamaño del cuerpo, el `trace_id` y el formato estándar de respuesta del grupo `api`.
+
+| Endpoint | Método | Por qué es público | Límite |
+| :--- | :---: | :--- | :--- |
+| `/api/auth/register` | POST | Crear la cuenta ocurre, por definición, antes de tener sesión. | Sin límite de frecuencia propio; validación estricta del cuerpo (422) y correo único |
+| `/api/auth/login` | POST | Obtener el primer par de tokens. | 5 intentos / min por `correo + IP` |
+| `/api/auth/refresh` | POST | Renovar el access token vencido; se autentica con el refresh token del cuerpo, no con la cabecera. | 30 / min por IP |
+| `/api/salidas` | GET | Alimenta el tablero de salidas del login, que se muestra antes de iniciar sesión. **Datos no sensibles:** solo el código IATA y los nombres traducidos de las 8 ciudades destino, que ya son públicos en la propia interfaz; sin ids, coordenadas ni datos de usuarios. **Solo lectura:** GET sin parámetros, sin efectos sobre la base de datos. | 30 / min por IP (limitador `salidas`) |
 
 ---
 

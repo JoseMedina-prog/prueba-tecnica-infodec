@@ -8,7 +8,6 @@ import { Ciudad, Pais } from '../../../core/models';
 import { ConsultaStateService } from '../../../core/services/consulta-state.service';
 import { IdiomaService } from '../../../core/services/idioma.service';
 import { PaisService } from '../../../core/services/pais.service';
-import { codigoCiudad } from '../../../core/utils/codigos';
 import { PasosIndicadorComponent } from '../../../shared/components/pasos-indicador/pasos-indicador.component';
 
 @Component({
@@ -95,7 +94,7 @@ import { PasosIndicadorComponent } from '../../../shared/components/pasos-indica
                     [value]="ciudad.id"
                     [attr.aria-invalid]="errorCiudad()"
                   />
-                  <span class="mono chip-codigo">{{ codigo(ciudad) }}</span>
+                  <span class="mono chip-codigo">{{ ciudad.codigo_iata }}</span>
                   <span>{{ ciudad.nombre }}</span>
                 </label>
               }
@@ -334,10 +333,6 @@ export class DestinoComponent implements OnInit {
     if (pais && ciudad && this.consultaState.ciudad()?.id === ciudad.id) {
       this.consultaState.setDestino(pais, ciudad);
     }
-  }
-
-  codigo(ciudad: Ciudad): string {
-    return codigoCiudad(ciudad.id, ciudad.nombre);
   }
 
   avanzar(): void {

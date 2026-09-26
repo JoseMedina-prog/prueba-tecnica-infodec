@@ -39,6 +39,7 @@ export interface ConsultaResultado {
   ciudad: {
     id: number;
     nombre: string;
+    codigo_iata: string;
   };
   presupuesto_cop: number;
   clima: ClimaInfo | null;

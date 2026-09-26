@@ -69,7 +69,7 @@ describe('ResultadoComponent', () => {
       id: 1,
       fecha: '2026-09-25T12:00:00Z',
       pais: { id: 2, codigo: 'JP', nombre: 'Japón' },
-      ciudad: { id: 3, nombre: 'Tokio' },
+      ciudad: { id: 3, nombre: 'Tokio', codigo_iata: 'TYO' },
       presupuesto_cop: 1000000,
       clima: null, // CLIMA NULL
       moneda: { codigo: 'JPY', nombre: 'Yen japonés', simbolo: '¥' },
@@ -93,7 +93,7 @@ describe('ResultadoComponent', () => {
       id: 2,
       fecha: '2026-09-25T12:00:00Z',
       pais: { id: 2, codigo: 'JP', nombre: 'Japón' },
-      ciudad: { id: 3, nombre: 'Tokio' },
+      ciudad: { id: 3, nombre: 'Tokio', codigo_iata: 'TYO' },
       presupuesto_cop: 1000000,
       clima: {
         temperatura: 22,
@@ -116,7 +116,7 @@ describe('ResultadoComponent', () => {
       id: 3,
       fecha: '2026-09-25T12:00:00Z',
       pais: { id: 2, codigo: 'JP', nombre: 'Japón' },
-      ciudad: { id: 3, nombre: 'Tokio' },
+      ciudad: { id: 3, nombre: 'Tokio', codigo_iata: 'TYO' },
       presupuesto_cop: 1000000,
       clima: {
         temperatura: 19.5,
@@ -148,7 +148,7 @@ describe('ResultadoComponent', () => {
       id: 4,
       fecha: '2026-09-25T12:00:00Z',
       pais: { id: 2, codigo: 'JP', nombre: 'Japón' },
-      ciudad: { id: 3, nombre: 'Tokio' },
+      ciudad: { id: 3, nombre: 'Tokio', codigo_iata: 'TYO' },
       presupuesto_cop: 1000000,
       clima: null,
       moneda: { codigo: 'JPY', nombre: 'Yen japonés', simbolo: '¥' },

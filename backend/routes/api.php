@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ConsultaController;
 use App\Http\Controllers\ExternasController;
 use App\Http\Controllers\PaisController;
+use App\Http\Controllers\SalidaController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -27,6 +28,12 @@ Route::prefix('auth')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout');
     });
 });
+
+// Tablero de salidas del login: PÚBLICO y de solo lectura (sin auth.token). Solo expone el código
+// IATA y los nombres traducidos de ciudad y país; limitado a 30 peticiones por minuto por IP.
+Route::get('/salidas', [SalidaController::class, 'index'])
+    ->middleware('throttle:salidas')
+    ->name('salidas.index');
 
 // Rutas protegidas por AuthTokenMiddleware con límite general 'api' (60/min)
 Route::middleware(['auth.token', 'throttle:api'])->group(function () {

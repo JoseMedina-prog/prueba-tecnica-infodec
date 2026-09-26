@@ -40,6 +40,7 @@ class ConsultaResource extends JsonResource
             'ciudad' => [
                 'id' => $ciudad?->id,
                 'nombre' => $nombreCiudad,
+                'codigo_iata' => $ciudad?->codigo_iata,
             ],
             'presupuesto_cop' => (float) $this->presupuesto_cop,
             'clima' => $this->clima_temperatura !== null ? [

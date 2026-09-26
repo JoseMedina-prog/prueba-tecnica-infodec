@@ -89,6 +89,7 @@ class SeguridadOwaspTest extends TestCase
 
         $ciudad = Ciudad::create([
             'nombre' => 'Madrid',
+            'codigo_iata' => 'MAD',
             'pais_id' => $pais->id,
             'latitud' => 40.4168,
             'longitud' => -3.7038,
@@ -186,6 +187,7 @@ class SeguridadOwaspTest extends TestCase
 
         $ciudad = Ciudad::create([
             'nombre' => 'Miami',
+            'codigo_iata' => 'MIA',
             'pais_id' => $pais->id,
             'latitud' => 25.7617,
             'longitud' => -80.1918,

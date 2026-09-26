@@ -2,7 +2,6 @@ import { Component, computed, inject, input, output } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ConsultaResultado } from '../../../core/models';
 import { IdiomaService } from '../../../core/services/idioma.service';
-import { codigoCiudad } from '../../../core/utils/codigos';
 import {
   formatearCop,
   formatearFechaTalon,
@@ -240,7 +239,7 @@ export class TalonViajeComponent {
 
   readonly idTitulo = computed(() => `talon-viaje-${this.consulta().id}`);
 
-  readonly codigo = computed(() => codigoCiudad(this.consulta().ciudad.id, this.consulta().ciudad.nombre));
+  readonly codigo = computed(() => this.consulta().ciudad.codigo_iata);
 
   /** Fecha y hora en una sola línea: "25 SEP 2026 · 20:45". */
   readonly fecha = computed(() => {

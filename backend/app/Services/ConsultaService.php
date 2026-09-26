@@ -112,6 +112,7 @@ class ConsultaService
             'ciudad' => [
                 'id' => $ciudad->id,
                 'nombre' => $nombreCiudad,
+                'codigo_iata' => $ciudad->codigo_iata,
             ],
             'presupuesto_cop' => (float) $consulta->presupuesto_cop,
             'clima' => $climaData ? [

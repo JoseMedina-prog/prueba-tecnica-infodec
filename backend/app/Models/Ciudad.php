@@ -19,6 +19,7 @@ class Ciudad extends Model
     protected $fillable = [
         'pais_id',
         'nombre',
+        'codigo_iata',
         'latitud',
         'longitud',
     ];

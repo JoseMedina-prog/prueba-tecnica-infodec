@@ -46,7 +46,7 @@ describe('consultaPasoGuard', () => {
     it('debe permitir el acceso si país y ciudad están seleccionados', () => {
       stateService.setDestino(
         { id: 1, codigo: 'JP', nombre: 'Japón', moneda: { codigo: 'JPY', nombre: 'Yen', simbolo: '¥' } },
-        { id: 3, nombre: 'Tokio' }
+        { id: 3, nombre: 'Tokio', codigo_iata: 'TYO' }
       );
       const result = TestBed.runInInjectionContext(() => consultaPasoGuard(routeSnapshot, {} as any));
       expect(result).toBeTrue();
@@ -66,7 +66,7 @@ describe('consultaPasoGuard', () => {
         id: 1,
         fecha: '2026-09-25T12:00:00Z',
         pais: { id: 2, codigo: 'JP', nombre: 'Japón' },
-        ciudad: { id: 3, nombre: 'Tokio' },
+        ciudad: { id: 3, nombre: 'Tokio', codigo_iata: 'TYO' },
         presupuesto_cop: 1000000,
         clima: null,
         moneda: { codigo: 'JPY', nombre: 'Yen', simbolo: '¥' },

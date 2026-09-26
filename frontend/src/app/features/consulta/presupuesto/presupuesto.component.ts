@@ -9,7 +9,6 @@ import { ApiErrorService } from '../../../core/services/api-error.service';
 import { ConsultaStateService } from '../../../core/services/consulta-state.service';
 import { ConsultaService } from '../../../core/services/consulta.service';
 import { IdiomaService } from '../../../core/services/idioma.service';
-import { codigoCiudad } from '../../../core/utils/codigos';
 import { formatearCop, localeDe, normalizarPresupuesto } from '../../../core/utils/formato';
 import { AlertaErrorComponent } from '../../../shared/components/alerta-error/alerta-error.component';
 import { PasosIndicadorComponent } from '../../../shared/components/pasos-indicador/pasos-indicador.component';
@@ -228,10 +227,7 @@ export class PresupuestoComponent {
 
   readonly valorActual = computed(() => this.valor().trim());
 
-  readonly codigoDestino = computed(() => {
-    const ciudad = this.ciudad();
-    return ciudad ? codigoCiudad(ciudad.id, ciudad.nombre) : '';
-  });
+  readonly codigoDestino = computed(() => this.ciudad()?.codigo_iata ?? '');
 
   /** Montos rápidos: llenan el campo con el número sin separadores, igual que si se escribiera. */
   readonly atajos = computed(() => {

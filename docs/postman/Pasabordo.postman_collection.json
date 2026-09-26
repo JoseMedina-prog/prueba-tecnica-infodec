@@ -321,6 +321,11 @@
                   "    const tokio = json.data.find(c => c.nombre === 'Tokio');",
                   "    pm.expect(tokio).to.not.be.undefined;",
                   "    pm.environment.set('id_tokio', tokio.id);",
+                  "});",
+                  "pm.test('Cada ciudad trae su código IATA (Tokio = TYO)', function () {",
+                  "    const json = pm.response.json();",
+                  "    json.data.forEach(c => pm.expect(c.codigo_iata).to.match(/^[A-Z]{3}$/));",
+                  "    pm.expect(json.data.find(c => c.nombre === 'Tokio').codigo_iata).to.eql('TYO');",
                   "});"
                 ]
               }
@@ -350,6 +355,62 @@
               ]
             },
             "description": "Lista las ciudades pertenecientes a Japón y guarda el ID de Tokio en el entorno."
+          }
+        },
+        {
+          "name": "03 Salidas (público)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK sin token', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Retorna las 8 salidas con solo codigo_iata, ciudad y pais', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.true;",
+                  "    pm.expect(json.data).to.be.an('array').with.lengthOf(8);",
+                  "    json.data.forEach(s => {",
+                  "        pm.expect(Object.keys(s)).to.have.members(['codigo_iata', 'ciudad', 'pais']).and.to.have.lengthOf(3);",
+                  "        pm.expect(s.codigo_iata).to.match(/^[A-Z]{3}$/);",
+                  "    });",
+                  "    pm.expect(json.data.map(s => s.codigo_iata)).to.include.members(['LON', 'TYO', 'DEL', 'CPH']);",
+                  "});",
+                  "pm.test('Incluye las cabeceras de seguridad', function () {",
+                  "    pm.response.to.have.header('X-Content-Type-Options', 'nosniff');",
+                  "    pm.response.to.have.header('X-Trace-Id');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{idioma}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/salidas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "salidas"
+              ]
+            },
+            "description": "Tablero de salidas del login. Endpoint PÚBLICO de solo lectura (sin token): devuelve el código IATA y los nombres traducidos de ciudad y país. Límite de 30 peticiones por minuto por IP."
           }
         }
       ]

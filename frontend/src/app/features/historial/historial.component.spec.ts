@@ -26,7 +26,8 @@ describe('HistorialComponent - Repetir consulta', () => {
     },
     ciudad: {
       id: 1,
-      nombre: 'Londres'
+      nombre: 'Londres',
+      codigo_iata: 'LON'
     },
     moneda: {
       codigo: 'GBP',
@@ -89,7 +90,8 @@ describe('HistorialComponent - Repetir consulta', () => {
 
     expect(consultaState.ciudad()).toEqual({
       id: 1,
-      nombre: 'Londres'
+      nombre: 'Londres',
+      codigo_iata: 'LON'
     });
 
     expect(consultaState.presupuesto()).toBe('5000000');

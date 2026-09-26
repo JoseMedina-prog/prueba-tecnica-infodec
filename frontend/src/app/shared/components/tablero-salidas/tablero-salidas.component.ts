@@ -1,13 +1,22 @@
 import { Component, DestroyRef, InjectionToken, inject, signal } from '@angular/core';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
-import { CODIGOS_CIUDAD } from '../../../core/utils/codigos';
+import { catchError, of, switchMap } from 'rxjs';
+import { DestinoSalida } from '../../../core/models';
+import { IdiomaService } from '../../../core/services/idioma.service';
+import { SalidaService } from '../../../core/services/salida.service';
 
 export const ESTADOS = ['DESPEGO', 'ABORDANDO', 'A_TIEMPO', 'PROGRAMADO'] as const;
 export type Estado = (typeof ESTADOS)[number];
 
+/** Estado de la carga de /api/salidas. */
+export type EstadoTablero = 'cargando' | 'listo' | 'no-disponible';
+
 export interface Salida {
-  id: number;
+  /** Código IATA de la ciudad: identifica la fila. */
   codigo: string;
+  /** Nombre de la ciudad, ya traducido por el backend. */
+  ciudad: string;
   hora: string;
   minutos: number;
   estado: Estado;
@@ -45,24 +54,25 @@ export function obtenerMinutosColombia(fecha: Date): number {
   return h * 60 + m;
 }
 
-/** Genera las 8 salidas a partir de la hora actual de Colombia */
-export function generarSalidas(fecha: Date, salidasAnteriores: Salida[] = []): Salida[] {
+/**
+ * Genera una salida por destino a partir de la hora actual de Colombia.
+ * Las salidas anteriores (mismo código IATA) conservan su contador de cambios para la animación.
+ */
+export function generarSalidas(destinos: DestinoSalida[], fecha: Date, salidasAnteriores: Salida[] = []): Salida[] {
   const minutosAhora = obtenerMinutosColombia(fecha);
   const redondeo5 = (min: number) => Math.round(min / 5) * 5;
 
-  // Primera hora: unos 20 minutos antes de ahora, redondeada a múltiplos de 5
+  // Primera hora: unos 20 minutos antes de ahora, redondeada a múltiplos de 5; luego un intervalo por vuelo
   let mAcumulado = redondeo5(minutosAhora - 20);
-
-  const minutosVuelos: number[] = [mAcumulado];
-  for (const intervalo of INTERVALOS_VUELOS) {
-    mAcumulado += intervalo;
-    minutosVuelos.push(mAcumulado);
-  }
+  const minutosVuelos = destinos.map((_, i) => {
+    if (i > 0) mAcumulado += INTERVALOS_VUELOS[(i - 1) % INTERVALOS_VUELOS.length];
+    return mAcumulado;
+  });
 
   let abordandoAsignado = false;
 
-  return Object.entries(CODIGOS_CIUDAD).map(([idStr, codigo], i) => {
-    const id = Number(idStr);
+  return destinos.map((destino, i) => {
+    const codigo = destino.codigo_iata;
     const m = minutosVuelos[i];
     const normalizado = ((m % 1440) + 1440) % 1440;
     const hh = String(Math.floor(normalizado / 60)).padStart(2, '0');
@@ -80,12 +90,12 @@ export function generarSalidas(fecha: Date, salidasAnteriores: Salida[] = []): S
       estado = i % 2 === 0 ? 'A_TIEMPO' : 'PROGRAMADO';
     }
 
-    const anterior = salidasAnteriores.find((s) => s.id === id);
+    const anterior = salidasAnteriores.find((s) => s.codigo === codigo);
     const cambios = anterior && anterior.estado !== estado ? anterior.cambios + 1 : (anterior?.cambios ?? 0);
 
     return {
-      id,
       codigo,
+      ciudad: destino.ciudad,
       hora,
       minutos: m,
       estado,
@@ -143,11 +153,24 @@ export function actualizarEstados(salidas: Salida[], fecha: Date): Salida[] {
         <span>{{ 'TABLERO.DESTINO' | translate }}</span>
         <span>{{ 'TABLERO.ESTADO' | translate }}</span>
       </div>
-      @for (salida of salidas(); track salida.id) {
+      @if (estado() === 'cargando') {
+        <!-- Filas en blanco que "parpadean" mientras llega /api/salidas -->
+        @for (n of filasCargando; track n) {
+          <div class="fila fila-cargando">
+            <span class="mono">--:--</span>
+            <span class="mono codigo">---</span>
+            <span class="barra barra-destino"></span>
+            <span class="barra barra-estado"></span>
+          </div>
+        }
+      } @else if (estado() === 'no-disponible') {
+        <p class="no-disponible">{{ 'TABLERO.NO_DISPONIBLE' | translate }}</p>
+      }
+      @for (salida of salidas(); track salida.codigo) {
         <div class="fila">
           <span class="mono">{{ salida.hora }}</span>
           <span class="mono codigo">{{ salida.codigo }}</span>
-          <span class="destino">{{ 'LUGARES.CIUDADES.' + salida.id | translate }}</span>
+          <span class="destino">{{ salida.ciudad }}</span>
           <!-- Alternar entre dos animaciones iguales la reinicia en cada cambio sin recrear el DOM -->
           @let texto = 'TABLERO.' + salida.estado | translate;
           <span class="estado" [attr.data-estado]="salida.estado">
@@ -326,6 +349,50 @@ export function actualizarEstados(salidas: Salida[], fecha: Date): Salida[] {
       font-size: 0.8rem;
       color: var(--muted-on-ink);
     }
+    /* Cargando: filas del tablero sin datos, con las casillas apagadas latiendo suavemente */
+    .fila-cargando {
+      color: color-mix(in srgb, var(--paper) 35%, transparent);
+    }
+    .fila-cargando .codigo {
+      color: color-mix(in srgb, var(--accent-on-ink) 40%, transparent);
+    }
+    .barra {
+      display: block;
+      height: 0.7rem;
+      border-radius: 2px;
+      background: color-mix(in srgb, var(--paper) 14%, transparent);
+      animation: latido 1.4s ease-in-out infinite;
+    }
+    .barra-destino {
+      width: 70%;
+    }
+    .barra-estado {
+      width: 60%;
+    }
+    @keyframes latido {
+      50% {
+        opacity: 0.45;
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .barra {
+        animation: none;
+      }
+    }
+    /* Sin datos: el tablero queda vacío con un aviso discreto; el login sigue funcionando */
+    .no-disponible {
+      grid-row: 2 / -1;
+      align-self: center;
+      margin: 0;
+      padding: 1.5rem 0;
+      border-top: 1px solid color-mix(in srgb, var(--paper) 10%, transparent);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      letter-spacing: 0.06em;
+      text-align: center;
+      text-transform: uppercase;
+      color: var(--muted-on-ink);
+    }
     @media (max-width: 767.98px) {
       .tablero-titulo {
         font-size: 0.85rem;
@@ -344,18 +411,39 @@ export function actualizarEstados(salidas: Salida[], fecha: Date): Salida[] {
         min-height: 2.1rem;
         font-size: 0.85rem;
       }
+      .no-disponible {
+        grid-row: auto;
+        padding: 0.9rem 0;
+      }
     }
   `
 })
 export class TableroSalidasComponent {
   private readonly relojFn = inject(RELOJ_FN);
+  private readonly salidaService = inject(SalidaService);
+  private readonly idioma = inject(IdiomaService).idiomaActual;
+
+  /** Filas en blanco que se muestran mientras carga (las mismas 8 del tablero). */
+  readonly filasCargando = [1, 2, 3, 4, 5, 6, 7, 8];
 
   readonly hora = signal(RELOJ_COLOMBIA.format(this.relojFn()));
-  readonly salidas = signal<Salida[]>(generarSalidas(this.relojFn()));
+  readonly estado = signal<EstadoTablero>('cargando');
+  readonly salidas = signal<Salida[]>([]);
 
+  /** Destinos recibidos de /api/salidas; las horas y estados se calculan en el cliente. */
+  private destinos: DestinoSalida[] = [];
   private ultimoMinuto = -1;
 
   constructor() {
+    // Pide los destinos al iniciar y en cada cambio de idioma (los nombres vienen traducidos).
+    // Si la petición falla, el tablero queda vacío con un aviso y el login sigue funcionando.
+    toObservable(this.idioma)
+      .pipe(
+        switchMap(() => this.salidaService.getSalidas().pipe(catchError(() => of<DestinoSalida[]>([])))),
+        takeUntilDestroyed()
+      )
+      .subscribe((destinos) => this.recibirDestinos(destinos));
+
     this.ultimoMinuto = obtenerMinutosColombia(this.relojFn());
     const interval = setInterval(() => {
       const ahora = this.relojFn();
@@ -364,8 +452,9 @@ export class TableroSalidasComponent {
       if (minActual !== this.ultimoMinuto) {
         this.ultimoMinuto = minActual;
         const actual = this.salidas();
+        if (actual.length === 0) return;
         if (minActual - actual[0].minutos > 45 || actual.every((s) => s.minutos < minActual)) {
-          this.salidas.set(generarSalidas(ahora, actual));
+          this.salidas.set(generarSalidas(this.destinos, ahora, actual));
         } else {
           this.salidas.set(actualizarEstados(actual, ahora));
         }
@@ -373,5 +462,17 @@ export class TableroSalidasComponent {
     }, 1000);
 
     inject(DestroyRef).onDestroy(() => clearInterval(interval));
+  }
+
+  private recibirDestinos(destinos: DestinoSalida[]): void {
+    this.destinos = destinos;
+    if (destinos.length === 0) {
+      this.salidas.set([]);
+      this.estado.set('no-disponible');
+      return;
+    }
+    // Conserva los estados y contadores de animación de las filas que ya estaban (mismo código IATA)
+    this.salidas.set(generarSalidas(destinos, this.relojFn(), this.salidas()));
+    this.estado.set('listo');
   }
 }

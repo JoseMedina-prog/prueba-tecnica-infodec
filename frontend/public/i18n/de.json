@@ -125,14 +125,14 @@
       "DK": "Dänemark"
     },
     "CIUDADES": {
-      "1": "London",
-      "2": "Manchester",
-      "3": "Tokio",
-      "4": "Osaka",
-      "5": "Neu-Delhi",
-      "6": "Mumbai",
-      "7": "Kopenhagen",
-      "8": "Aarhus"
+      "LON": "London",
+      "MAN": "Manchester",
+      "TYO": "Tokio",
+      "OSA": "Osaka",
+      "DEL": "Neu-Delhi",
+      "BOM": "Mumbai",
+      "CPH": "Kopenhagen",
+      "AAR": "Aarhus"
     },
     "MONEDAS": {
       "GBP": "Britisches Pfund",
@@ -185,7 +185,8 @@
     "PROGRAMADO": "Geplant",
     "DESPEGO": "Abgeflogen",
     "HORA_COLOMBIA": "Uhrzeit in Kolumbien",
-    "PIE": "Kurse täglich aktualisiert · Wetter in Echtzeit"
+    "PIE": "Kurse täglich aktualisiert · Wetter in Echtzeit",
+    "NO_DISPONIBLE": "Anzeigetafel nicht verfügbar"
   },
   "NO_ENCONTRADO": {
     "TITULO": "Flug nicht gefunden",

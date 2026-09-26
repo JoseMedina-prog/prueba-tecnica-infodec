@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict ZZ1U9jgaVhlZpMsmE4zXIjRNUmn2BPSn0UhdfGbnaIazRSvR0hvSCSsW9iZIJTG
+\restrict uuux8awOIu0kMmFAUn4EGalk8X2Klg6jU9i3lcAjmuFNtW9YpWbgLI4IwmGJ3sO
 
 -- Dumped from database version 16.14
 -- Dumped by pg_dump version 16.14
@@ -33,7 +33,8 @@ CREATE TABLE public.ciudades (
     latitud numeric(9,6) NOT NULL,
     longitud numeric(9,6) NOT NULL,
     created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    updated_at timestamp(0) without time zone,
+    codigo_iata character(3) NOT NULL
 );
 
 
@@ -356,15 +357,15 @@ ALTER TABLE ONLY public.usuarios ALTER COLUMN id SET DEFAULT nextval('public.usu
 -- Data for Name: ciudades; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.ciudades (id, pais_id, nombre, latitud, longitud, created_at, updated_at) FROM stdin;
-1	1	Londres	51.507400	-0.127800	2026-09-25 18:39:43	2026-09-25 18:39:43
-2	1	Mánchester	53.480800	-2.242600	2026-09-25 18:39:43	2026-09-25 18:39:43
-3	2	Tokio	35.676200	139.650300	2026-09-25 18:39:43	2026-09-25 18:39:43
-4	2	Osaka	34.693700	135.502300	2026-09-25 18:39:43	2026-09-25 18:39:43
-5	3	Nueva Delhi	28.613900	77.209000	2026-09-25 18:39:43	2026-09-25 18:39:43
-6	3	Bombay	19.076000	72.877700	2026-09-25 18:39:43	2026-09-25 18:39:43
-7	4	Copenhague	55.676100	12.568300	2026-09-25 18:39:43	2026-09-25 18:39:43
-8	4	Aarhus	56.162900	10.203900	2026-09-25 18:39:43	2026-09-25 18:39:43
+COPY public.ciudades (id, pais_id, nombre, latitud, longitud, created_at, updated_at, codigo_iata) FROM stdin;
+1	1	Londres	51.507400	-0.127800	2026-09-26 02:12:26	2026-09-26 02:12:26	LON
+2	1	Mánchester	53.480800	-2.242600	2026-09-26 02:12:26	2026-09-26 02:12:26	MAN
+3	2	Tokio	35.676200	139.650300	2026-09-26 02:12:26	2026-09-26 02:12:26	TYO
+4	2	Osaka	34.693700	135.502300	2026-09-26 02:12:26	2026-09-26 02:12:26	OSA
+5	3	Nueva Delhi	28.613900	77.209000	2026-09-26 02:12:26	2026-09-26 02:12:26	DEL
+6	3	Bombay	19.076000	72.877700	2026-09-26 02:12:26	2026-09-26 02:12:26	BOM
+7	4	Copenhague	55.676100	12.568300	2026-09-26 02:12:26	2026-09-26 02:12:26	CPH
+8	4	Aarhus	56.162900	10.203900	2026-09-26 02:12:26	2026-09-26 02:12:26	AAR
 \.
 
 
@@ -381,10 +382,10 @@ COPY public.consultas (id, usuario_id, ciudad_id, presupuesto_cop, clima_tempera
 --
 
 COPY public.monedas (id, codigo, nombre, simbolo, created_at, updated_at) FROM stdin;
-1	GBP	Libra esterlina	£	2026-09-25 18:39:43	2026-09-25 18:39:43
-2	JPY	Yen	¥	2026-09-25 18:39:43	2026-09-25 18:39:43
-3	INR	Rupia india	₹	2026-09-25 18:39:43	2026-09-25 18:39:43
-4	DKK	Corona danesa	kr	2026-09-25 18:39:43	2026-09-25 18:39:43
+1	GBP	Libra esterlina	£	2026-09-26 02:12:26	2026-09-26 02:12:26
+2	JPY	Yen	¥	2026-09-26 02:12:26	2026-09-26 02:12:26
+3	INR	Rupia india	₹	2026-09-26 02:12:26	2026-09-26 02:12:26
+4	DKK	Corona danesa	kr	2026-09-26 02:12:26	2026-09-26 02:12:26
 \.
 
 
@@ -393,10 +394,10 @@ COPY public.monedas (id, codigo, nombre, simbolo, created_at, updated_at) FROM s
 --
 
 COPY public.paises (id, nombre, codigo, moneda_id, created_at, updated_at) FROM stdin;
-1	Inglaterra	GB	1	2026-09-25 18:39:43	2026-09-25 18:39:43
-2	Japón	JP	2	2026-09-25 18:39:43	2026-09-25 18:39:43
-3	India	IN	3	2026-09-25 18:39:43	2026-09-25 18:39:43
-4	Dinamarca	DK	4	2026-09-25 18:39:43	2026-09-25 18:39:43
+1	Inglaterra	GB	1	2026-09-26 02:12:26	2026-09-26 02:12:26
+2	Japón	JP	2	2026-09-26 02:12:26	2026-09-26 02:12:26
+3	India	IN	3	2026-09-26 02:12:26	2026-09-26 02:12:26
+4	Dinamarca	DK	4	2026-09-26 02:12:26	2026-09-26 02:12:26
 \.
 
 
@@ -429,7 +430,7 @@ COPY public.tokens_revocados (id, jti, usuario_id, expira_en, created_at) FROM s
 --
 
 COPY public.usuarios (id, nombre, correo, password_hash, idioma, created_at, updated_at) FROM stdin;
-1	Usuario Prueba	prueba@travelapp.test	$2y$12$loAZYfBwLn85sOE9NxdJBuaMXKEZDQzA8F7mCmjn.KLvQd79x.mcq	es	2026-09-25 18:39:43	2026-09-25 18:39:43
+1	Usuario Prueba	prueba@travelapp.test	$2y$12$Eof68yAf/vzjf5kGlQWFP.QsYUPXtIvYze21eJC32Jy37gz.uDLEC	es	2026-09-26 02:12:26	2026-09-26 02:12:26
 \.
 
 
@@ -487,6 +488,14 @@ SELECT pg_catalog.setval('public.tokens_revocados_id_seq', 1, false);
 --
 
 SELECT pg_catalog.setval('public.usuarios_id_seq', 1, true);
+
+
+--
+-- Name: ciudades ciudades_codigo_iata_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ciudades
+    ADD CONSTRAINT ciudades_codigo_iata_unique UNIQUE (codigo_iata);
 
 
 --
@@ -674,5 +683,5 @@ ALTER TABLE ONLY public.tokens_revocados
 -- PostgreSQL database dump complete
 --
 
-\unrestrict ZZ1U9jgaVhlZpMsmE4zXIjRNUmn2BPSn0UhdfGbnaIazRSvR0hvSCSsW9iZIJTG
+\unrestrict uuux8awOIu0kMmFAUn4EGalk8X2Klg6jU9i3lcAjmuFNtW9YpWbgLI4IwmGJ3sO
 
