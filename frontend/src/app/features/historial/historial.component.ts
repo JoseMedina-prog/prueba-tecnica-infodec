@@ -11,6 +11,7 @@ import {
   formatearCop,
   formatearFechaTalon,
   formatearMonto,
+  formatearTasaDirecta,
   formatearTasaInversa,
   localeDe
 } from '../../core/utils/formato';
@@ -92,6 +93,7 @@ import { CapitalizarPrimeraPipe } from '../../shared/pipes/capitalizar-primera.p
                     @if (item.conversion; as conversion) {
                       <span class="mono valor">{{ item.moneda.simbolo }} {{ monto(conversion.valor, item.moneda.codigo) }}</span>
                       <span class="mono secundario">{{ tasaInversa(conversion.tasa, item.moneda.simbolo) }}</span>
+                      <span class="mono secundario">{{ tasaDirecta(conversion.tasa, item.moneda.codigo) }}</span>
                     } @else {
                       <span aria-hidden="true">—</span>
                       <span class="secundario">{{ 'RESULTADO.CONVERSION_NO_DISPONIBLE' | translate }}</span>
@@ -128,6 +130,7 @@ import { CapitalizarPrimeraPipe } from '../../shared/pipes/capitalizar-primera.p
                   @if (item.conversion; as conversion) {
                     <span class="mono valor">{{ item.moneda.simbolo }} {{ monto(conversion.valor, item.moneda.codigo) }}</span>
                     <span class="mono secundario d-block">{{ tasaInversa(conversion.tasa, item.moneda.simbolo) }}</span>
+                    <span class="mono secundario d-block">{{ tasaDirecta(conversion.tasa, item.moneda.codigo) }}</span>
                   } @else {
                     <span class="secundario">— {{ 'RESULTADO.CONVERSION_NO_DISPONIBLE' | translate }}</span>
                   }
@@ -337,8 +340,8 @@ export class HistorialComponent {
     return formatearTasaInversa(valor, simbolo, this.idioma());
   }
 
-  tasa(valor: number, codigo: string): string {
-    return formatearTasa(valor, codigo, this.idioma());
+  tasaDirecta(valor: number, codigo: string): string {
+    return formatearTasaDirecta(valor, codigo, this.idioma());
   }
 
   temperatura(valor: number): string {
