@@ -14,6 +14,7 @@ import { TranslatePipe } from '@ngx-translate/core';
       type="button"
       class="boton-ojo"
       [class.activo]="visible()"
+      [disabled]="deshabilitado()"
       [attr.aria-pressed]="visible()"
       [attr.aria-controls]="campoId()"
       [attr.aria-label]="(visible() ? 'AUTH.OCULTAR_PASSWORD' : 'AUTH.MOSTRAR_PASSWORD') | translate"
@@ -96,6 +97,8 @@ export class BotonVerPasswordComponent {
   readonly visible = model(false);
   /** Id del campo que controla este botón (para aria-controls). */
   readonly campoId = input<string>();
+  /** Si el botón debe estar deshabilitado. */
+  readonly deshabilitado = input(false);
 
   alternar(): void {
     this.visible.set(!this.visible());

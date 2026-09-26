@@ -4,6 +4,7 @@ import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
+import { finalize } from 'rxjs';
 import { ApiHttpError } from '../../../core/models';
 import { ApiErrorService } from '../../../core/services/api-error.service';
 import { ConsultaStateService } from '../../../core/services/consulta-state.service';
@@ -87,6 +88,7 @@ const ATAJOS = [500000, 1000000, 3000000];
               class="btn btn-sm btn-outline-secondary mono"
               [attr.aria-pressed]="valorActual() === atajo.valor"
               (click)="usarAtajo(atajo.valor)"
+              [disabled]="enviando()"
             >
               {{ atajo.texto }}
             </button>
@@ -101,16 +103,18 @@ const ATAJOS = [500000, 1000000, 3000000];
         }
 
         <div class="acciones-flujo">
-          <button type="button" class="btn btn-outline-secondary" (click)="volverAtras()" [disabled]="cargando()">
+          <button type="button" class="btn btn-outline-secondary" (click)="volverAtras()" [disabled]="enviando()">
             {{ 'DESTINO.ATRAS' | translate }}
           </button>
-          <button type="submit" class="btn btn-primary d-inline-flex align-items-center gap-2" [disabled]="cargando()">
-            @if (cargando()) {
+          <button
+            type="submit"
+            class="btn btn-primary d-inline-flex align-items-center justify-content-center gap-2 btn-consultar"
+            [disabled]="enviando()"
+          >
+            @if (enviando()) {
               <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
-              <span role="status">{{ 'PRESUPUESTO.CONSULTANDO' | translate }}</span>
-            } @else {
-              {{ 'DESTINO.SIGUIENTE' | translate }}
             }
+            <span>{{ (enviando() ? 'PRESUPUESTO.CONSULTANDO' : 'DESTINO.SIGUIENTE') | translate }}</span>
           </button>
         </div>
       </form>
@@ -187,6 +191,10 @@ const ATAJOS = [500000, 1000000, 3000000];
       background: var(--ink);
       color: var(--paper);
     }
+    .btn-consultar {
+      min-width: 170px;
+      min-height: 42px;
+    }
   `
 })
 export class PresupuestoComponent {
@@ -207,7 +215,8 @@ export class PresupuestoComponent {
   readonly form = new FormGroup({ presupuesto: this.presupuesto });
   private readonly valor = toSignal(this.presupuesto.valueChanges, { initialValue: this.presupuesto.value });
 
-  readonly cargando = signal(false);
+  readonly enviando = signal(false);
+  readonly cargando = this.enviando;
   readonly intentoEnviar = signal(false);
   readonly errorHttp = signal<ApiHttpError | null>(null);
   readonly errorServidor = signal<string | null>(null);
@@ -251,31 +260,40 @@ export class PresupuestoComponent {
   }
 
   consultar(): void {
+    if (this.enviando()) {
+      return;
+    }
+
     this.intentoEnviar.set(true);
     this.limpiarErroresServidor();
 
     const ciudad = this.ciudad();
-    if (this.presupuesto.invalid || this.cargando() || !ciudad) {
+    if (this.presupuesto.invalid || !ciudad) {
       return;
     }
 
     const texto = this.presupuesto.value.trim();
     this.consultaState.setPresupuesto(texto);
-    this.cargando.set(true);
+    this.enviando.set(true);
+    this.form.disable();
 
     this.consultaService
       .crearConsulta({ ciudad_id: ciudad.id, presupuesto: normalizarPresupuesto(texto) })
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => {
+          this.enviando.set(false);
+          this.form.enable();
+        })
+      )
       .subscribe({
         next: (res) => {
-          this.cargando.set(false);
           if (res.data) {
             this.consultaState.setResultado(res.data);
             this.router.navigate(['/consulta/resultado']);
           }
         },
         error: (err: HttpErrorResponse) => {
-          this.cargando.set(false);
           const error = this.apiErrorService.procesarError(err);
           const porCampo = this.apiErrorService.mapearDetallesPorCampo(error.details);
 

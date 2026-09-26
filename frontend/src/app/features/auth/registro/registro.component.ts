@@ -10,7 +10,7 @@ import {
 } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { Observable } from 'rxjs';
+import { Observable, finalize } from 'rxjs';
 import { ApiHttpError } from '../../../core/models';
 import { ApiErrorService } from '../../../core/services/api-error.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -123,7 +123,7 @@ export function passwordMatchValidator(group: AbstractControl): ValidationErrors
                 aria-describedby="passwordReglas"
                 autocomplete="new-password"
               />
-              <app-boton-ver-password [(visible)]="mostrarPassword" campoId="password" />
+              <app-boton-ver-password [(visible)]="mostrarPassword" campoId="password" [deshabilitado]="enviando()" />
             </div>
 
             <!-- Checklist de contraseña -->
@@ -160,7 +160,7 @@ export function passwordMatchValidator(group: AbstractControl): ValidationErrors
                 formControlName="password_confirmation"
                 autocomplete="new-password"
               />
-              <app-boton-ver-password [(visible)]="mostrarConfirmacion" campoId="password_confirmation" />
+              <app-boton-ver-password [(visible)]="mostrarConfirmacion" campoId="password_confirmation" [deshabilitado]="enviando()" />
             </div>
             <app-campo-error
               [control]="form.get('password_confirmation')"
@@ -243,16 +243,18 @@ export function passwordMatchValidator(group: AbstractControl): ValidationErrors
           <!-- Botón de envío en el talón -->
           <button
             type="submit"
-            class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2"
-            [disabled]="cargando()"
+            class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2 btn-auth-submit"
+            [disabled]="enviando()"
           >
-            @if (cargando()) {
+            @if (enviando()) {
               <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
             }
             <span>{{ 'AUTH.REGISTRARME' | translate }}</span>
-            <svg class="flecha" viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M3 8h10M9 4l4 4-4 4" />
-            </svg>
+            @if (!enviando()) {
+              <svg class="flecha" viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M3 8h10M9 4l4 4-4 4" />
+              </svg>
+            }
           </button>
         </aside>
       </form>
@@ -267,6 +269,9 @@ export function passwordMatchValidator(group: AbstractControl): ValidationErrors
       padding: 0;
       list-style: none;
       font-size: 0.8125rem;
+    }
+    .btn-auth-submit {
+      min-height: 42px;
     }
     .checklist-password li {
       display: flex;
@@ -326,7 +331,8 @@ export class RegistroComponent {
   private readonly translate = inject(TranslateService);
   private readonly relojFn = inject(RELOJ_FN);
 
-  readonly cargando = signal<boolean>(false);
+  readonly enviando = signal<boolean>(false);
+  readonly cargando = this.enviando;
   readonly errorGeneral = signal<ApiHttpError | null>(null);
   readonly erroresCampos = signal<Record<string, string>>({});
 
@@ -359,37 +365,49 @@ export class RegistroComponent {
   ]);
 
   onSubmit(): void {
+    if (this.enviando()) {
+      return;
+    }
+
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
 
-    this.cargando.set(true);
+    const payload = this.form.getRawValue();
+    this.enviando.set(true);
+    this.form.disable();
     this.errorGeneral.set(null);
     this.erroresCampos.set({});
 
-    this.authService.registro(this.form.value).subscribe({
-      next: (res) => {
-        this.cargando.set(false);
-        if (res.success) {
-          const correo = this.form.get('correo')?.value;
-          this.router.navigate(['/login'], {
-            state: {
-              correo,
-              mensajeExito: this.translate.instant('AUTH.REGISTRO_EXITOSO')
-            }
-          });
-        }
-      },
-      error: (err) => {
-        this.cargando.set(false);
-        const apiError = this.apiErrorService.procesarError(err);
-        this.errorGeneral.set(apiError);
+    this.authService
+      .registro(payload)
+      .pipe(
+        finalize(() => {
+          this.enviando.set(false);
+          this.form.enable();
+        })
+      )
+      .subscribe({
+        next: (res) => {
+          if (res.success) {
+            const correo = payload.correo;
+            this.router.navigate(['/login'], {
+              state: {
+                correo,
+                mensajeExito: this.translate.instant('AUTH.REGISTRO_EXITOSO')
+              }
+            });
+          }
+        },
+        error: (err) => {
+          const apiError = this.apiErrorService.procesarError(err);
+          this.errorGeneral.set(apiError);
 
-        if (apiError.details) {
-          this.erroresCampos.set(this.apiErrorService.mapearDetallesPorCampo(apiError.details));
+          if (apiError.details) {
+            this.erroresCampos.set(this.apiErrorService.mapearDetallesPorCampo(apiError.details));
+          }
         }
-      }
-    });
+      });
   }
 }

@@ -3,7 +3,7 @@ import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { catchError, of, switchMap } from 'rxjs';
+import { catchError, finalize, of, switchMap } from 'rxjs';
 import { ApiHttpError, DestinoSalida } from '../../../core/models';
 import { ApiErrorService } from '../../../core/services/api-error.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -104,7 +104,7 @@ import { LogoComponent } from '../../../shared/components/logo/logo.component';
                 formControlName="password"
                 autocomplete="current-password"
               />
-              <app-boton-ver-password [(visible)]="mostrarPassword" campoId="password" />
+              <app-boton-ver-password [(visible)]="mostrarPassword" campoId="password" [deshabilitado]="enviando()" />
             </div>
             <app-campo-error [control]="form.get('password')" [mensajeServidor]="erroresCampos()['password']" />
           </div>
@@ -189,16 +189,18 @@ import { LogoComponent } from '../../../shared/components/logo/logo.component';
           <!-- Botón de envío en el talón -->
           <button
             type="submit"
-            class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2"
-            [disabled]="cargando()"
+            class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2 btn-auth-submit"
+            [disabled]="enviando()"
           >
-            @if (cargando()) {
+            @if (enviando()) {
               <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
             }
             <span>{{ 'AUTH.ENTRAR' | translate }}</span>
-            <svg class="flecha" viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M3 8h10M9 4l4 4-4 4" />
-            </svg>
+            @if (!enviando()) {
+              <svg class="flecha" viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M3 8h10M9 4l4 4-4 4" />
+              </svg>
+            }
           </button>
         </aside>
       </form>
@@ -218,6 +220,9 @@ import { LogoComponent } from '../../../shared/components/logo/logo.component';
       flex: none;
       margin-top: 0.15rem;
     }
+    .btn-auth-submit {
+      min-height: 42px;
+    }
   `
 })
 export class LoginComponent implements OnInit {
@@ -231,7 +236,8 @@ export class LoginComponent implements OnInit {
   private readonly idioma = inject(IdiomaService).idiomaActual;
 
   readonly avisoSesionExpirada = signal(false);
-  readonly cargando = signal<boolean>(false);
+  readonly enviando = signal<boolean>(false);
+  readonly cargando = this.enviando;
   readonly errorGeneral = signal<ApiHttpError | null>(null);
   readonly erroresCampos = signal<Record<string, string>>({});
   readonly mensajeExito = signal<string | null>(null);
@@ -282,33 +288,45 @@ export class LoginComponent implements OnInit {
   }
 
   onSubmit(): void {
+    if (this.enviando()) {
+      return;
+    }
+
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
 
     this.cerrarAviso();
-    this.cargando.set(true);
+    const credenciales = this.form.getRawValue();
+    this.enviando.set(true);
+    this.form.disable();
     this.errorGeneral.set(null);
     this.erroresCampos.set({});
     this.mensajeExito.set(null);
 
-    this.authService.login(this.form.value).subscribe({
-      next: (res) => {
-        this.cargando.set(false);
-        if (res.success) {
-          this.router.navigate(['/consulta']);
-        }
-      },
-      error: (err) => {
-        this.cargando.set(false);
-        const apiError = this.apiErrorService.procesarError(err);
-        this.errorGeneral.set(apiError);
+    this.authService
+      .login(credenciales)
+      .pipe(
+        finalize(() => {
+          this.enviando.set(false);
+          this.form.enable();
+        })
+      )
+      .subscribe({
+        next: (res) => {
+          if (res.success) {
+            this.router.navigate(['/consulta']);
+          }
+        },
+        error: (err) => {
+          const apiError = this.apiErrorService.procesarError(err);
+          this.errorGeneral.set(apiError);
 
-        if (apiError.details) {
-          this.erroresCampos.set(this.apiErrorService.mapearDetallesPorCampo(apiError.details));
+          if (apiError.details) {
+            this.erroresCampos.set(this.apiErrorService.mapearDetallesPorCampo(apiError.details));
+          }
         }
-      }
-    });
+      });
   }
 }

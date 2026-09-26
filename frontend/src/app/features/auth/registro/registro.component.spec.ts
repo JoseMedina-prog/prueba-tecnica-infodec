@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { provideTranslateService } from '@ngx-translate/core';
 import { RegistroComponent } from './registro.component';
@@ -95,5 +95,59 @@ describe('RegistroComponent - Checklist de contraseña', () => {
   it('el registro no muestra la tira de salidas', () => {
     const tiraSalidas = fixture.nativeElement.querySelector('app-carrusel-salidas');
     expect(tiraSalidas).toBeNull();
+  });
+
+  it('evita envíos repetidos por doble submit: solo emite una petición y el botón se deshabilita y rehabilita tras error', () => {
+    const httpMock = TestBed.inject(HttpTestingController);
+
+    component.form.setValue({
+      nombre: 'Marlon',
+      correo: 'marlon@travelapp.test',
+      password: 'Password123',
+      password_confirmation: 'Password123'
+    });
+    fixture.detectChanges();
+
+    const boton: HTMLButtonElement = fixture.nativeElement.querySelector('.ticket-talon button[type="submit"]');
+    const inputNombre: HTMLInputElement = fixture.nativeElement.querySelector('#nombre');
+    const inputCorreo: HTMLInputElement = fixture.nativeElement.querySelector('#correo');
+    const inputPass: HTMLInputElement = fixture.nativeElement.querySelector('#password');
+    const inputConfirm: HTMLInputElement = fixture.nativeElement.querySelector('#password_confirmation');
+    expect(boton.disabled).toBeFalse();
+    expect(inputNombre.disabled).toBeFalse();
+    expect(inputCorreo.disabled).toBeFalse();
+    expect(inputPass.disabled).toBeFalse();
+    expect(inputConfirm.disabled).toBeFalse();
+
+    // Disparar dos submits seguidos
+    component.onSubmit();
+    component.onSubmit();
+    fixture.detectChanges();
+
+    // Solo debe haber 1 petición HTTP a /auth/register
+    const reqs = httpMock.match((r) => r.url.endsWith('/auth/register'));
+    expect(reqs.length).toBe(1);
+    expect(component.enviando()).toBeTrue();
+    expect(boton.disabled).toBeTrue();
+    expect(inputNombre.disabled).toBeTrue();
+    expect(inputCorreo.disabled).toBeTrue();
+    expect(inputPass.disabled).toBeTrue();
+    expect(inputConfirm.disabled).toBeTrue();
+
+    // Responder con error 409
+    reqs[0].flush(
+      { success: false, error: { code: 'USER_ALREADY_EXISTS', message: 'El usuario ya existe' } },
+      { status: 409, statusText: 'Conflict' }
+    );
+    fixture.detectChanges();
+
+    // El estado enviando vuelve a false y los campos y botón se rehabilitan
+    expect(component.enviando()).toBeFalse();
+    expect(boton.disabled).toBeFalse();
+    expect(inputNombre.disabled).toBeFalse();
+    expect(inputCorreo.disabled).toBeFalse();
+    expect(inputPass.disabled).toBeFalse();
+    expect(inputConfirm.disabled).toBeFalse();
+    httpMock.verify();
   });
 });
