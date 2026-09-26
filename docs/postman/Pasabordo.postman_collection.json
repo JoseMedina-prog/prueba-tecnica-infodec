@@ -1,0 +1,1706 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "name": "Pasabordo API",
+    "description": "# Pasabordo API — Colección Oficial Postman\n\nColección completa de pruebas para la API REST de **Pasabordo** (Laravel 11 + PostgreSQL).\n\n---\n\n## 🚀 Guía de inicio rápido\n\n### 1. Importación\n1. En Postman, haz clic en **Import**.\n2. Selecciona los dos archivos de la carpeta `docs/postman/`:\n   - `Pasabordo.postman_collection.json`\n   - `Pasabordo.local.postman_environment.json`\n\n### 2. Selección del entorno\n- En la esquina superior derecha de Postman, selecciona el entorno **Pasabordo Local**.\n- Variables incluidas en el entorno:\n  - `base_url`: `http://localhost:8000/api`\n  - `idioma`: `es` (cambiar a `de` para respuestas en alemán)\n  - `correo_prueba`: `prueba@travelapp.test`\n  - `password_prueba`: `Prueba123`\n  - `access_token`, `refresh_token`, `token_vencido`: administrados automáticamente por los scripts de prueba.\n  - `weather_api_key`, `exchange_api_key`: vacías por seguridad. Ingresa tus propias claves si deseas probar las peticiones directas a OpenWeatherMap y ExchangeRate-API.\n\n### 3. Ejecución automática (Collection Runner / Newman)\nLas carpetas están ordenadas secuencialmente (`01` a `06`) para que el flujo sea 100% autónomo:\n```bash\nnpx newman run docs/postman/Pasabordo.postman_collection.json -e docs/postman/Pasabordo.local.postman_environment.json\n```\n\n### 4. Soporte multilingüe (Español / Alemán)\n- Por defecto, la variable `idioma` está configurada en `es`.\n- Para recibir mensajes de validación y error en alemán, cambia el valor de la variable `idioma` a `de` en el entorno.\n",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "01 Autenticación",
+      "description": "Flujos de registro, login, perfil y renovación de sesión.",
+      "item": [
+        {
+          "name": "01 Registro de usuario nuevo",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const ts = Date.now();",
+                  "pm.environment.set('correo_registro', `usuario_${ts}@travelapp.test`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 201 Created', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('Respuesta exitosa con datos de usuario', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.true;",
+                  "    pm.expect(json.data).to.have.property('id');",
+                  "    pm.expect(json.data).to.have.property('correo');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{idioma}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Usuario Registro Temporal\",\n  \"correo\": \"{{correo_registro}}\",\n  \"password\": \"Password123\",\n  \"password_confirmation\": \"Password123\",\n  \"idioma\": \"es\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "description": "Crea un usuario nuevo con correo aleatorio generado en pre-request script para garantizar idempotencia en cada ejecución."
+          }
+        },
+        {
+          "name": "02 Login de usuario de prueba",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Guarda access_token y refresh_token en el entorno', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.true;",
+                  "    pm.expect(json.data.access_token).to.be.a('string');",
+                  "    pm.expect(json.data.refresh_token).to.be.a('string');",
+                  "    pm.environment.set('access_token', json.data.access_token);",
+                  "    pm.environment.set('refresh_token', json.data.refresh_token);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{idioma}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{correo_prueba}}\",\n  \"password\": \"{{password_prueba}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Autentica al usuario de prueba y persiste sus tokens de acceso y refresco en el entorno."
+          }
+        },
+        {
+          "name": "03 Mi perfil (GET /auth/me)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Retorna los datos del usuario autenticado', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.true;",
+                  "    pm.expect(json.data.correo).to.eql(pm.environment.get('correo_prueba'));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{idioma}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Obtiene los datos del perfil del usuario autenticado usando el Bearer token de la colección."
+          }
+        },
+        {
+          "name": "04 Renovar sesión (POST /auth/refresh)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Actualiza tokens tras rotación', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.true;",
+                  "    pm.expect(json.data.access_token).to.be.a('string');",
+                  "    pm.expect(json.data.refresh_token).to.be.a('string');",
+                  "    pm.environment.set('access_token', json.data.access_token);",
+                  "    pm.environment.set('refresh_token', json.data.refresh_token);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{idioma}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/refresh",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
+            },
+            "description": "Renueva el par de tokens aplicando rotación criptográfica estricta."
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 Países y ciudades",
+      "description": "Catálogo geográfico de destinos turísticos y monedas asociadas.",
+      "item": [
+        {
+          "name": "01 Listar países",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Retorna exactamente 4 países configurados', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.true;",
+                  "    pm.expect(json.data).to.be.an('array').with.lengthOf(4);",
+                  "    const japon = json.data.find(p => p.codigo === 'JP');",
+                  "    pm.expect(japon).to.not.be.undefined;",
+                  "    pm.environment.set('id_japon', japon.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{idioma}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/paises",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "paises"
+              ]
+            },
+            "description": "Obtiene los países disponibles y almacena el ID de Japón en el entorno."
+          }
+        },
+        {
+          "name": "02 Ciudades de Japón",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Retorna 2 ciudades de Japón y guarda Tokio', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.true;",
+                  "    pm.expect(json.data).to.be.an('array').with.lengthOf(2);",
+                  "    const tokio = json.data.find(c => c.nombre === 'Tokio');",
+                  "    pm.expect(tokio).to.not.be.undefined;",
+                  "    pm.environment.set('id_tokio', tokio.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{idioma}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/paises/{{id_japon}}/ciudades",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "paises",
+                "{{id_japon}}",
+                "ciudades"
+              ]
+            },
+            "description": "Lista las ciudades pertenecientes a Japón y guarda el ID de Tokio en el entorno."
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 Consultas",
+      "description": "Generación de pasabordos, conversión de presupuesto e historial del viajero.",
+      "item": [
+        {
+          "name": "01 Crear consulta (POST /consultas)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 201 Created', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('Retorna consulta con clima y conversión completa', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.true;",
+                  "    pm.expect(json.data.ciudad.id).to.eql(Number(pm.environment.get('id_tokio')));",
+                  "    pm.expect(json.data.presupuesto_cop).to.eql(1000000);",
+                  "    pm.expect(json.data).to.have.property('clima');",
+                  "    pm.expect(json.data).to.have.property('conversion');",
+                  "    if (json.data.conversion) {",
+                  "        pm.expect(json.data.conversion.valor).to.be.a('number');",
+                  "        pm.expect(json.data.conversion.tasa).to.be.a('number');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{idioma}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ciudad_id\": \"{{id_tokio}}\",\n  \"presupuesto\": 1000000\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/consultas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "consultas"
+              ]
+            },
+            "description": "Crea una consulta para Tokio con 1.000.000 COP calculando clima y conversión a JPY."
+          }
+        },
+        {
+          "name": "02 Crear consulta por alias (POST /conversion)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 201 Created', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('El endpoint alterno responde exitosamente', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{idioma}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ciudad_id\": \"{{id_tokio}}\",\n  \"presupuesto\": 1000000\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/conversion",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "conversion"
+              ]
+            },
+            "description": "Verifica compatibilidad con el alias POST /api/conversion documentado en el Anexo A."
+          }
+        },
+        {
+          "name": "03 Historial de consultas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Retorna lista con máximo 5 consultas ordenadas', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.true;",
+                  "    pm.expect(json.data).to.be.an('array');",
+                  "    pm.expect(json.data.length).to.be.at.most(5);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{idioma}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/consultas/historial",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "consultas",
+                "historial"
+              ]
+            },
+            "description": "Obtiene las últimas consultas realizadas por el usuario (máximo 5)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 APIs externas",
+      "description": "Diagnóstico de integraciones externas (a través del backend y directas).",
+      "item": [
+        {
+          "name": "01 Clima de Tokio (interno)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Retorna estructura de clima válida', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.true;",
+                  "    pm.expect(json.data).to.have.property('temperatura');",
+                  "    pm.expect(json.data).to.have.property('descripcion');",
+                  "    pm.expect(json.data).to.have.property('icono');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{idioma}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/externas/clima/{{id_tokio}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "externas",
+                "clima",
+                "{{id_tokio}}"
+              ]
+            },
+            "description": "Diagnóstico del servicio de clima para Tokio a través del backend."
+          }
+        },
+        {
+          "name": "02 Tasa COP a JPY (interno)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Retorna tasa con fuente y fecha', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.true;",
+                  "    pm.expect(json.data.tasa).to.be.a('number');",
+                  "    pm.expect(json.data.fecha_tasa).to.be.a('string');",
+                  "    pm.expect(['api', 'respaldo']).to.include(json.data.fuente);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{idioma}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/externas/tasa/JPY",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "externas",
+                "tasa",
+                "JPY"
+              ]
+            },
+            "description": "Diagnóstico de la tasa de cambio COP -> JPY a través del backend."
+          }
+        },
+        {
+          "name": "03 Directa a OpenWeatherMap",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const key = pm.environment.get('weather_api_key');",
+                  "if (!key || key.trim() === '') {",
+                  "    pm.test.skip('Se omite porque weather_api_key está vacía en el entorno (configura tu API key personal para probarla).');",
+                  "} else {",
+                  "    pm.test('Respuesta exitosa de OpenWeatherMap (200 OK)', function () {",
+                  "        pm.response.to.have.status(200);",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "https://api.openweathermap.org/data/2.5/weather?lat=35.6762&lon=139.6503&appid={{weather_api_key}}&units=metric&lang=es",
+              "protocol": "https",
+              "host": [
+                "api",
+                "openweathermap",
+                "org"
+              ],
+              "path": [
+                "data",
+                "2.5",
+                "weather"
+              ],
+              "query": [
+                {
+                  "key": "lat",
+                  "value": "35.6762"
+                },
+                {
+                  "key": "lon",
+                  "value": "139.6503"
+                },
+                {
+                  "key": "appid",
+                  "value": "{{weather_api_key}}"
+                },
+                {
+                  "key": "units",
+                  "value": "metric"
+                },
+                {
+                  "key": "lang",
+                  "value": "es"
+                }
+              ]
+            },
+            "description": "Llamada directa al endpoint de OpenWeatherMap. Requiere ingresar una clave personal en la variable 'weather_api_key' del entorno. Si está vacía, la prueba se omite de forma segura sin fallar."
+          }
+        },
+        {
+          "name": "04 Directa a ExchangeRate-API",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const key = pm.environment.get('exchange_api_key');",
+                  "if (!key || key.trim() === '') {",
+                  "    pm.test.skip('Se omite porque exchange_api_key está vacía en el entorno (configura tu API key personal para probarla).');",
+                  "} else {",
+                  "    pm.test('Respuesta exitosa de ExchangeRate-API (200 OK)', function () {",
+                  "        pm.response.to.have.status(200);",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "https://v6.exchangerate-api.com/v6/{{exchange_api_key}}/pair/COP/JPY",
+              "protocol": "https",
+              "host": [
+                "v6",
+                "exchangerate-api",
+                "com"
+              ],
+              "path": [
+                "v6",
+                "{{exchange_api_key}}",
+                "pair",
+                "COP",
+                "JPY"
+              ]
+            },
+            "description": "Llamada directa al endpoint de ExchangeRate-API. Requiere ingresar una clave personal en la variable 'exchange_api_key' del entorno. Si está vacía, la prueba se omite de forma segura sin fallar."
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 Casos de error",
+      "description": "Validación de códigos de estado HTTP y códigos de error estándar de la API.",
+      "item": [
+        {
+          "name": "01 Sin token (401 AUTH_TOKEN_MISSING)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 401 Unauthorized', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "pm.test('Error code es AUTH_TOKEN_MISSING', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.false;",
+                  "    pm.expect(json.error.code).to.eql('AUTH_TOKEN_MISSING');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{idioma}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Verifica que acceder a una ruta protegida sin encabezado Authorization retorne 401 con código AUTH_TOKEN_MISSING."
+          }
+        },
+        {
+          "name": "02 Token alterado (401 AUTH_TOKEN_INVALID)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const token = pm.environment.get('access_token') || 'token_dummy_para_alterar';",
+                  "const mid = Math.floor(token.length / 2);",
+                  "const charOriginal = token.charAt(mid);",
+                  "const charNuevo = charOriginal === 'A' ? 'B' : 'A';",
+                  "const tokenAlterado = token.substring(0, mid) + charNuevo + token.substring(mid + 1);",
+                  "pm.variables.set('token_alterado', tokenAlterado);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 401 Unauthorized', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "pm.test('Error code es AUTH_TOKEN_INVALID', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.false;",
+                  "    pm.expect(json.error.code).to.eql('AUTH_TOKEN_INVALID');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{idioma}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_alterado}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Altera un carácter en la mitad del token de acceso para comprobar la detección criptográfica de manipulación."
+          }
+        },
+        {
+          "name": "03 Guardar token actual como vencido (auxiliar)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Token actual respaldado en token_vencido', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.environment.set('token_vencido', pm.environment.get('access_token'));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{idioma}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Copia el token de acceso actual a la variable 'token_vencido'. Para comprobar expiración real, esperar 15 minutos o configurar TOKEN_ACCESS_TTL=1 en el .env del backend."
+          }
+        },
+        {
+          "name": "04 Token vencido (401 AUTH_TOKEN_EXPIRED)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const tv = pm.environment.get('token_vencido');",
+                  "if (!tv || pm.response.code !== 401) {",
+                  "    pm.test.skip('Se omite porque el token aún no ha alcanzado su TTL de 15 minutos. Para probarlo inmediatamente, configura TOKEN_ACCESS_TTL=1 en el backend.');",
+                  "} else {",
+                  "    pm.test('Status code es 401 Unauthorized', function () {",
+                  "        pm.response.to.have.status(401);",
+                  "    });",
+                  "    pm.test('Error code es AUTH_TOKEN_EXPIRED', function () {",
+                  "        const json = pm.response.json();",
+                  "        pm.expect(json.error.code).to.eql('AUTH_TOKEN_EXPIRED');",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{idioma}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_vencido}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Verifica que un token expirado retorne 401 AUTH_TOKEN_EXPIRED. Si la variable está vacía o el token no ha expirado aún, la prueba se salta con pm.test.skip."
+          }
+        },
+        {
+          "name": "05 Campos vacíos en registro (422 VALIDATION_ERROR)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 422 Unprocessable Content', function () {",
+                  "    pm.response.to.have.status(422);",
+                  "});",
+                  "pm.test('Error code es VALIDATION_ERROR con details', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.false;",
+                  "    pm.expect(json.error.code).to.eql('VALIDATION_ERROR');",
+                  "    pm.expect(json.error.details).to.be.an('array').with.length.above(0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{idioma}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "description": "Envía un objeto vacío al registro esperando 422 con arreglo de detalles por campo."
+          }
+        },
+        {
+          "name": "06 Campos vacíos en consulta (422 VALIDATION_ERROR)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 422 Unprocessable Content', function () {",
+                  "    pm.response.to.have.status(422);",
+                  "});",
+                  "pm.test('Error code es VALIDATION_ERROR con details', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.false;",
+                  "    pm.expect(json.error.code).to.eql('VALIDATION_ERROR');",
+                  "    pm.expect(json.error.details).to.be.an('array').with.length.above(0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{idioma}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{base_url}}/consultas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "consultas"
+              ]
+            },
+            "description": "Envía un objeto vacío al crear consulta esperando 422 con lista de campos requeridos."
+          }
+        },
+        {
+          "name": "07 Tipo de dato inválido (422 VALIDATION_ERROR)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 422 Unprocessable Content', function () {",
+                  "    pm.response.to.have.status(422);",
+                  "});",
+                  "pm.test('Error code es VALIDATION_ERROR', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.false;",
+                  "    pm.expect(json.error.code).to.eql('VALIDATION_ERROR');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{idioma}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ciudad_id\": \"x\",\n  \"presupuesto\": \"abc\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/consultas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "consultas"
+              ]
+            },
+            "description": "Envía cadenas de texto no numéricas en campos enteros/numéricos esperando 422."
+          }
+        },
+        {
+          "name": "08 JSON mal formado (400 BAD_REQUEST)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 400 Bad Request', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Error code es BAD_REQUEST', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.false;",
+                  "    pm.expect(json.error.code).to.eql('BAD_REQUEST');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{idioma}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"correo\": \"invalido\", \"password\": "
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Envía un cuerpo JSON truncado / con sintaxis inválida esperando 400 BAD_REQUEST."
+          }
+        },
+        {
+          "name": "09 País inexistente (404 NOT_FOUND)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 404 Not Found', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('Error code es NOT_FOUND', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.false;",
+                  "    pm.expect(json.error.code).to.eql('NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{idioma}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/paises/999/ciudades",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "paises",
+                "999",
+                "ciudades"
+              ]
+            },
+            "description": "Solicita ciudades de un ID de país inexistente (999) esperando 404 NOT_FOUND."
+          }
+        },
+        {
+          "name": "10 Correo duplicado (409 USER_ALREADY_EXISTS)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 409 Conflict', function () {",
+                  "    pm.response.to.have.status(409);",
+                  "});",
+                  "pm.test('Error code es USER_ALREADY_EXISTS', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.false;",
+                  "    pm.expect(json.error.code).to.eql('USER_ALREADY_EXISTS');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{idioma}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Usuario Duplicado\",\n  \"correo\": \"{{correo_prueba}}\",\n  \"password\": \"Password123\",\n  \"password_confirmation\": \"Password123\",\n  \"idioma\": \"es\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "description": "Intenta registrar un correo que ya existe en el sistema esperando 409 USER_ALREADY_EXISTS."
+          }
+        },
+        {
+          "name": "11 Credenciales incorrectas (401 AUTH_INVALID_CREDENTIALS)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 401 Unauthorized', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "pm.test('Error code es AUTH_INVALID_CREDENTIALS', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.false;",
+                  "    pm.expect(json.error.code).to.eql('AUTH_INVALID_CREDENTIALS');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{idioma}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"bloqueo@travelapp.test\",\n  \"password\": \"ClaveIncorrecta123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Usa un correo inventado (bloqueo@travelapp.test) con contraseña errónea para no afectar los intentos fallidos del usuario de prueba."
+          }
+        },
+        {
+          "name": "12 Mensaje en alemán (Accept-Language: de)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 401 Unauthorized', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "pm.test('El mensaje de error se retorna traducido al alemán', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.error.code).to.eql('AUTH_TOKEN_MISSING');",
+                  "    pm.expect(json.error.message).to.contain('Kein Authentifizierungstoken');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "de"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Envía la cabecera 'Accept-Language: de' sin token para confirmar la localización de los mensajes de error en alemán."
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 Cierre de sesión",
+      "description": "Revocación de tokens, detección de reuso de refresh token y re-login seguro.",
+      "item": [
+        {
+          "name": "01 Cerrar sesión (POST /auth/logout)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Sesión cerrada exitosamente', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{idioma}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Cierra la sesión actual e invalida el token de acceso en la lista de revocaciones."
+          }
+        },
+        {
+          "name": "02 Usar el token después del logout (401 AUTH_TOKEN_REVOKED)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 401 Unauthorized', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "pm.test('Error code es AUTH_TOKEN_REVOKED', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.false;",
+                  "    pm.expect(json.error.code).to.eql('AUTH_TOKEN_REVOKED');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{idioma}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Verifica que intentar usar el token de acceso recién revocado resulte en 401 AUTH_TOKEN_REVOKED."
+          }
+        },
+        {
+          "name": "03 Nuevo login tras logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Tokens renovados y guardados', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.true;",
+                  "    pm.environment.set('access_token', json.data.access_token);",
+                  "    pm.environment.set('refresh_token', json.data.refresh_token);",
+                  "    pm.environment.set('refresh_token_reuso', json.data.refresh_token);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{idioma}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{correo_prueba}}\",\n  \"password\": \"{{password_prueba}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Inicia sesión nuevamente para habilitar las pruebas de reuso de refresh token."
+          }
+        },
+        {
+          "name": "04 Consumir refresh token (primera rotación)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Sesión renovada y token anterior consumido', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.true;",
+                  "    pm.environment.set('access_token', json.data.access_token);",
+                  "    pm.environment.set('refresh_token', json.data.refresh_token);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{idioma}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"{{refresh_token_reuso}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/refresh",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
+            },
+            "description": "Consume el refresh token por primera vez, generando un nuevo par y dejando 'refresh_token_reuso' invalidado en base de datos."
+          }
+        },
+        {
+          "name": "05 Reuso de refresh token (401 AUTH_TOKEN_REVOKED)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 401 Unauthorized', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "pm.test('Detección de reuso: AUTH_TOKEN_REVOKED y revocación total', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.false;",
+                  "    pm.expect(json.error.code).to.eql('AUTH_TOKEN_REVOKED');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{idioma}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"{{refresh_token_reuso}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/refresh",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
+            },
+            "description": "Intenta volver a utilizar el refresh token anterior que ya fue consumido. El backend detecta el reuso e invalida inmediatamente todas las sesiones del usuario por seguridad (cierre preventivo)."
+          }
+        },
+        {
+          "name": "06 Login final de restauración",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Tokens válidos restaurados en el entorno', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.true;",
+                  "    pm.environment.set('access_token', json.data.access_token);",
+                  "    pm.environment.set('refresh_token', json.data.refresh_token);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{idioma}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{correo_prueba}}\",\n  \"password\": \"{{password_prueba}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Inicia sesión al final de la corrida para dejar el entorno con tokens válidos listos para cualquier uso manual posterior."
+          }
+        }
+      ]
+    }
+  ]
+}
