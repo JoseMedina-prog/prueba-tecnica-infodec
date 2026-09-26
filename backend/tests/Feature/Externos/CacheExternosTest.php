@@ -15,6 +15,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Testing\TestResponse;
 use Tests\Support\CreaTokens;
 use Tests\TestCase;
 
@@ -71,7 +72,7 @@ class CacheExternosTest extends TestCase
         return ['result' => 'success', 'conversion_rate' => $tasa, 'time_last_update_unix' => $this->ahora->copy()->startOfDay()->timestamp];
     }
 
-    private function consultar(): \Illuminate\Testing\TestResponse
+    private function consultar(): TestResponse
     {
         return $this->withHeader('Authorization', "Bearer {$this->token}")
             ->postJson('/api/consultas', ['ciudad_id' => $this->tokio->id, 'presupuesto' => 1000000]);

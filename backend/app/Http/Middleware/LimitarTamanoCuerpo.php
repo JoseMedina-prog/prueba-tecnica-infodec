@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -28,9 +29,9 @@ class LimitarTamanoCuerpo
             // Sincronizar idioma con Accept-Language
             $acceptLanguage = $request->header('Accept-Language', '');
             if (str_starts_with(strtolower(trim($acceptLanguage)), 'de')) {
-                \Illuminate\Support\Facades\App::setLocale('de');
+                App::setLocale('de');
             } else {
-                \Illuminate\Support\Facades\App::setLocale('es');
+                App::setLocale('es');
             }
 
             return response()->json([

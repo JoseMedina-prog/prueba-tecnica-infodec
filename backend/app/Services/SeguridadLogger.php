@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Throwable;
 
 class SeguridadLogger
 {
@@ -60,7 +61,7 @@ class SeguridadLogger
 
         try {
             $logger = Log::channel('seguridad');
-        } catch (\Throwable) {
+        } catch (Throwable) {
             $logger = null;
         }
 

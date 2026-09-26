@@ -79,7 +79,7 @@ class AuthService
         // 1. Límite de intentos: 5 fallos por minuto antes de verificar contraseña
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             $segundos = RateLimiter::availableIn($throttleKey);
-            \App\Services\SeguridadLogger::registrar('bloqueo_intentos', ip: $ip, correo: $correoNormalizado);
+            SeguridadLogger::registrar('bloqueo_intentos', ip: $ip, correo: $correoNormalizado);
 
             throw new ApiException(
                 429,
@@ -97,14 +97,14 @@ class AuthService
         if (!$usuario) {
             Hash::check($password, self::DUMMY_HASH);
             RateLimiter::hit($throttleKey, 60);
-            \App\Services\SeguridadLogger::registrar('login_fallido', ip: $ip, correo: $correoNormalizado);
+            SeguridadLogger::registrar('login_fallido', ip: $ip, correo: $correoNormalizado);
 
             throw new ApiException(401, 'AUTH_INVALID_CREDENTIALS');
         }
 
         if (!Hash::check($password, $usuario->password_hash)) {
             RateLimiter::hit($throttleKey, 60);
-            \App\Services\SeguridadLogger::registrar('login_fallido', ip: $ip, usuarioId: $usuario->id, correo: $correoNormalizado);
+            SeguridadLogger::registrar('login_fallido', ip: $ip, usuarioId: $usuario->id, correo: $correoNormalizado);
 
             throw new ApiException(401, 'AUTH_INVALID_CREDENTIALS');
         }
@@ -147,7 +147,7 @@ class AuthService
         $throttleKey = "refresh:{$ip}";
         if (RateLimiter::tooManyAttempts($throttleKey, 30)) {
             $segundos = RateLimiter::availableIn($throttleKey);
-            \App\Services\SeguridadLogger::registrar('limite_consumo', ip: $ip);
+            SeguridadLogger::registrar('limite_consumo', ip: $ip);
 
             throw new ApiException(
                 429,
@@ -190,7 +190,7 @@ class AuthService
                     ->update(['revocado_en' => Carbon::now()]);
 
                 // Registro seguro en auditoría y canal de seguridad: nunca se loguea el token plano
-                \App\Services\SeguridadLogger::registrar(
+                SeguridadLogger::registrar(
                     'reuso_refresh',
                     ip: $ip,
                     usuarioId: $rt->usuario_id,

@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Throwable;
 
 class SeguridadResumenCommand extends Command
 {
@@ -100,7 +101,7 @@ class SeguridadResumenCommand extends Command
             }
             try {
                 return Carbon::parse($e['fecha'])->greaterThanOrEqualTo($limite);
-            } catch (\Throwable) {
+            } catch (Throwable) {
                 return true;
             }
         });

@@ -1,12 +1,21 @@
 <?php
 
 use App\Exceptions\ApiException;
+use App\Http\Middleware\AsignarTraceId;
+use App\Http\Middleware\AuthTokenMiddleware;
+use App\Http\Middleware\CabecerasSeguridad;
+use App\Http\Middleware\EstablecerIdioma;
+use App\Http\Middleware\LimitarTamanoCuerpo;
+use App\Services\SeguridadLogger;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -23,14 +32,14 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->prependToGroup('api', [
-            \App\Http\Middleware\CabecerasSeguridad::class,
-            \App\Http\Middleware\LimitarTamanoCuerpo::class,
-            \App\Http\Middleware\AsignarTraceId::class,
-            \App\Http\Middleware\EstablecerIdioma::class,
+            CabecerasSeguridad::class,
+            LimitarTamanoCuerpo::class,
+            AsignarTraceId::class,
+            EstablecerIdioma::class,
         ]);
 
         $middleware->alias([
-            'auth.token' => \App\Http\Middleware\AuthTokenMiddleware::class,
+            'auth.token' => AuthTokenMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
@@ -48,9 +57,9 @@ return Application::configure(basePath: dirname(__DIR__))
                 // ocurrió antes de que EstablecerIdioma se ejecutara
                 $acceptLanguage = $request->header('Accept-Language', '');
                 if (str_starts_with(strtolower(trim($acceptLanguage)), 'de')) {
-                    \Illuminate\Support\Facades\App::setLocale('de');
+                    App::setLocale('de');
                 } else {
-                    \Illuminate\Support\Facades\App::setLocale('es');
+                    App::setLocale('es');
                 }
 
                 $headers = ['X-Trace-Id' => $traceId];
@@ -129,7 +138,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 if ($e instanceof ThrottleRequestsException) {
                     Log::info("Error 4xx [429 TOO_MANY_ATTEMPTS] en ruta: {$request->path()}");
 
-                    \App\Services\SeguridadLogger::registrar(
+                    SeguridadLogger::registrar(
                         'limite_consumo',
                         traceId: $traceId,
                         ip: $request->ip(),
@@ -167,8 +176,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
                 // Fallback 500: registrar excepción real en el log con clase, archivo y línea
                 // Si llega una excepción del cliente HTTP sin atrapar, omitir su mensaje para proteger claves de API
-                $isHttpClientException = ($e instanceof \Illuminate\Http\Client\RequestException ||
-                                          $e instanceof \Illuminate\Http\Client\ConnectionException ||
+                $isHttpClientException = ($e instanceof RequestException ||
+                                          $e instanceof ConnectionException ||
                                           str_contains(get_class($e), 'HttpClient') ||
                                           str_contains(get_class($e), 'Guzzle'));
 

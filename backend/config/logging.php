@@ -1,5 +1,6 @@
 <?php
 
+use Monolog\Formatter\JsonFormatter;
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;
@@ -69,7 +70,7 @@ return [
             'driver' => 'single',
             'path' => env('LOG_SEGURIDAD_PATH', storage_path('logs/seguridad.log')),
             'level' => 'debug',
-            'formatter' => Monolog\Formatter\JsonFormatter::class,
+            'formatter' => JsonFormatter::class,
             'replace_placeholders' => true,
         ],
 

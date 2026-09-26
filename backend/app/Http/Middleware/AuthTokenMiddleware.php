@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Exceptions\ApiException;
 use App\Models\TokenRevocado;
 use App\Models\Usuario;
+use App\Services\SeguridadLogger;
 use App\Services\TokenService;
 use Closure;
 use Illuminate\Http\Request;
@@ -54,9 +55,9 @@ class AuthTokenMiddleware
             $claims = $this->tokenService->validarAccessToken($token);
         } catch (ApiException $e) {
             if ($e->getErrorCode() === 'AUTH_TOKEN_EXPIRED') {
-                \App\Services\SeguridadLogger::registrar('token_vencido', ip: $request->ip());
+                SeguridadLogger::registrar('token_vencido', ip: $request->ip());
             } elseif ($e->getErrorCode() === 'AUTH_TOKEN_INVALID') {
-                \App\Services\SeguridadLogger::registrar('token_invalido', ip: $request->ip());
+                SeguridadLogger::registrar('token_invalido', ip: $request->ip());
             }
 
             throw new ApiException(
@@ -70,7 +71,7 @@ class AuthTokenMiddleware
 
         // 4. Verificación de revocación previa (blacklist por JTI)
         if (TokenRevocado::where('jti', $claims['jti'])->exists()) {
-            \App\Services\SeguridadLogger::registrar(
+            SeguridadLogger::registrar(
                 'token_revocado_usado',
                 ip: $request->ip(),
                 usuarioId: isset($claims['sub']) ? (int) $claims['sub'] : null
@@ -89,7 +90,7 @@ class AuthTokenMiddleware
         $usuario = Usuario::find($claims['sub']);
 
         if (!$usuario) {
-            \App\Services\SeguridadLogger::registrar(
+            SeguridadLogger::registrar(
                 'token_invalido',
                 ip: $request->ip(),
                 usuarioId: isset($claims['sub']) ? (int) $claims['sub'] : null

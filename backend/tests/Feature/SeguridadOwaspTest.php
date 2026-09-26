@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
+use Mockery;
+use Psr\Log\LoggerInterface;
 use Tests\TestCase;
 
 class SeguridadOwaspTest extends TestCase
@@ -36,7 +39,7 @@ class SeguridadOwaspTest extends TestCase
         ]);
 
         $tokenService = app(TokenService::class);
-        $this->accessToken = $tokenService->emitirAccessToken($this->usuario, (string) \Illuminate\Support\Str::uuid());
+        $this->accessToken = $tokenService->emitirAccessToken($this->usuario, (string) Str::uuid());
     }
 
     /**
@@ -224,7 +227,7 @@ class SeguridadOwaspTest extends TestCase
     public function test_login_fallido_escribe_en_canal_seguridad_con_correo_enmascarado(): void
     {
         Log::spy();
-        $canalSpy = \Mockery::spy(\Psr\Log\LoggerInterface::class);
+        $canalSpy = Mockery::spy(LoggerInterface::class);
         Log::shouldReceive('channel')->with('seguridad')->andReturn($canalSpy);
 
         $response = $this->postJson('/api/auth/login', [

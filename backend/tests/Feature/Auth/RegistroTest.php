@@ -6,6 +6,8 @@ use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Mockery;
+use Psr\Log\LoggerInterface;
 use Tests\TestCase;
 
 class RegistroTest extends TestCase
@@ -109,7 +111,7 @@ class RegistroTest extends TestCase
     public function test_el_undecimo_registro_en_un_minuto_devuelve_429(): void
     {
         Log::spy();
-        $canalSpy = \Mockery::spy(\Psr\Log\LoggerInterface::class);
+        $canalSpy = Mockery::spy(LoggerInterface::class);
         Log::shouldReceive('channel')->with('seguridad')->andReturn($canalSpy);
 
         $registrar = fn (int $n) => $this->postJson('/api/auth/register', [
