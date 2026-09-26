@@ -68,7 +68,7 @@ describe('ResultadoComponent', () => {
     const mockResultado: ConsultaResultado = {
       id: 1,
       fecha: '2026-09-25T12:00:00Z',
-      pais: { codigo: 'JP', nombre: 'Japón' },
+      pais: { id: 2, codigo: 'JP', nombre: 'Japón' },
       ciudad: { id: 3, nombre: 'Tokio' },
       presupuesto_cop: 1000000,
       clima: null, // CLIMA NULL
@@ -92,7 +92,7 @@ describe('ResultadoComponent', () => {
     const mockResultado: ConsultaResultado = {
       id: 2,
       fecha: '2026-09-25T12:00:00Z',
-      pais: { codigo: 'JP', nombre: 'Japón' },
+      pais: { id: 2, codigo: 'JP', nombre: 'Japón' },
       ciudad: { id: 3, nombre: 'Tokio' },
       presupuesto_cop: 1000000,
       clima: {
@@ -115,7 +115,7 @@ describe('ResultadoComponent', () => {
     const mockResultado: ConsultaResultado = {
       id: 3,
       fecha: '2026-09-25T12:00:00Z',
-      pais: { codigo: 'JP', nombre: 'Japón' },
+      pais: { id: 2, codigo: 'JP', nombre: 'Japón' },
       ciudad: { id: 3, nombre: 'Tokio' },
       presupuesto_cop: 1000000,
       clima: {
@@ -147,7 +147,7 @@ describe('ResultadoComponent', () => {
     stateService.setResultado({
       id: 4,
       fecha: '2026-09-25T12:00:00Z',
-      pais: { codigo: 'JP', nombre: 'Japón' },
+      pais: { id: 2, codigo: 'JP', nombre: 'Japón' },
       ciudad: { id: 3, nombre: 'Tokio' },
       presupuesto_cop: 1000000,
       clima: null,

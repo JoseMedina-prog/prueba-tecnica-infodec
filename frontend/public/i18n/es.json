@@ -32,7 +32,14 @@
     "SESION_EXPIRADA": "Tu sesión ha expirado o no es válida. Por favor, ingresa de nuevo.",
     "CORREO_PLACEHOLDER": "tu@correo.com",
     "NOMBRE_PLACEHOLDER": "Como aparece en tu pasaporte",
-    "PASSWORD_AYUDA": "Mínimo 8 caracteres, con una mayúscula, una minúscula y un número."
+    "MOSTRAR_PASSWORD": "Mostrar contraseña",
+    "OCULTAR_PASSWORD": "Ocultar contraseña",
+    "REGLA_MIN_8": "Mínimo 8 caracteres",
+    "REGLA_MAYUSCULA": "Una mayúscula",
+    "REGLA_MINUSCULA": "Una minúscula",
+    "REGLA_NUMERO": "Un número",
+    "REGLA_CUMPLIDA": "cumplido",
+    "REGLA_PENDIENTE": "pendiente"
   },
   "PASOS": {
     "DESTINO": "Destino",
@@ -104,7 +111,9 @@
     "CARGANDO": "Cargando tus viajes…",
     "ERROR_CARGA": "No pudimos cargar tu historial.",
     "VACIO_DETALLE": "Cuando hagas tu primera consulta, aparecerá aquí como en un tablero de salidas.",
-    "PRIMERA_CONSULTA": "Planear mi primer viaje"
+    "PRIMERA_CONSULTA": "Planear mi primer viaje",
+    "REPETIR_CONSULTA": "Repetir consulta",
+    "TABLA_ACCIONES": "Acción"
   },
   "LUGARES": {
     "PAISES": {
@@ -175,5 +184,13 @@
     "DESPEGO": "Despegó",
     "HORA_COLOMBIA": "Hora en Colombia",
     "PIE": "Tasas actualizadas a diario · Clima en tiempo real"
+  },
+  "NO_ENCONTRADO": {
+    "TITULO": "Vuelo no encontrado",
+    "SUBTITULO": "La página que buscas no existe o cambió de destino.",
+    "PUERTA": "Puerta 404",
+    "ESTADO": "Cancelado",
+    "VOLVER_HISTORIAL": "Volver a mis viajes",
+    "IR_INICIO": "Ir al inicio"
   }
 }

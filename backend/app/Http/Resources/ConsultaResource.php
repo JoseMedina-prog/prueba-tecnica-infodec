@@ -33,6 +33,7 @@ class ConsultaResource extends JsonResource
             'id' => $this->id,
             'fecha' => $this->created_at?->toIso8601String(),
             'pais' => [
+                'id' => $pais?->id,
                 'codigo' => $pais?->codigo,
                 'nombre' => $nombrePais,
             ],

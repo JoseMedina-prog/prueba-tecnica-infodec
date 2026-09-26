@@ -32,7 +32,14 @@
     "SESION_EXPIRADA": "Deine Sitzung ist abgelaufen oder ungültig. Bitte melde dich erneut an.",
     "CORREO_PLACEHOLDER": "du@beispiel.de",
     "NOMBRE_PLACEHOLDER": "Wie in deinem Reisepass",
-    "PASSWORD_AYUDA": "Mindestens 8 Zeichen, mit Groß- und Kleinbuchstaben und einer Zahl."
+    "MOSTRAR_PASSWORD": "Passwort anzeigen",
+    "OCULTAR_PASSWORD": "Passwort ausblenden",
+    "REGLA_MIN_8": "Mindestens 8 Zeichen",
+    "REGLA_MAYUSCULA": "Ein Großbuchstabe",
+    "REGLA_MINUSCULA": "Ein Kleinbuchstabe",
+    "REGLA_NUMERO": "Eine Zahl",
+    "REGLA_CUMPLIDA": "erfüllt",
+    "REGLA_PENDIENTE": "offen"
   },
   "PASOS": {
     "DESTINO": "Reiseziel",
@@ -104,7 +111,9 @@
     "CARGANDO": "Deine Reisen werden geladen …",
     "ERROR_CARGA": "Dein Verlauf konnte nicht geladen werden.",
     "VACIO_DETALLE": "Sobald du deine erste Abfrage machst, erscheint sie hier wie auf einer Abflugtafel.",
-    "PRIMERA_CONSULTA": "Meine erste Reise planen"
+    "PRIMERA_CONSULTA": "Meine erste Reise planen",
+    "REPETIR_CONSULTA": "Erneut abfragen",
+    "TABLA_ACCIONES": "Aktion"
   },
   "LUGARES": {
     "PAISES": {
@@ -175,5 +184,13 @@
     "DESPEGO": "Abgeflogen",
     "HORA_COLOMBIA": "Uhrzeit in Kolumbien",
     "PIE": "Kurse täglich aktualisiert · Wetter in Echtzeit"
+  },
+  "NO_ENCONTRADO": {
+    "TITULO": "Flug nicht gefunden",
+    "SUBTITULO": "Die gesuchte Seite existiert nicht oder hat das Ziel geändert.",
+    "PUERTA": "Gate 404",
+    "ESTADO": "Gestrichen",
+    "VOLVER_HISTORIAL": "Zurück zu Meinen Reisen",
+    "IR_INICIO": "Zur Startseite"
   }
 }

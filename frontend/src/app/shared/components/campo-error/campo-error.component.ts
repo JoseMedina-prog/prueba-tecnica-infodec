@@ -13,7 +13,7 @@ import { TranslatePipe } from '@ngx-translate/core';
       <div class="invalid-feedback d-block">
         {{ mensajeServidor() }}
       </div>
-    } @else if (control() && control()!.invalid && (control()!.dirty || control()!.touched)) {
+    } @else if (control() && control()!.invalid && ((control()!.dirty && !soloAlSalir()) || control()!.touched)) {
       <div class="invalid-feedback d-block">
         @if (control()!.hasError('required')) {
           {{ 'VALIDACION.REQUERIDO' | translate }}
@@ -37,4 +37,6 @@ export class CampoErrorComponent {
   readonly control = input<AbstractControl | null>(null);
   readonly mensajeServidor = input<string | null | undefined>(null);
   readonly mensajePersonalizado = input<string | null>(null);
+  /** Muestra el error solo al salir del campo o al enviar (p. ej. cuando una checklist ya guía mientras se escribe). */
+  readonly soloAlSalir = input(false);
 }

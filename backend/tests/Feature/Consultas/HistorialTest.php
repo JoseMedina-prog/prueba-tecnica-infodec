@@ -100,6 +100,10 @@ class HistorialTest extends TestCase
         $presupuestosA = array_column($itemsA, 'presupuesto_cop');
         $this->assertEquals([700000, 600000, 500000, 400000, 300000], $presupuestosA);
 
+        // Ids de país y ciudad: el frontend los usa para "Repetir consulta"
+        $this->assertSame($this->ciudad->pais_id, $itemsA[0]['pais']['id']);
+        $this->assertSame($this->ciudad->id, $itemsA[0]['ciudad']['id']);
+
         // 2. Consulta del historial de Usuario B
         $resB = $this->withHeader('Authorization', "Bearer {$this->tokenB}")
             ->getJson('/api/consultas/historial');

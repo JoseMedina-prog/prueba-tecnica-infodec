@@ -60,8 +60,8 @@ Este documento detalla las medidas de seguridad defensiva implementadas en **Pas
 | `/api/auth/logout` | POST | 200 | `message` | Datos de sesión, claims de tokens |
 | `/api/paises` | GET | 200 | Array de `[{ id, nombre, codigo_iso }]` | Timestamps, llaves foráneas no requeridas |
 | `/api/paises/{id}/ciudades` | GET | 200 | Array de `[{ id, nombre, pais_id }]` | Coordenadas internas no solicitadas en combo, timestamps |
-| `/api/consultas` / `/conversion` | POST | 201 | `id`, `fecha`, `pais`, `ciudad`, `presupuesto_cop`, `clima`, `moneda`, `conversion`, `avisos` | `usuario_id`, `updated_at`, IDs de auditoría interna |
-| `/api/consultas/historial` | GET | 200 | Array de 5 items con estructura `ConsultaResource` (`id`, `fecha`, `pais`, `ciudad`, `presupuesto_cop`, `clima`, `moneda`, `conversion`) | `usuario_id` (de otros o propio), `updated_at`, timestamps internos |
+| `/api/consultas` / `/conversion` | POST | 201 | `id`, `fecha`, `pais: { id, codigo, nombre }`, `ciudad: { id, nombre }`, `presupuesto_cop`, `clima`, `moneda`, `conversion`, `avisos` | `usuario_id`, `updated_at`, IDs de auditoría interna |
+| `/api/consultas/historial` | GET | 200 | Array de 5 items con estructura `ConsultaResource` (`id`, `fecha`, `pais: { id, codigo, nombre }`, `ciudad: { id, nombre }`, `presupuesto_cop`, `clima`, `moneda`, `conversion`) | `usuario_id` (de otros o propio), `updated_at`, timestamps internos |
 | `/api/externas/clima/{ciudadId}` | GET | 200 | `temperatura`, `condicion`, `icono`, `fuente`, `fecha_consulta` | Coordenadas crudas, respuestas HTTP completas de proveedores |
 | `/api/externas/tasa/{codigoMoneda}` | GET | 200 | `moneda_origen`, `moneda_destino`, `tasa`, `fuente`, `fecha_actualizacion` | Respuestas completas de proveedor, códigos HTTP ajenos |
 

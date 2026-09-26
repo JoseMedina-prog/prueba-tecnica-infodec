@@ -65,7 +65,7 @@ describe('consultaPasoGuard', () => {
       stateService.setResultado({
         id: 1,
         fecha: '2026-09-25T12:00:00Z',
-        pais: { codigo: 'JP', nombre: 'Japón' },
+        pais: { id: 2, codigo: 'JP', nombre: 'Japón' },
         ciudad: { id: 3, nombre: 'Tokio' },
         presupuesto_cop: 1000000,
         clima: null,

@@ -32,6 +32,7 @@ export interface ConsultaResultado {
   id: number;
   fecha: string;
   pais: {
+    id: number;
     codigo: string;
     nombre: string;
   };

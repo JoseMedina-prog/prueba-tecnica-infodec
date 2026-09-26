@@ -1,37 +1,25 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import {
   AbstractControl,
   FormBuilder,
   FormGroup,
   ReactiveFormsModule,
   ValidationErrors,
-  ValidatorFn,
   Validators
 } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { Observable } from 'rxjs';
 import { ApiHttpError } from '../../../core/models';
 import { ApiErrorService } from '../../../core/services/api-error.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { IdiomaService } from '../../../core/services/idioma.service';
+import { evaluatePasswordRules, passwordReglasValidator } from '../../../core/utils/password-rules';
 import { AlertaErrorComponent } from '../../../shared/components/alerta-error/alerta-error.component';
 import { CampoErrorComponent } from '../../../shared/components/campo-error/campo-error.component';
 import { AuthShellComponent } from '../../../shared/components/auth-shell/auth-shell.component';
-
-/**
- * Validador para complejidad de contraseña: al menos una mayúscula, una minúscula y un número
- */
-export function passwordComplexityValidator(): ValidatorFn {
-  return (control: AbstractControl): ValidationErrors | null => {
-    if (!control.value) return null;
-    const hasUpper = /[A-Z]/.test(control.value);
-    const hasLower = /[a-z]/.test(control.value);
-    const hasNumber = /[0-9]/.test(control.value);
-
-    const valid = hasUpper && hasLower && hasNumber;
-    return valid ? null : { passwordComplexity: true };
-  };
-}
+import { BotonVerPasswordComponent } from '../../../shared/components/boton-ver-password/boton-ver-password.component';
 
 /**
  * Validador para confirmar que password y password_confirmation coincidan
@@ -56,7 +44,8 @@ export function passwordMatchValidator(group: AbstractControl): ValidationErrors
     TranslatePipe,
     AlertaErrorComponent,
     CampoErrorComponent,
-    AuthShellComponent
+    AuthShellComponent,
+    BotonVerPasswordComponent
   ],
   template: `
     <app-auth-shell enlace="login">
@@ -105,31 +94,56 @@ export function passwordMatchValidator(group: AbstractControl): ValidationErrors
               <label for="password" class="form-label">
                 {{ 'AUTH.PASSWORD' | translate }} <span class="requerido" aria-hidden="true">*</span>
               </label>
-              <input
-                type="password"
-                id="password"
-                class="form-control"
-                [class.is-invalid]="(form.get('password')?.invalid && (form.get('password')?.dirty || form.get('password')?.touched)) || erroresCampos()['password']"
-                formControlName="password"
-                aria-describedby="passwordAyuda"
-                autocomplete="new-password"
-              />
-              <div id="passwordAyuda" class="form-text">{{ 'AUTH.PASSWORD_AYUDA' | translate }}</div>
-              <app-campo-error [control]="form.get('password')" [mensajeServidor]="erroresCampos()['password']" />
+              <div class="input-group">
+                <input
+                  [type]="mostrarPassword() ? 'text' : 'password'"
+                  id="password"
+                  class="form-control"
+                  [class.is-invalid]="(form.get('password')?.invalid && form.get('password')?.touched) || erroresCampos()['password']"
+                  formControlName="password"
+                  aria-describedby="passwordReglas"
+                  autocomplete="new-password"
+                />
+                <app-boton-ver-password [(visible)]="mostrarPassword" />
+              </div>
+
+              <!-- Cada regla se vuelve a pintar entera al cambiar, así el lector anuncia solo la que cambió -->
+              <ul id="passwordReglas" class="checklist-password" aria-live="polite">
+                @for (regla of reglas(); track regla.clave) {
+                  <li [class.cumplida]="regla.cumplida" [class.pendiente]="!regla.cumplida">
+                    @if (regla.cumplida) {
+                      <svg class="marca" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+                        <path d="M3 8.5l3.2 3L13 4.5" fill="none" stroke="currentColor" stroke-width="2"
+                              stroke-linecap="round" stroke-linejoin="round" />
+                      </svg>
+                      <span>{{ regla.clave | translate }}<span class="visually-hidden">: {{ 'AUTH.REGLA_CUMPLIDA' | translate }}</span></span>
+                    } @else {
+                      <span class="marca punto" aria-hidden="true"></span>
+                      <span>{{ regla.clave | translate }}<span class="visually-hidden">: {{ 'AUTH.REGLA_PENDIENTE' | translate }}</span></span>
+                    }
+                  </li>
+                }
+              </ul>
+
+              <!-- Mientras se escribe guía la checklist; el error aparece al salir del campo o al enviar -->
+              <app-campo-error [control]="form.get('password')" [mensajeServidor]="erroresCampos()['password']" [soloAlSalir]="true" />
             </div>
 
             <div class="mb-4">
               <label for="password_confirmation" class="form-label">
                 {{ 'AUTH.PASSWORD_CONFIRM' | translate }} <span class="requerido" aria-hidden="true">*</span>
               </label>
-              <input
-                type="password"
-                id="password_confirmation"
-                class="form-control"
-                [class.is-invalid]="(form.get('password_confirmation')?.invalid && (form.get('password_confirmation')?.dirty || form.get('password_confirmation')?.touched)) || erroresCampos()['password_confirmation']"
-                formControlName="password_confirmation"
-                autocomplete="new-password"
-              />
+              <div class="input-group">
+                <input
+                  [type]="mostrarConfirmacion() ? 'text' : 'password'"
+                  id="password_confirmation"
+                  class="form-control"
+                  [class.is-invalid]="(form.get('password_confirmation')?.invalid && (form.get('password_confirmation')?.dirty || form.get('password_confirmation')?.touched)) || erroresCampos()['password_confirmation']"
+                  formControlName="password_confirmation"
+                  autocomplete="new-password"
+                />
+                <app-boton-ver-password [(visible)]="mostrarConfirmacion" />
+              </div>
               <app-campo-error
                 [control]="form.get('password_confirmation')"
                 [mensajeServidor]="erroresCampos()['password_confirmation']"
@@ -154,6 +168,43 @@ export function passwordMatchValidator(group: AbstractControl): ValidationErrors
           </p>
         </div>
     </app-auth-shell>
+  `,
+  styles: `
+    .checklist-password {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.3rem 1rem;
+      margin: 0.6rem 0 0;
+      padding: 0;
+      list-style: none;
+      font-size: 0.8125rem;
+    }
+    .checklist-password li {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--muted);
+    }
+    .checklist-password li.cumplida {
+      color: var(--success);
+      font-weight: 500;
+    }
+    .marca {
+      flex: none;
+      width: 14px;
+      height: 14px;
+    }
+    .punto {
+      display: inline-block;
+      border: 1.5px solid currentColor;
+      border-radius: 50%;
+      transform: scale(0.6);
+    }
+    @media (max-width: 359.98px) {
+      .checklist-password {
+        grid-template-columns: 1fr;
+      }
+    }
   `
 })
 export class RegistroComponent {
@@ -168,15 +219,35 @@ export class RegistroComponent {
   readonly errorGeneral = signal<ApiHttpError | null>(null);
   readonly erroresCampos = signal<Record<string, string>>({});
 
+  readonly mostrarPassword = signal(false);
+  readonly mostrarConfirmacion = signal(false);
+
   readonly form: FormGroup = this.fb.group(
     {
       nombre: ['', [Validators.required]],
       correo: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(8), passwordComplexityValidator()]],
+      password: ['', [Validators.required, passwordReglasValidator()]],
       password_confirmation: ['', [Validators.required]]
     },
     { validators: passwordMatchValidator }
   );
+
+  private readonly password = toSignal(this.form.controls['password'].valueChanges as Observable<string>, {
+    initialValue: ''
+  });
+
+  /** Estado en vivo de las 4 reglas; sale de la misma función que usa el validador. */
+  readonly passwordRules = computed(() => evaluatePasswordRules(this.password()));
+
+  readonly reglas = computed(() => {
+    const r = this.passwordRules();
+    return [
+      { clave: 'AUTH.REGLA_MIN_8', cumplida: r.minLength },
+      { clave: 'AUTH.REGLA_MAYUSCULA', cumplida: r.hasUpper },
+      { clave: 'AUTH.REGLA_MINUSCULA', cumplida: r.hasLower },
+      { clave: 'AUTH.REGLA_NUMERO', cumplida: r.hasNumber }
+    ];
+  });
 
   onSubmit(): void {
     if (this.form.invalid) {

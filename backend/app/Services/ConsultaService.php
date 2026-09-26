@@ -105,6 +105,7 @@ class ConsultaService
             'id' => $consulta->id,
             'fecha' => $consulta->created_at?->toIso8601String(),
             'pais' => [
+                'id' => $pais->id,
                 'codigo' => $pais->codigo,
                 'nombre' => $nombrePais,
             ],

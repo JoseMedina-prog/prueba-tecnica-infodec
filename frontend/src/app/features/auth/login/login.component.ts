@@ -8,6 +8,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { AlertaErrorComponent } from '../../../shared/components/alerta-error/alerta-error.component';
 import { CampoErrorComponent } from '../../../shared/components/campo-error/campo-error.component';
 import { AuthShellComponent } from '../../../shared/components/auth-shell/auth-shell.component';
+import { BotonVerPasswordComponent } from '../../../shared/components/boton-ver-password/boton-ver-password.component';
 
 @Component({
   selector: 'app-login',
@@ -18,7 +19,8 @@ import { AuthShellComponent } from '../../../shared/components/auth-shell/auth-s
     TranslatePipe,
     AlertaErrorComponent,
     CampoErrorComponent,
-    AuthShellComponent
+    AuthShellComponent,
+    BotonVerPasswordComponent
   ],
   template: `
     <app-auth-shell enlace="registro">
@@ -55,14 +57,17 @@ import { AuthShellComponent } from '../../../shared/components/auth-shell/auth-s
               <label for="password" class="form-label">
                 {{ 'AUTH.PASSWORD' | translate }} <span class="requerido" aria-hidden="true">*</span>
               </label>
-              <input
-                type="password"
-                id="password"
-                class="form-control"
-                [class.is-invalid]="(form.get('password')?.invalid && (form.get('password')?.dirty || form.get('password')?.touched)) || erroresCampos()['password']"
-                formControlName="password"
-                autocomplete="current-password"
-              />
+              <div class="input-group">
+                <input
+                  [type]="mostrarPassword() ? 'text' : 'password'"
+                  id="password"
+                  class="form-control"
+                  [class.is-invalid]="(form.get('password')?.invalid && (form.get('password')?.dirty || form.get('password')?.touched)) || erroresCampos()['password']"
+                  formControlName="password"
+                  autocomplete="current-password"
+                />
+                <app-boton-ver-password [(visible)]="mostrarPassword" />
+              </div>
               <app-campo-error [control]="form.get('password')" [mensajeServidor]="erroresCampos()['password']" />
             </div>
 
@@ -97,6 +102,7 @@ export class LoginComponent implements OnInit {
   readonly errorGeneral = signal<ApiHttpError | null>(null);
   readonly erroresCampos = signal<Record<string, string>>({});
   readonly mensajeExito = signal<string | null>(null);
+  readonly mostrarPassword = signal(false);
 
   readonly form: FormGroup = this.fb.group({
     correo: ['', [Validators.required, Validators.email]],

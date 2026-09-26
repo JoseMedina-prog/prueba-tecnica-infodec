@@ -57,6 +57,7 @@ export const routes: Routes = [
   },
   {
     path: '**',
-    redirectTo: 'consulta'
+    loadComponent: () =>
+      import('./features/no-encontrado/no-encontrado.component').then((m) => m.NoEncontradoComponent)
   }
 ];

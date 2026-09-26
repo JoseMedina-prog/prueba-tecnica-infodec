@@ -1,10 +1,12 @@
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
 import { ConsultaResultado } from '../../core/models';
+import { Ciudad, Pais } from '../../core/models/pais.model';
 import { ConsultaService } from '../../core/services/consulta.service';
+import { ConsultaStateService } from '../../core/services/consulta-state.service';
 import { IdiomaService } from '../../core/services/idioma.service';
 import { codigoCiudad } from '../../core/utils/codigos';
 import {
@@ -66,6 +68,7 @@ import { CapitalizarPrimeraPipe } from '../../shared/pipes/capitalizar-primera.p
                 <th scope="col" class="num">{{ 'HISTORIAL.TABLA_PRESUPUESTO' | translate }}</th>
                 <th scope="col">{{ 'HISTORIAL.TABLA_CLIMA' | translate }}</th>
                 <th scope="col" class="num">{{ 'HISTORIAL.TABLA_CONVERSION' | translate }}</th>
+                <th scope="col" class="text-end">{{ 'HISTORIAL.TABLA_ACCIONES' | translate }}</th>
               </tr>
             </thead>
             <tbody>
@@ -81,7 +84,7 @@ import { CapitalizarPrimeraPipe } from '../../shared/pipes/capitalizar-primera.p
                     @if (item.clima; as clima) {
                       <div class="d-inline-flex align-items-center gap-2">
                         <app-icono-clima [icono]="clima.icono" [tamanio]="20" />
-                        <span class="mono">{{ temperatura(clima.temperatura) }} °C</span>
+                        <span class="mono text-nowrap">{{ temperatura(clima.temperatura) }} °C</span>
                       </div>
                       <span class="secundario d-block">{{ clima.descripcion | capitalizarPrimera }}</span>
                     } @else {
@@ -98,6 +101,21 @@ import { CapitalizarPrimeraPipe } from '../../shared/pipes/capitalizar-primera.p
                       <span aria-hidden="true">—</span>
                       <span class="secundario">{{ 'RESULTADO.CONVERSION_NO_DISPONIBLE' | translate }}</span>
                     }
+                  </td>
+                  <td class="text-end align-middle">
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-repetir"
+                      (click)="repetirConsulta(item)"
+                      [attr.aria-label]="('HISTORIAL.REPETIR_CONSULTA' | translate) + ': ' + item.ciudad.nombre"
+                      [title]="'HISTORIAL.REPETIR_CONSULTA' | translate"
+                    >
+                      <svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/>
+                        <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
+                      </svg>
+                      <span class="texto-repetir">{{ 'HISTORIAL.REPETIR_CONSULTA' | translate }}</span>
+                    </button>
                   </td>
                 </tr>
               }
@@ -136,6 +154,20 @@ import { CapitalizarPrimeraPipe } from '../../shared/pipes/capitalizar-primera.p
                   }
                 </dd>
               </dl>
+              <div class="talon-pie">
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-secondary w-100 btn-repetir"
+                  (click)="repetirConsulta(item)"
+                  [attr.aria-label]="('HISTORIAL.REPETIR_CONSULTA' | translate) + ': ' + item.ciudad.nombre"
+                >
+                  <svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor" class="me-1" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/>
+                    <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
+                  </svg>
+                  {{ 'HISTORIAL.REPETIR_CONSULTA' | translate }}
+                </button>
+              </div>
             </li>
           }
         </ul>
@@ -204,6 +236,43 @@ import { CapitalizarPrimeraPipe } from '../../shared/pipes/capitalizar-primera.p
       color: var(--muted);
     }
 
+    .btn-repetir {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      white-space: nowrap;
+      border: 1px solid color-mix(in srgb, var(--paper) 35%, transparent);
+      color: var(--paper);
+    }
+    .btn-repetir:hover {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #ffffff;
+    }
+    .tablero .btn-repetir:focus-visible {
+      outline-color: var(--accent-on-ink);
+    }
+    /* Tablet: la tabla no cabe con el texto del botón; queda el ícono con su nombre accesible y tooltip */
+    @media (max-width: 991.98px) {
+      th,
+      td {
+        padding-inline: 0.7rem;
+      }
+      .tablero .texto-repetir {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+      }
+      .tablero .btn-repetir {
+        padding: 0.45rem 0.55rem;
+      }
+    }
+
     .talones {
       display: grid;
       gap: 0.9rem;
@@ -261,6 +330,21 @@ import { CapitalizarPrimeraPipe } from '../../shared/pipes/capitalizar-primera.p
       font-weight: 600;
       color: var(--accent);
     }
+    .talon-pie {
+      grid-column: 1 / -1;
+      padding: 0.5rem 1rem 0.8rem;
+      border-top: 1px dashed var(--line);
+    }
+    .talon .btn-repetir {
+      border-color: var(--line-strong);
+      color: var(--ink);
+      background-color: var(--surface);
+    }
+    .talon .btn-repetir:hover {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #ffffff;
+    }
 
     .vacio {
       padding: 3rem 1.5rem;
@@ -282,7 +366,9 @@ import { CapitalizarPrimeraPipe } from '../../shared/pipes/capitalizar-primera.p
 })
 export class HistorialComponent {
   private readonly consultaService = inject(ConsultaService);
+  private readonly consultaState = inject(ConsultaStateService);
   private readonly idiomaService = inject(IdiomaService);
+  private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
   private readonly idioma = this.idiomaService.idiomaActual;
 
@@ -346,5 +432,26 @@ export class HistorialComponent {
 
   temperatura(valor: number): string {
     return new Intl.NumberFormat(localeDe(this.idioma()), { maximumFractionDigits: 1 }).format(valor);
+  }
+
+  repetirConsulta(item: ConsultaResultado): void {
+    const pais: Pais = {
+      id: item.pais.id,
+      codigo: item.pais.codigo,
+      nombre: item.pais.nombre,
+      moneda: {
+        codigo: item.moneda.codigo,
+        nombre: item.moneda.nombre,
+        simbolo: item.moneda.simbolo
+      }
+    };
+    const ciudad: Ciudad = {
+      id: item.ciudad.id,
+      nombre: item.ciudad.nombre
+    };
+    this.consultaState.setDestino(pais, ciudad);
+    this.consultaState.setPresupuesto(String(item.presupuesto_cop));
+    this.consultaState.setResultado(null);
+    this.router.navigate(['/consulta/presupuesto']);
   }
 }
