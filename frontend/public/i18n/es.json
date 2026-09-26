@@ -40,7 +40,19 @@
     "REGLA_NUMERO": "Un número",
     "REGLA_CUMPLIDA": "cumplido",
     "REGLA_PENDIENTE": "pendiente",
-    "CERRAR_AVISO": "Cerrar aviso"
+    "CERRAR_AVISO": "Cerrar aviso",
+    "PASAJERO_NOMBRE": "PASAJERO · NOMBRE",
+    "PASAJERO_CORREO": "PASAJERO · CORREO",
+    "CLAVE_ABORDAJE": "CLAVE DE ABORDAJE",
+    "CONFIRMAR_CLAVE": "CONFIRMAR CLAVE",
+    "ORIGEN": "ORIGEN",
+    "DESTINO": "DESTINO",
+    "TALON": "TALÓN",
+    "NUMERO_VUELO": "N.º 0001",
+    "PUERTA": "PUERTA",
+    "ASIENTO": "ASIENTO",
+    "FECHA": "FECHA",
+    "PASAJERO_NUEVO": "PASAJERO NUEVO"
   },
   "PASOS": {
     "DESTINO": "Destino",
@@ -188,7 +200,11 @@
     "DESPEGO": "Despegó",
     "HORA_COLOMBIA": "Hora en Colombia",
     "PIE": "Tasas actualizadas a diario · Clima en tiempo real",
-    "NO_DISPONIBLE": "Tablero no disponible"
+    "NO_DISPONIBLE": "Tablero no disponible",
+    "PROXIMAS_SALIDAS": "Próximas salidas",
+    "ANTERIOR": "Salidas anteriores",
+    "SIGUIENTE": "Siguientes salidas",
+    "DE": "de"
   },
   "NO_ENCONTRADO": {
     "TITULO": "Vuelo no encontrado",

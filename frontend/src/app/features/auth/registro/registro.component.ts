@@ -16,10 +16,12 @@ import { ApiErrorService } from '../../../core/services/api-error.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { IdiomaService } from '../../../core/services/idioma.service';
 import { evaluatePasswordRules, passwordReglasValidator } from '../../../core/utils/password-rules';
+import { RELOJ_FN, obtenerFechaColombia } from '../../../core/utils/salidas';
 import { AlertaErrorComponent } from '../../../shared/components/alerta-error/alerta-error.component';
 import { CampoErrorComponent } from '../../../shared/components/campo-error/campo-error.component';
 import { AuthShellComponent } from '../../../shared/components/auth-shell/auth-shell.component';
 import { BotonVerPasswordComponent } from '../../../shared/components/boton-ver-password/boton-ver-password.component';
+import { LogoComponent } from '../../../shared/components/logo/logo.component';
 
 /**
  * Validador para confirmar que password y password_confirmation coincidan
@@ -45,11 +47,29 @@ export function passwordMatchValidator(group: AbstractControl): ValidationErrors
     AlertaErrorComponent,
     CampoErrorComponent,
     AuthShellComponent,
-    BotonVerPasswordComponent
+    BotonVerPasswordComponent,
+    LogoComponent
   ],
   template: `
     <app-auth-shell enlace="login">
-        <div>
+      <!-- Pasabordo de dos partes: cuerpo con campos y talón con submit -->
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="ticket-pasabordo" novalidate>
+        <!-- Cuerpo del ticket -->
+        <div class="ticket-cuerpo">
+          <!-- Cabecera del ticket con logo y ruta de vuelo -->
+          <div class="ticket-header-meta">
+            <div class="ticket-logo-wrap">
+              <app-logo sobre="claro" />
+            </div>
+            <div class="ticket-ruta-meta mono">
+              <span class="label-ruta">{{ 'AUTH.ORIGEN' | translate }}</span>
+              <span class="val-ruta">BOG</span>
+              <span class="flecha-ruta" aria-hidden="true">→</span>
+              <span class="label-ruta">{{ 'AUTH.DESTINO' | translate }}</span>
+              <span class="val-ruta">— — —</span>
+            </div>
+          </div>
+
           <header class="encabezado-pantalla">
             <h1 class="titulo-pantalla">{{ 'AUTH.REGISTRO_TITLE' | translate }}</h1>
             <p class="bajada">{{ 'AUTH.REGISTRO_SUBTITLE' | translate }}</p>
@@ -57,124 +77,193 @@ export function passwordMatchValidator(group: AbstractControl): ValidationErrors
 
           <app-alerta-error [error]="errorGeneral()" />
 
-          <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
-            <div class="mb-3">
-              <label for="nombre" class="form-label">
-                {{ 'AUTH.NOMBRE' | translate }} <span class="requerido" aria-hidden="true">*</span>
-              </label>
+          <div class="mb-3">
+            <label for="nombre" class="form-label label-mono">
+              {{ 'AUTH.PASAJERO_NOMBRE' | translate }} <span class="requerido" aria-hidden="true">*</span>
+            </label>
+            <input
+              type="text"
+              id="nombre"
+              class="form-control"
+              [class.is-invalid]="(form.get('nombre')?.invalid && (form.get('nombre')?.dirty || form.get('nombre')?.touched)) || erroresCampos()['nombre']"
+              formControlName="nombre"
+              [placeholder]="'AUTH.NOMBRE_PLACEHOLDER' | translate"
+              autocomplete="name"
+            />
+            <app-campo-error [control]="form.get('nombre')" [mensajeServidor]="erroresCampos()['nombre']" />
+          </div>
+
+          <div class="mb-3">
+            <label for="correo" class="form-label label-mono">
+              {{ 'AUTH.PASAJERO_CORREO' | translate }} <span class="requerido" aria-hidden="true">*</span>
+            </label>
+            <input
+              type="email"
+              id="correo"
+              class="form-control"
+              [class.is-invalid]="(form.get('correo')?.invalid && (form.get('correo')?.dirty || form.get('correo')?.touched)) || erroresCampos()['correo']"
+              formControlName="correo"
+              [placeholder]="'AUTH.CORREO_PLACEHOLDER' | translate"
+              autocomplete="email"
+            />
+            <app-campo-error [control]="form.get('correo')" [mensajeServidor]="erroresCampos()['correo']" />
+          </div>
+
+          <div class="mb-3">
+            <label for="password" class="form-label label-mono">
+              {{ 'AUTH.CLAVE_ABORDAJE' | translate }} <span class="requerido" aria-hidden="true">*</span>
+            </label>
+            <div class="campo-password-wrap">
               <input
-                type="text"
-                id="nombre"
+                [type]="mostrarPassword() ? 'text' : 'password'"
+                id="password"
                 class="form-control"
-                [class.is-invalid]="(form.get('nombre')?.invalid && (form.get('nombre')?.dirty || form.get('nombre')?.touched)) || erroresCampos()['nombre']"
-                formControlName="nombre"
-                [placeholder]="'AUTH.NOMBRE_PLACEHOLDER' | translate"
-                autocomplete="name"
+                [class.is-invalid]="(form.get('password')?.invalid && form.get('password')?.touched) || erroresCampos()['password']"
+                formControlName="password"
+                aria-describedby="passwordReglas"
+                autocomplete="new-password"
               />
-              <app-campo-error [control]="form.get('nombre')" [mensajeServidor]="erroresCampos()['nombre']" />
+              <app-boton-ver-password [(visible)]="mostrarPassword" campoId="password" />
             </div>
 
-            <div class="mb-3">
-              <label for="correo" class="form-label">
-                {{ 'AUTH.CORREO' | translate }} <span class="requerido" aria-hidden="true">*</span>
-              </label>
-              <input
-                type="email"
-                id="correo"
-                class="form-control"
-                [class.is-invalid]="(form.get('correo')?.invalid && (form.get('correo')?.dirty || form.get('correo')?.touched)) || erroresCampos()['correo']"
-                formControlName="correo"
-                [placeholder]="'AUTH.CORREO_PLACEHOLDER' | translate"
-                autocomplete="email"
-              />
-              <app-campo-error [control]="form.get('correo')" [mensajeServidor]="erroresCampos()['correo']" />
-            </div>
-
-            <div class="mb-3">
-              <label for="password" class="form-label">
-                {{ 'AUTH.PASSWORD' | translate }} <span class="requerido" aria-hidden="true">*</span>
-              </label>
-              <div class="input-group">
-                <input
-                  [type]="mostrarPassword() ? 'text' : 'password'"
-                  id="password"
-                  class="form-control"
-                  [class.is-invalid]="(form.get('password')?.invalid && form.get('password')?.touched) || erroresCampos()['password']"
-                  formControlName="password"
-                  aria-describedby="passwordReglas"
-                  autocomplete="new-password"
-                />
-                <app-boton-ver-password [(visible)]="mostrarPassword" />
-              </div>
-
-              <!-- Cada regla se vuelve a pintar entera al cambiar, así el lector anuncia solo la que cambió -->
-              <ul id="passwordReglas" class="checklist-password" aria-live="polite">
-                @for (regla of reglas(); track regla.clave) {
-                  <li [class.cumplida]="regla.cumplida" [class.pendiente]="!regla.cumplida">
-                    @if (regla.cumplida) {
-                      <svg class="marca" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
-                        <path d="M3 8.5l3.2 3L13 4.5" fill="none" stroke="currentColor" stroke-width="2"
-                              stroke-linecap="round" stroke-linejoin="round" />
-                      </svg>
-                      <span>{{ regla.clave | translate }}<span class="visually-hidden">: {{ 'AUTH.REGLA_CUMPLIDA' | translate }}</span></span>
-                    } @else {
-                      <span class="marca punto" aria-hidden="true"></span>
-                      <span>{{ regla.clave | translate }}<span class="visually-hidden">: {{ 'AUTH.REGLA_PENDIENTE' | translate }}</span></span>
-                    }
-                  </li>
-                }
-              </ul>
-
-              <!-- Mientras se escribe guía la checklist; el error aparece al salir del campo o al enviar -->
-              <app-campo-error [control]="form.get('password')" [mensajeServidor]="erroresCampos()['password']" [soloAlSalir]="true" />
-            </div>
-
-            <div class="mb-4">
-              <label for="password_confirmation" class="form-label">
-                {{ 'AUTH.PASSWORD_CONFIRM' | translate }} <span class="requerido" aria-hidden="true">*</span>
-              </label>
-              <div class="input-group">
-                <input
-                  [type]="mostrarConfirmacion() ? 'text' : 'password'"
-                  id="password_confirmation"
-                  class="form-control"
-                  [class.is-invalid]="(form.get('password_confirmation')?.invalid && (form.get('password_confirmation')?.dirty || form.get('password_confirmation')?.touched)) || erroresCampos()['password_confirmation']"
-                  formControlName="password_confirmation"
-                  autocomplete="new-password"
-                />
-                <app-boton-ver-password [(visible)]="mostrarConfirmacion" />
-              </div>
-              <app-campo-error
-                [control]="form.get('password_confirmation')"
-                [mensajeServidor]="erroresCampos()['password_confirmation']"
-              />
-            </div>
-
-            <button
-              type="submit"
-              class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2"
-              [disabled]="cargando()"
-            >
-              @if (cargando()) {
-                <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+            <!-- Checklist de contraseña -->
+            <ul id="passwordReglas" class="checklist-password" aria-live="polite">
+              @for (regla of reglas(); track regla.clave) {
+                <li [class.cumplida]="regla.cumplida" [class.pendiente]="!regla.cumplida">
+                  @if (regla.cumplida) {
+                    <svg class="marca marca-chulo" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+                      <path d="M3 8.5l3.2 3L13 4.5" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <span>{{ regla.clave | translate }}<span class="visually-hidden">: {{ 'AUTH.REGLA_CUMPLIDA' | translate }}</span></span>
+                  } @else {
+                    <span class="marca punto" aria-hidden="true"></span>
+                    <span>{{ regla.clave | translate }}<span class="visually-hidden">: {{ 'AUTH.REGLA_PENDIENTE' | translate }}</span></span>
+                  }
+                </li>
               }
-              <span>{{ 'AUTH.REGISTRARME' | translate }}</span>
-            </button>
-          </form>
+            </ul>
 
-          <p class="auth-pie">
+            <app-campo-error [control]="form.get('password')" [mensajeServidor]="erroresCampos()['password']" [soloAlSalir]="true" />
+          </div>
+
+          <div class="mb-3">
+            <label for="password_confirmation" class="form-label label-mono">
+              {{ 'AUTH.CONFIRMAR_CLAVE' | translate }} <span class="requerido" aria-hidden="true">*</span>
+            </label>
+            <div class="campo-password-wrap">
+              <input
+                [type]="mostrarConfirmacion() ? 'text' : 'password'"
+                id="password_confirmation"
+                class="form-control"
+                [class.is-invalid]="(form.get('password_confirmation')?.invalid && (form.get('password_confirmation')?.dirty || form.get('password_confirmation')?.touched)) || erroresCampos()['password_confirmation']"
+                formControlName="password_confirmation"
+                autocomplete="new-password"
+              />
+              <app-boton-ver-password [(visible)]="mostrarConfirmacion" campoId="password_confirmation" />
+            </div>
+            <app-campo-error
+              [control]="form.get('password_confirmation')"
+              [mensajeServidor]="erroresCampos()['password_confirmation']"
+            />
+          </div>
+
+          <p class="auth-pie-cuerpo">
             {{ 'AUTH.YA_TIENES_CUENTA' | translate }}
             <a routerLink="/login" class="fw-semibold">{{ 'AUTH.INICIA_SESION' | translate }}</a>
           </p>
         </div>
+
+        <!-- Perforación vertical con muescas arriba y abajo -->
+        <div class="ticket-perforacion" aria-hidden="true">
+          <div class="muesca muesca-arriba"></div>
+          <div class="muesca muesca-abajo"></div>
+        </div>
+
+        <!-- Talón del ticket (derecha) -->
+        <aside class="ticket-talon">
+          <div class="talon-header mono">
+            <span class="talon-titulo">{{ 'AUTH.TALON' | translate }}</span>
+            <span class="talon-subtitulo">{{ 'AUTH.PASAJERO_NUEVO' | translate }}</span>
+          </div>
+
+          <div class="talon-info-grid mono">
+            <div class="talon-dato talon-dato-ancho">
+              <span class="talon-label">{{ 'AUTH.PASAJERO_NUEVO' | translate }}</span>
+              <span class="talon-valor">CLASE TURISTA</span>
+            </div>
+            <div class="talon-dato talon-dato-fecha">
+              <span class="talon-label">{{ 'AUTH.FECHA' | translate }}</span>
+              <span class="talon-valor">{{ fechaColombia() }}</span>
+            </div>
+          </div>
+
+          <!-- Código de barras SVG decorativo -->
+          <div class="talon-barcode-wrap" aria-hidden="true">
+            <svg class="talon-barcode" viewBox="0 0 180 40" preserveAspectRatio="none">
+              <rect x="0" y="0" width="3" height="40" fill="currentColor" />
+              <rect x="5" y="0" width="1.5" height="40" fill="currentColor" />
+              <rect x="9" y="0" width="4" height="40" fill="currentColor" />
+              <rect x="15" y="0" width="2" height="40" fill="currentColor" />
+              <rect x="19" y="0" width="1" height="40" fill="currentColor" />
+              <rect x="23" y="0" width="5" height="40" fill="currentColor" />
+              <rect x="30" y="0" width="2" height="40" fill="currentColor" />
+              <rect x="34" y="0" width="3" height="40" fill="currentColor" />
+              <rect x="39" y="0" width="1.5" height="40" fill="currentColor" />
+              <rect x="43" y="0" width="4" height="40" fill="currentColor" />
+              <rect x="50" y="0" width="2" height="40" fill="currentColor" />
+              <rect x="54" y="0" width="1" height="40" fill="currentColor" />
+              <rect x="58" y="0" width="3.5" height="40" fill="currentColor" />
+              <rect x="64" y="0" width="1.5" height="40" fill="currentColor" />
+              <rect x="68" y="0" width="4" height="40" fill="currentColor" />
+              <rect x="75" y="0" width="2" height="40" fill="currentColor" />
+              <rect x="80" y="0" width="3" height="40" fill="currentColor" />
+              <rect x="85" y="0" width="1" height="40" fill="currentColor" />
+              <rect x="89" y="0" width="5" height="40" fill="currentColor" />
+              <rect x="96" y="0" width="2" height="40" fill="currentColor" />
+              <rect x="100" y="0" width="3" height="40" fill="currentColor" />
+              <rect x="105" y="0" width="1.5" height="40" fill="currentColor" />
+              <rect x="109" y="0" width="4" height="40" fill="currentColor" />
+              <rect x="115" y="0" width="2" height="40" fill="currentColor" />
+              <rect x="120" y="0" width="4" height="40" fill="currentColor" />
+              <rect x="126" y="0" width="1.5" height="40" fill="currentColor" />
+              <rect x="130" y="0" width="3" height="40" fill="currentColor" />
+              <rect x="135" y="0" width="2" height="40" fill="currentColor" />
+              <rect x="140" y="0" width="4" height="40" fill="currentColor" />
+              <rect x="146" y="0" width="1" height="40" fill="currentColor" />
+              <rect x="150" y="0" width="3" height="40" fill="currentColor" />
+              <rect x="155" y="0" width="2" height="40" fill="currentColor" />
+              <rect x="160" y="0" width="4" height="40" fill="currentColor" />
+              <rect x="166" y="0" width="1.5" height="40" fill="currentColor" />
+              <rect x="170" y="0" width="3" height="40" fill="currentColor" />
+              <rect x="176" y="0" width="4" height="40" fill="currentColor" />
+            </svg>
+          </div>
+
+          <!-- Botón de envío en el talón -->
+          <button
+            type="submit"
+            class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2"
+            [disabled]="cargando()"
+          >
+            @if (cargando()) {
+              <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+            }
+            <span>{{ 'AUTH.REGISTRARME' | translate }}</span>
+            <svg class="flecha" viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 8h10M9 4l4 4-4 4" />
+            </svg>
+          </button>
+        </aside>
+      </form>
     </app-auth-shell>
   `,
   styles: `
     .checklist-password {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 0.3rem 1rem;
-      margin: 0.6rem 0 0;
+      gap: 0.35rem 1rem;
+      margin: 0.75rem 0 0;
       padding: 0;
       list-style: none;
       font-size: 0.8125rem;
@@ -182,8 +271,9 @@ export function passwordMatchValidator(group: AbstractControl): ValidationErrors
     .checklist-password li {
       display: flex;
       align-items: center;
-      gap: 0.4rem;
+      gap: 0.45rem;
       color: var(--muted);
+      transition: color 150ms ease;
     }
     .checklist-password li.cumplida {
       color: var(--success);
@@ -194,13 +284,33 @@ export function passwordMatchValidator(group: AbstractControl): ValidationErrors
       width: 14px;
       height: 14px;
     }
+    .marca-chulo {
+      color: var(--success-vivid);
+      animation: escala-chulo 180ms ease-out both;
+    }
     .punto {
       display: inline-block;
       border: 1.5px solid currentColor;
       border-radius: 50%;
       transform: scale(0.6);
     }
-    @media (max-width: 359.98px) {
+    @keyframes escala-chulo {
+      from {
+        transform: scale(0.6);
+        opacity: 0.5;
+      }
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .marca-chulo {
+        animation: none !important;
+        transform: none !important;
+      }
+    }
+    @media (max-width: 440px) {
       .checklist-password {
         grid-template-columns: 1fr;
       }
@@ -214,6 +324,7 @@ export class RegistroComponent {
   private readonly apiErrorService = inject(ApiErrorService);
   private readonly idiomaService = inject(IdiomaService);
   private readonly translate = inject(TranslateService);
+  private readonly relojFn = inject(RELOJ_FN);
 
   readonly cargando = signal<boolean>(false);
   readonly errorGeneral = signal<ApiHttpError | null>(null);
@@ -221,6 +332,8 @@ export class RegistroComponent {
 
   readonly mostrarPassword = signal(false);
   readonly mostrarConfirmacion = signal(false);
+
+  readonly fechaColombia = computed(() => obtenerFechaColombia(this.relojFn()));
 
   readonly form: FormGroup = this.fb.group(
     {
@@ -236,18 +349,14 @@ export class RegistroComponent {
     initialValue: ''
   });
 
-  /** Estado en vivo de las 4 reglas; sale de la misma función que usa el validador. */
-  readonly passwordRules = computed(() => evaluatePasswordRules(this.password()));
+  readonly passwordRules = computed(() => evaluatePasswordRules(this.password() ?? ''));
 
-  readonly reglas = computed(() => {
-    const r = this.passwordRules();
-    return [
-      { clave: 'AUTH.REGLA_MIN_8', cumplida: r.minLength },
-      { clave: 'AUTH.REGLA_MAYUSCULA', cumplida: r.hasUpper },
-      { clave: 'AUTH.REGLA_MINUSCULA', cumplida: r.hasLower },
-      { clave: 'AUTH.REGLA_NUMERO', cumplida: r.hasNumber }
-    ];
-  });
+  readonly reglas = computed(() => [
+    { clave: 'AUTH.REGLA_MIN_8', cumplida: this.passwordRules().minLength },
+    { clave: 'AUTH.REGLA_MAYUSCULA', cumplida: this.passwordRules().hasUpper },
+    { clave: 'AUTH.REGLA_MINUSCULA', cumplida: this.passwordRules().hasLower },
+    { clave: 'AUTH.REGLA_NUMERO', cumplida: this.passwordRules().hasNumber }
+  ]);
 
   onSubmit(): void {
     if (this.form.invalid) {
@@ -259,19 +368,14 @@ export class RegistroComponent {
     this.errorGeneral.set(null);
     this.erroresCampos.set({});
 
-    const datosRegistro = {
-      ...this.form.value,
-      idioma: this.idiomaService.getIdioma()
-    };
-
-    this.authService.registro(datosRegistro).subscribe({
+    this.authService.registro(this.form.value).subscribe({
       next: (res) => {
         this.cargando.set(false);
         if (res.success) {
-          // Redirigir al login pasando el correo en el estado de navegación (NUNCA la contraseña)
+          const correo = this.form.get('correo')?.value;
           this.router.navigate(['/login'], {
             state: {
-              correo: datosRegistro.correo,
+              correo,
               mensajeExito: this.translate.instant('AUTH.REGISTRO_EXITOSO')
             }
           });

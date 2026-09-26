@@ -33,14 +33,26 @@
     "CORREO_PLACEHOLDER": "du@beispiel.de",
     "NOMBRE_PLACEHOLDER": "Wie in deinem Reisepass",
     "MOSTRAR_PASSWORD": "Passwort anzeigen",
-    "OCULTAR_PASSWORD": "Passwort ausblenden",
+    "OCULTAR_PASSWORD": "Passwort verbergen",
     "REGLA_MIN_8": "Mindestens 8 Zeichen",
     "REGLA_MAYUSCULA": "Ein Großbuchstabe",
     "REGLA_MINUSCULA": "Ein Kleinbuchstabe",
     "REGLA_NUMERO": "Eine Zahl",
     "REGLA_CUMPLIDA": "erfüllt",
     "REGLA_PENDIENTE": "offen",
-    "CERRAR_AVISO": "Hinweis schließen"
+    "CERRAR_AVISO": "Hinweis schließen",
+    "PASAJERO_NOMBRE": "PASSAGIER · NAME",
+    "PASAJERO_CORREO": "PASSAGIER · E-MAIL",
+    "CLAVE_ABORDAJE": "BOARDING-PASSWORT",
+    "CONFIRMAR_CLAVE": "PASSWORT BESTÄTIGEN",
+    "ORIGEN": "HERKUNFT",
+    "DESTINO": "ZIEL",
+    "TALON": "ABSCHNITT",
+    "NUMERO_VUELO": "NR. 0001",
+    "PUERTA": "GATE",
+    "ASIENTO": "SITZ",
+    "FECHA": "DATUM",
+    "PASAJERO_NUEVO": "NEUER PASSAGIER"
   },
   "PASOS": {
     "DESTINO": "Reiseziel",
@@ -188,7 +200,11 @@
     "DESPEGO": "Abgeflogen",
     "HORA_COLOMBIA": "Uhrzeit in Kolumbien",
     "PIE": "Kurse täglich aktualisiert · Wetter in Echtzeit",
-    "NO_DISPONIBLE": "Anzeigetafel nicht verfügbar"
+    "NO_DISPONIBLE": "Anzeigetafel nicht verfügbar",
+    "PROXIMAS_SALIDAS": "Nächste Abflüge",
+    "ANTERIOR": "Vorherige Abflüge",
+    "SIGUIENTE": "Nächste Abflüge",
+    "DE": "von"
   },
   "NO_ENCONTRADO": {
     "TITULO": "Flug nicht gefunden",

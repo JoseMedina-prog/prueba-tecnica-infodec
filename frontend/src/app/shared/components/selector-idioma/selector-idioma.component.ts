@@ -48,8 +48,9 @@ import { IdiomaApp, IdiomaService } from '../../../core/services/idioma.service'
       outline-offset: 2px;
     }
     .claro {
-      border-color: var(--line-strong);
-      background: var(--surface);
+      border: 1.5px solid var(--ink);
+      background: #ffffff;
+      box-shadow: 0 1px 3px rgba(27, 42, 65, 0.04);
     }
     .claro button {
       color: var(--muted);

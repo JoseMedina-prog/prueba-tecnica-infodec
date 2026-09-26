@@ -1,12 +1,824 @@
-// Formularios de login y registro (la pantalla dividida vive en AuthShellComponent).
-.auth-pie {
-  margin-top: 1.75rem;
-  padding-top: 1.25rem;
-  border-top: 1px dashed var(--line-strong);
-  font-size: 0.9rem;
-  color: var(--muted);
+// Formularios de login y registro en tarjeta pasabordo de dos partes con talón.
+.ticket-pasabordo {
+  position: relative;
+  display: flex;
+  width: 100%;
+  max-width: 880px;
+  margin: 0 auto;
+  background: var(--surface);
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  box-shadow: 0 1px 2px rgba(27, 42, 65, 0.04), 0 16px 40px -16px rgba(27, 42, 65, 0.14);
+  animation: tarjeta-entrada 300ms ease-out both;
+  overflow: visible;
+
+  .ticket-cuerpo {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 2.25rem 2.5rem 1.75rem;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .ticket-header-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .ticket-ruta-meta {
+    display: flex;
+    align-items: baseline;
+    gap: 0.35rem;
+
+    .label-ruta {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .val-ruta {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .flecha-ruta {
+      color: var(--accent);
+      font-size: 13px;
+      margin: 0 0.15rem;
+    }
+  }
+
+  .label-mono {
+    font-family: var(--font-mono);
+    font-size: 0.725rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink);
+    margin-bottom: 0.35rem;
+    display: block;
+  }
+
+  .auth-pie-cuerpo {
+    margin-top: 1.5rem;
+    font-size: 0.875rem;
+    color: var(--muted);
+    text-align: center;
+
+    a {
+      color: var(--accent);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      &:hover {
+        color: #9c3314;
+      }
+    }
+  }
+
+  // Perforación vertical con muescas arriba y abajo
+  .ticket-perforacion {
+    position: relative;
+    width: 0;
+    flex: 0 0 0;
+    border-left: 2px dashed var(--line-strong);
+
+    .muesca {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--paper);
+      left: -12px;
+      z-index: 5;
+    }
+    .muesca-arriba {
+      top: -12px;
+    }
+    .muesca-abajo {
+      bottom: -12px;
+    }
+  }
+
+  // Talón (derecha, unos 260px)
+  .ticket-talon {
+    flex: 0 0 260px;
+    width: 260px;
+    padding: 2.25rem 1.65rem 1.75rem;
+    background: #fbfcfd;
+    border-radius: 0 16px 16px 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 1.25rem;
+  }
+
+  .talon-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding-bottom: 0.65rem;
+    border-bottom: 1px solid var(--line);
+
+    .talon-titulo {
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: var(--ink);
+      text-transform: uppercase;
+    }
+    .talon-subtitulo {
+      font-size: 0.725rem;
+      color: var(--muted);
+    }
+  }
+
+  .talon-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.85rem;
+
+    .talon-dato {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+    .talon-dato-fecha,
+    .talon-dato-ancho {
+      grid-column: span 2;
+    }
+    .talon-label {
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .talon-valor {
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: var(--ink);
+    }
+  }
+
+  .talon-barcode-wrap {
+    padding: 0.4rem 0;
+    color: var(--ink);
+
+    .talon-barcode {
+      width: 100%;
+      height: 38px;
+      display: block;
+    }
+  }
+
+  // Responsive: en celular y tablet (< 992 px), talón baja y perforación pasa a horizontal
+  @media (max-width: 991.98px) {
+    flex-direction: column;
+    max-width: 520px;
+
+    .ticket-cuerpo {
+      padding: 1.75rem 1.5rem 1.25rem;
+    }
+
+    .ticket-perforacion {
+      width: 100%;
+      height: 0;
+      border-left: none;
+      border-top: 2px dashed var(--line-strong);
+
+      .muesca {
+        left: auto;
+      }
+      .muesca-arriba {
+        top: -12px;
+        left: -12px;
+      }
+      .muesca-abajo {
+        top: -12px;
+        right: -12px;
+      }
+    }
+
+    .ticket-talon {
+      flex: 0 0 auto;
+      width: 100%;
+      border-radius: 0 0 16px 16px;
+      padding: 1.25rem 1.5rem 1.75rem;
+      gap: 1rem;
+    }
+
+    .talon-fila-compacta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+
+      .talon-barcode-wrap {
+        flex: 1;
+        max-width: 180px;
+      }
+    }
+  }
+
+  @media (max-width: 575.98px) {
+    margin: 0 16px;
+    width: calc(100% - 32px);
+  }
+}
+
+// Mantener compatibilidad de clase si se utiliza
+.tarjeta-pasabordo {
+  @extend .ticket-pasabordo;
+}
+
+@keyframes tarjeta-entrada {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticket-pasabordo,
+  .tarjeta-pasabordo {
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
 }
 
 .requerido {
   color: var(--danger);
+}
+
+// Contenedor del campo con el botón de ojo integrado dentro a la derecha
+.campo-password-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+
+  .form-control {
+    padding-right: 2.75rem;
+    background-image: none !important;
+  }
+
+  app-boton-ver-password {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 4;
+  }
+}
+
+// Microinteracción del botón principal con flecha
+.btn-primary {
+  transition: transform 150ms ease, box-shadow 150ms ease;
+
+  .flecha {
+    transition: transform 150ms ease;
+  }
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(184, 64, 28, 0.28);
+
+    .flecha {
+      transform: translateX(2px);
+    }
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-primary,
+  .btn-primary:hover:not(:disabled) {
+    transform: none !important;
+
+    .flecha {
+      transform: none !important;
+    }
+  }
+}
+
+// Lienzo de fondo unificado y capa decorativa
+.lienzo-auth {
+  position: relative;
+  min-height: 100dvh;
+  width: 100%;
+  overflow-x: hidden;
+  background-color: var(--paper);
+}
+
+.barra-superior {
+  position: relative;
+  z-index: 30; // Por encima de todo
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  padding: 1.25rem 2.25rem;
+  background: transparent;
+
+  .marca {
+    text-decoration: none;
+    display: inline-flex;
+
+    &:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 3px;
+    }
+  }
+
+  .pastilla-logo {
+    display: inline-flex;
+    align-items: center;
+    background: #ffffff;
+    border-radius: 999px;
+    padding: 0.35rem 1.1rem;
+    box-shadow: 0 2px 10px rgba(27, 42, 65, 0.08);
+  }
+
+  .acciones-nav {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+  }
+
+  .btn-pastilla-auth {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.4rem 1.25rem;
+    background: #ffffff;
+    border: 1.5px solid var(--ink);
+    border-radius: 999px;
+    color: var(--ink);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    box-shadow: 0 1px 3px rgba(27, 42, 65, 0.04);
+    transition: background-color 150ms ease, color 150ms ease, transform 150ms ease;
+
+    &:hover {
+      background: var(--ink);
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+    &:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 2px;
+    }
+  }
+}
+
+.contenedor-principal {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100dvh - 5.5rem);
+  padding: 1rem 1.5rem 2.5rem;
+}
+
+// Capa decorativa: fija en el fondo
+.decoracion-fondo {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+
+// Retícula tenue cada 64 px y marcas de grados
+.reticula-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.marcas-grados-top {
+  position: absolute;
+  top: 74px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: rgba(27, 42, 65, 0.25);
+  pointer-events: none;
+  user-select: none;
+}
+
+.marcas-grados-left {
+  position: absolute;
+  top: 130px;
+  left: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 72px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: rgba(27, 42, 65, 0.25);
+  pointer-events: none;
+  user-select: none;
+}
+
+// Arco punteado con rótulo FL350
+.arco-fl350-svg {
+  position: absolute;
+  top: 12%;
+  left: 0;
+  width: 100%;
+  height: 280px;
+  pointer-events: none;
+  z-index: 2;
+
+  .arco-vuelo-guia {
+    fill: none;
+    stroke: rgba(42, 157, 143, 0.28);
+    stroke-width: 1.5px;
+    stroke-linecap: round;
+    stroke-dasharray: 4 6;
+  }
+  .texto-arco {
+    fill: rgba(42, 157, 143, 0.65);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+  }
+}
+
+// Miras en cruz en las esquinas
+.mira-cruz {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+  z-index: 3;
+}
+.mira-tl {
+  top: calc(50% - 240px);
+  left: calc(50% - 460px);
+}
+.mira-br {
+  top: calc(50% + 190px);
+  right: calc(50% - 460px);
+}
+
+.bloques-ciudades {
+  position: absolute;
+  inset: 0;
+}
+
+.bloque {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  user-select: none;
+  box-shadow: 0 4px 20px rgba(27, 42, 65, 0.06);
+}
+
+.bloque-codigo {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(80px, 7.5vw, 112px);
+  line-height: 0.88;
+  letter-spacing: -0.03em;
+}
+
+.bloque-ciudad {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-top: 0.4rem;
+}
+
+.bloque-coords {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  opacity: 0.65;
+  margin-top: 0.15rem;
+}
+
+// LON: rectangular azul claro girada -6° arriba a la izquierda.
+// Empieza a 80 px del borde superior como mínimo.
+.bloque-lon {
+  top: clamp(80px, 8vw, 100px);
+  left: -35px;
+  width: clamp(230px, 20vw, 290px);
+  padding: 3rem 2.25rem 2rem 3rem;
+  background: #c9d8e6;
+  color: var(--ink);
+  border-radius: 20px;
+  transform: rotate(-6deg);
+}
+
+// CPH: rectangular terracota girada 5° arriba a la derecha.
+// Empieza a 80 px del borde superior como mínimo.
+.bloque-cph {
+  top: clamp(80px, 8vw, 100px);
+  right: -35px;
+  width: clamp(230px, 20vw, 300px);
+  padding: 3rem 3rem 2rem 2.25rem;
+  background: var(--accent);
+  color: #ffffff;
+  border-radius: 20px;
+  transform: rotate(5deg);
+  text-align: right;
+}
+
+// TYO: círculo arena abajo a la izquierda
+.bloque-tyo {
+  bottom: -60px;
+  left: -60px;
+  width: clamp(240px, 20vw, 290px);
+  height: clamp(240px, 20vw, 290px);
+  border-radius: 50%;
+  background: #e7dccb;
+  color: var(--ink);
+  padding: 3.5rem 2.5rem 2rem 4.5rem;
+  justify-content: center;
+}
+
+// DEL: arco tinta abajo a la derecha
+.bloque-del {
+  bottom: -35px;
+  right: -35px;
+  width: clamp(240px, 20vw, 290px);
+  height: clamp(230px, 18vw, 270px);
+  border-radius: 140px 140px 0 0;
+  background: var(--ink);
+  color: var(--paper);
+  padding: 3rem 3rem 2rem;
+  align-items: center;
+  text-align: center;
+}
+
+// Punto BOG con doble anillo y latido suave a media altura en el lado izquierdo
+.punto-bog {
+  position: absolute;
+  top: 50%;
+  left: 60px;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.anillo-pulso {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  animation: pulso-bog 2.5s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes pulso-bog {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.95;
+  }
+  100% {
+    transform: scale(2.8);
+    opacity: 0;
+  }
+}
+
+.anillo-exterior {
+  position: absolute;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2px solid rgba(42, 157, 143, 0.4);
+}
+
+.anillo-interior {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--ink);
+}
+
+.punto-central {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.bog-etiquetas {
+  position: absolute;
+  top: 44px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.bog-codigo {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+}
+
+.bog-pais {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+}
+
+.bog-coords {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-top: 0.15rem;
+}
+
+// Rutas dinámicas en SVG
+.rutas-svg-dinamicas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.ruta-linea-base {
+  fill: none;
+  stroke: rgba(27, 42, 65, 0.35);
+  stroke-width: 2px;
+  stroke-linecap: round;
+  stroke-dasharray: 4 8;
+}
+
+.ruta-linea-activa {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2.5px;
+  stroke-linecap: round;
+  opacity: 1;
+}
+
+.waypoint-diamante {
+  fill: var(--ink);
+  stroke: var(--paper);
+  stroke-width: 1.5px;
+}
+
+.avion-viajero {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 20px;
+  height: 20px;
+  color: var(--accent);
+  pointer-events: none;
+  z-index: 6;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anillo-pulso {
+    animation: none !important;
+    display: none !important;
+  }
+  .avion-viajero {
+    display: none !important;
+  }
+  .ruta-linea-activa {
+    display: none !important;
+  }
+}
+
+// Responsive: 576 a 991 px
+@media (max-width: 991.98px) {
+  .barra-superior {
+    padding: 1.1rem 1.5rem;
+  }
+  .marcas-grados-top,
+  .marcas-grados-left {
+    display: none;
+  }
+  .bloque-codigo {
+    font-size: 58px;
+  }
+  .bloque-ciudad {
+    font-size: 0.65rem;
+  }
+  .bloque-coords {
+    display: none;
+  }
+  .bloque-lon {
+    top: 80px;
+    width: 190px;
+    padding: 2.25rem 1.5rem 1.5rem 2rem;
+    left: -25px;
+  }
+  .bloque-cph {
+    top: 80px;
+    width: 190px;
+    padding: 2.25rem 2rem 1.5rem 1.5rem;
+    right: -25px;
+  }
+  .bloque-tyo {
+    width: 190px;
+    height: 190px;
+    bottom: -45px;
+    left: -45px;
+    padding: 2.5rem 1.5rem 1.5rem 3rem;
+  }
+  .bloque-del {
+    width: 190px;
+    height: 180px;
+    bottom: -25px;
+    right: -25px;
+    padding: 2rem 1.5rem 1.5rem;
+  }
+  .mira-tl,
+  .mira-br {
+    display: none;
+  }
+}
+
+// Responsive: menos de 576 px
+@media (max-width: 575.98px) {
+  .barra-superior {
+    padding: 1rem 1rem;
+  }
+  .bloque-codigo {
+    font-size: 42px;
+  }
+  .bloque-ciudad,
+  .bloque-coords {
+    display: none;
+  }
+  .bloque-lon {
+    top: 80px;
+    width: 130px;
+    padding: 1.75rem 1rem 1rem 1.5rem;
+    left: -20px;
+  }
+  .bloque-cph {
+    top: 80px;
+    width: 130px;
+    padding: 1.75rem 1.5rem 1rem 1rem;
+    right: -20px;
+  }
+  .bloque-tyo,
+  .bloque-del,
+  .punto-bog,
+  .rutas-svg-dinamicas,
+  .avion-viajero,
+  .arco-fl350-svg,
+  .mira-tl,
+  .mira-br,
+  .marcas-grados-top,
+  .marcas-grados-left {
+    display: none;
+  }
+  .contenedor-principal {
+    padding: 0.75rem 1rem 2rem;
+  }
 }

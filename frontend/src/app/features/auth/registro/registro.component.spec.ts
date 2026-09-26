@@ -60,21 +60,25 @@ describe('RegistroComponent - Checklist de contraseña', () => {
     expect(items[3].classList.contains('pendiente')).toBeTrue(); // número
   });
 
-  it('debe alternar la visibilidad de la contraseña con el botón mostrar/ocultar', () => {
+  it('debe alternar la visibilidad de la contraseña con el botón mostrar/ocultar (el ojo cambia type, aria-pressed y aria-label)', () => {
     const input: HTMLInputElement = fixture.nativeElement.querySelector('#password');
     const boton: HTMLButtonElement = fixture.nativeElement.querySelector('app-boton-ver-password button');
     expect(input.type).toBe('password');
     expect(boton.getAttribute('aria-pressed')).toBe('false');
-    expect(boton.getAttribute('aria-label')).toBeTruthy();
+    expect(boton.getAttribute('aria-controls')).toBe('password');
+    expect(boton.getAttribute('aria-label')).toBe('AUTH.MOSTRAR_PASSWORD');
 
     boton.click();
     fixture.detectChanges();
     expect(input.type).toBe('text');
     expect(boton.getAttribute('aria-pressed')).toBe('true');
+    expect(boton.getAttribute('aria-label')).toBe('AUTH.OCULTAR_PASSWORD');
 
     boton.click();
     fixture.detectChanges();
     expect(input.type).toBe('password');
+    expect(boton.getAttribute('aria-pressed')).toBe('false');
+    expect(boton.getAttribute('aria-label')).toBe('AUTH.MOSTRAR_PASSWORD');
     expect(component.mostrarPassword()).toBeFalse();
   });
 
@@ -86,5 +90,10 @@ describe('RegistroComponent - Checklist de contraseña', () => {
     expect(control.hasError('passwordComplexity')).toBeTrue();
     control.setValue('Abcdefg1');
     expect(control.valid).toBeTrue();
+  });
+
+  it('el registro no muestra la tira de salidas', () => {
+    const tiraSalidas = fixture.nativeElement.querySelector('app-carrusel-salidas');
+    expect(tiraSalidas).toBeNull();
   });
 });

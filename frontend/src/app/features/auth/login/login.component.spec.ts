@@ -84,4 +84,44 @@ describe('LoginComponent - aviso de sesión expirada', () => {
     expect(history.state.correo).toBeUndefined();
     expect(history.state.mensajeExito).toBeUndefined();
   });
+
+  it('el ojo cambia type, aria-pressed y aria-label', () => {
+    crear();
+
+    const input: HTMLInputElement = fixture.nativeElement.querySelector('#password');
+    const boton: HTMLButtonElement = fixture.nativeElement.querySelector('app-boton-ver-password button');
+
+    expect(input.type).toBe('password');
+    expect(boton.getAttribute('aria-pressed')).toBe('false');
+    expect(boton.getAttribute('aria-label')).toBe('AUTH.MOSTRAR_PASSWORD');
+    expect(boton.getAttribute('aria-controls')).toBe('password');
+
+    boton.click();
+    fixture.detectChanges();
+
+    expect(input.type).toBe('text');
+    expect(boton.getAttribute('aria-pressed')).toBe('true');
+    expect(boton.getAttribute('aria-label')).toBe('AUTH.OCULTAR_PASSWORD');
+
+    boton.click();
+    fixture.detectChanges();
+
+    expect(input.type).toBe('password');
+    expect(boton.getAttribute('aria-pressed')).toBe('false');
+    expect(boton.getAttribute('aria-label')).toBe('AUTH.MOSTRAR_PASSWORD');
+  });
+
+  it('el login muestra la tira de próximas salidas debajo de la tarjeta', () => {
+    crear();
+    const carrusel = fixture.nativeElement.querySelector('app-carrusel-salidas');
+    expect(carrusel).toBeTruthy();
+  });
+
+  it('el botón Entrar está en el talón y es type="submit" del form', () => {
+    crear();
+    const botonTalon: HTMLButtonElement | null = fixture.nativeElement.querySelector('.ticket-talon button[type="submit"]');
+    expect(botonTalon).toBeTruthy();
+    expect(botonTalon!.type).toBe('submit');
+    expect(botonTalon!.textContent).toContain('AUTH.ENTRAR');
+  });
 });
