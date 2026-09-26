@@ -34,6 +34,16 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(30)->by($clave);
         });
 
+        // Limitador del registro público (OWASP API6: flujo de negocio sensible sin sesión):
+        // 10 por minuto y 30 por hora por IP. Cuenta toda petición a /auth/register, válida o no:
+        // el 409 USER_ALREADY_EXISTS revela qué correos existen y este límite frena la enumeración.
+        RateLimiter::for('registro', function (Request $request) {
+            return [
+                Limit::perMinute(10)->by('registro:minuto:' . $request->ip()),
+                Limit::perHour(30)->by('registro:hora:' . $request->ip()),
+            ];
+        });
+
         // Limitador del tablero de salidas público (sin sesión): 30 por minuto por IP
         RateLimiter::for('salidas', function (Request $request) {
             return Limit::perMinute(30)->by('salidas:' . $request->ip());

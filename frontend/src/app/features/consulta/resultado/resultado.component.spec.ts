@@ -161,4 +161,29 @@ describe('ResultadoComponent', () => {
     expect(compiled.textContent).toContain('1 COP = 0,04832000 JPY');
     expect(compiled.textContent).toContain('1 ¥ = 20,70 COP');
   });
+
+  it('muestra la nota de clima guardado solo cuando la fuente del clima es respaldo', () => {
+    const base: ConsultaResultado = {
+      id: 5,
+      fecha: '2026-09-25T12:00:00Z',
+      pais: { id: 2, codigo: 'JP', nombre: 'Japón' },
+      ciudad: { id: 3, nombre: 'Tokio', codigo_iata: 'TYO' },
+      presupuesto_cop: 1000000,
+      clima: { temperatura: 17.5, descripcion: 'nubes', icono: '04d', obtenido_en: '2026-09-25T09:00:00Z', fuente: 'respaldo' },
+      moneda: { codigo: 'JPY', nombre: 'Yen japonés', simbolo: '¥' },
+      conversion: { valor: 48320, tasa: 0.04832, fecha_tasa: '2026-09-25T00:00:00Z', fuente: 'cache' }
+    };
+
+    stateService.setResultado(base);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('app-clima-guardado .clima-guardado')).toBeTruthy();
+
+    stateService.setResultado({ ...base, clima: { ...base.clima!, fuente: 'cache' } });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('app-clima-guardado')).toBeNull();
+
+    stateService.setResultado({ ...base, clima: { ...base.clima!, fuente: 'api' } });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('app-clima-guardado')).toBeNull();
+  });
 });

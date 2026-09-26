@@ -3,6 +3,10 @@ export interface ClimaInfo {
   descripcion: string;
   /** Solo viene al crear la consulta; el historial no lo guarda. */
   icono?: string | null;
+  /** Cuándo se obtuvo el clima de OpenWeatherMap (null en consultas antiguas). */
+  obtenido_en?: string | null;
+  /** Solo al crear la consulta: "api", "cache" o "respaldo" (último guardado porque la API falló). */
+  fuente?: 'api' | 'cache' | 'respaldo' | string;
 }
 
 export interface MonedaInfo {
@@ -15,7 +19,7 @@ export interface ConversionInfo {
   valor: number;
   tasa: number;
   fecha_tasa: string;
-  fuente?: 'api' | 'respaldo' | string;
+  fuente?: 'api' | 'cache' | 'respaldo' | string;
 }
 
 export interface ConsultaAviso {

@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict uuux8awOIu0kMmFAUn4EGalk8X2Klg6jU9i3lcAjmuFNtW9YpWbgLI4IwmGJ3sO
+\restrict kX9OUMHFbNkNub2xuboCaf53gsj03FuI2Zf8ZLdWplkmy8M4HG48H1s45XdRxHn
 
 -- Dumped from database version 16.14
 -- Dumped by pg_dump version 16.14
@@ -58,6 +58,42 @@ ALTER SEQUENCE public.ciudades_id_seq OWNED BY public.ciudades.id;
 
 
 --
+-- Name: climas; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.climas (
+    id bigint NOT NULL,
+    ciudad_id bigint NOT NULL,
+    idioma character(2) NOT NULL,
+    temperatura numeric(5,2) NOT NULL,
+    descripcion character varying(255) NOT NULL,
+    icono character varying(255) NOT NULL,
+    obtenido_en timestamp(0) without time zone NOT NULL,
+    created_at timestamp(0) without time zone,
+    updated_at timestamp(0) without time zone
+);
+
+
+--
+-- Name: climas_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.climas_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: climas_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.climas_id_seq OWNED BY public.climas.id;
+
+
+--
 -- Name: consultas; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -72,7 +108,8 @@ CREATE TABLE public.consultas (
     valor_convertido numeric(18,2),
     fecha_tasa timestamp(0) without time zone,
     created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    updated_at timestamp(0) without time zone,
+    clima_obtenido_en timestamp(0) without time zone
 );
 
 
@@ -305,6 +342,13 @@ ALTER TABLE ONLY public.ciudades ALTER COLUMN id SET DEFAULT nextval('public.ciu
 
 
 --
+-- Name: climas id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.climas ALTER COLUMN id SET DEFAULT nextval('public.climas_id_seq'::regclass);
+
+
+--
 -- Name: consultas id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -358,14 +402,22 @@ ALTER TABLE ONLY public.usuarios ALTER COLUMN id SET DEFAULT nextval('public.usu
 --
 
 COPY public.ciudades (id, pais_id, nombre, latitud, longitud, created_at, updated_at, codigo_iata) FROM stdin;
-1	1	Londres	51.507400	-0.127800	2026-09-26 02:12:26	2026-09-26 02:12:26	LON
-2	1	Mánchester	53.480800	-2.242600	2026-09-26 02:12:26	2026-09-26 02:12:26	MAN
-3	2	Tokio	35.676200	139.650300	2026-09-26 02:12:26	2026-09-26 02:12:26	TYO
-4	2	Osaka	34.693700	135.502300	2026-09-26 02:12:26	2026-09-26 02:12:26	OSA
-5	3	Nueva Delhi	28.613900	77.209000	2026-09-26 02:12:26	2026-09-26 02:12:26	DEL
-6	3	Bombay	19.076000	72.877700	2026-09-26 02:12:26	2026-09-26 02:12:26	BOM
-7	4	Copenhague	55.676100	12.568300	2026-09-26 02:12:26	2026-09-26 02:12:26	CPH
-8	4	Aarhus	56.162900	10.203900	2026-09-26 02:12:26	2026-09-26 02:12:26	AAR
+1	1	Londres	51.507400	-0.127800	2026-09-26 02:30:05	2026-09-26 02:30:05	LON
+2	1	Mánchester	53.480800	-2.242600	2026-09-26 02:30:05	2026-09-26 02:30:05	MAN
+3	2	Tokio	35.676200	139.650300	2026-09-26 02:30:05	2026-09-26 02:30:05	TYO
+4	2	Osaka	34.693700	135.502300	2026-09-26 02:30:05	2026-09-26 02:30:05	OSA
+5	3	Nueva Delhi	28.613900	77.209000	2026-09-26 02:30:05	2026-09-26 02:30:05	DEL
+6	3	Bombay	19.076000	72.877700	2026-09-26 02:30:05	2026-09-26 02:30:05	BOM
+7	4	Copenhague	55.676100	12.568300	2026-09-26 02:30:05	2026-09-26 02:30:05	CPH
+8	4	Aarhus	56.162900	10.203900	2026-09-26 02:30:05	2026-09-26 02:30:05	AAR
+\.
+
+
+--
+-- Data for Name: climas; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.climas (id, ciudad_id, idioma, temperatura, descripcion, icono, obtenido_en, created_at, updated_at) FROM stdin;
 \.
 
 
@@ -373,7 +425,7 @@ COPY public.ciudades (id, pais_id, nombre, latitud, longitud, created_at, update
 -- Data for Name: consultas; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.consultas (id, usuario_id, ciudad_id, presupuesto_cop, clima_temperatura, clima_descripcion, tasa, valor_convertido, fecha_tasa, created_at, updated_at) FROM stdin;
+COPY public.consultas (id, usuario_id, ciudad_id, presupuesto_cop, clima_temperatura, clima_descripcion, tasa, valor_convertido, fecha_tasa, created_at, updated_at, clima_obtenido_en) FROM stdin;
 \.
 
 
@@ -382,10 +434,10 @@ COPY public.consultas (id, usuario_id, ciudad_id, presupuesto_cop, clima_tempera
 --
 
 COPY public.monedas (id, codigo, nombre, simbolo, created_at, updated_at) FROM stdin;
-1	GBP	Libra esterlina	£	2026-09-26 02:12:26	2026-09-26 02:12:26
-2	JPY	Yen	¥	2026-09-26 02:12:26	2026-09-26 02:12:26
-3	INR	Rupia india	₹	2026-09-26 02:12:26	2026-09-26 02:12:26
-4	DKK	Corona danesa	kr	2026-09-26 02:12:26	2026-09-26 02:12:26
+1	GBP	Libra esterlina	£	2026-09-26 02:30:05	2026-09-26 02:30:05
+2	JPY	Yen	¥	2026-09-26 02:30:05	2026-09-26 02:30:05
+3	INR	Rupia india	₹	2026-09-26 02:30:05	2026-09-26 02:30:05
+4	DKK	Corona danesa	kr	2026-09-26 02:30:05	2026-09-26 02:30:05
 \.
 
 
@@ -394,10 +446,10 @@ COPY public.monedas (id, codigo, nombre, simbolo, created_at, updated_at) FROM s
 --
 
 COPY public.paises (id, nombre, codigo, moneda_id, created_at, updated_at) FROM stdin;
-1	Inglaterra	GB	1	2026-09-26 02:12:26	2026-09-26 02:12:26
-2	Japón	JP	2	2026-09-26 02:12:26	2026-09-26 02:12:26
-3	India	IN	3	2026-09-26 02:12:26	2026-09-26 02:12:26
-4	Dinamarca	DK	4	2026-09-26 02:12:26	2026-09-26 02:12:26
+1	Inglaterra	GB	1	2026-09-26 02:30:05	2026-09-26 02:30:05
+2	Japón	JP	2	2026-09-26 02:30:05	2026-09-26 02:30:05
+3	India	IN	3	2026-09-26 02:30:05	2026-09-26 02:30:05
+4	Dinamarca	DK	4	2026-09-26 02:30:05	2026-09-26 02:30:05
 \.
 
 
@@ -430,7 +482,7 @@ COPY public.tokens_revocados (id, jti, usuario_id, expira_en, created_at) FROM s
 --
 
 COPY public.usuarios (id, nombre, correo, password_hash, idioma, created_at, updated_at) FROM stdin;
-1	Usuario Prueba	prueba@travelapp.test	$2y$12$Eof68yAf/vzjf5kGlQWFP.QsYUPXtIvYze21eJC32Jy37gz.uDLEC	es	2026-09-26 02:12:26	2026-09-26 02:12:26
+1	Usuario Prueba	prueba@travelapp.test	$2y$12$lCPOnwfbAgxJ.EN/K7ThRuUf1q8embDVvtsD2nKujS5VQUkx0455y	es	2026-09-26 02:30:06	2026-09-26 02:30:06
 \.
 
 
@@ -439,6 +491,13 @@ COPY public.usuarios (id, nombre, correo, password_hash, idioma, created_at, upd
 --
 
 SELECT pg_catalog.setval('public.ciudades_id_seq', 8, true);
+
+
+--
+-- Name: climas_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.climas_id_seq', 1, false);
 
 
 --
@@ -512,6 +571,22 @@ ALTER TABLE ONLY public.ciudades
 
 ALTER TABLE ONLY public.ciudades
     ADD CONSTRAINT ciudades_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: climas climas_ciudad_id_idioma_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.climas
+    ADD CONSTRAINT climas_ciudad_id_idioma_unique UNIQUE (ciudad_id, idioma);
+
+
+--
+-- Name: climas climas_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.climas
+    ADD CONSTRAINT climas_pkey PRIMARY KEY (id);
 
 
 --
@@ -640,6 +715,14 @@ ALTER TABLE ONLY public.ciudades
 
 
 --
+-- Name: climas climas_ciudad_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.climas
+    ADD CONSTRAINT climas_ciudad_id_foreign FOREIGN KEY (ciudad_id) REFERENCES public.ciudades(id) ON DELETE CASCADE;
+
+
+--
 -- Name: consultas consultas_ciudad_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -683,5 +766,5 @@ ALTER TABLE ONLY public.tokens_revocados
 -- PostgreSQL database dump complete
 --
 
-\unrestrict uuux8awOIu0kMmFAUn4EGalk8X2Klg6jU9i3lcAjmuFNtW9YpWbgLI4IwmGJ3sO
+\unrestrict kX9OUMHFbNkNub2xuboCaf53gsj03FuI2Zf8ZLdWplkmy8M4HG48H1s45XdRxHn
 

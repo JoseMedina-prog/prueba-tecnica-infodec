@@ -12,6 +12,7 @@ import {
   formatearTasaInversa,
   localeDe
 } from '../../../core/utils/formato';
+import { ClimaGuardadoComponent } from '../../../shared/components/clima-guardado/clima-guardado.component';
 import { IconoClimaComponent } from '../../../shared/components/icono-clima/icono-clima.component';
 import { PasosIndicadorComponent } from '../../../shared/components/pasos-indicador/pasos-indicador.component';
 import { CapitalizarPrimeraPipe } from '../../../shared/pipes/capitalizar-primera.pipe';
@@ -19,7 +20,7 @@ import { CapitalizarPrimeraPipe } from '../../../shared/pipes/capitalizar-primer
 @Component({
   selector: 'app-resultado',
   standalone: true,
-  imports: [TranslatePipe, PasosIndicadorComponent, IconoClimaComponent, CapitalizarPrimeraPipe],
+  imports: [TranslatePipe, PasosIndicadorComponent, IconoClimaComponent, CapitalizarPrimeraPipe, ClimaGuardadoComponent],
   template: `
     <div class="container py-4 contenedor-resultado">
       <app-pasos-indicador [pasoActual]="3" />
@@ -64,6 +65,10 @@ import { CapitalizarPrimeraPipe } from '../../../shared/pipes/capitalizar-primer
                     >
                       {{ clima.descripcion | capitalizarPrimera }}
                     </span>
+                    <!-- Solo cuando la API falló y se usó el último clima guardado -->
+                    @if (clima.fuente === 'respaldo') {
+                      <app-clima-guardado [obtenidoEn]="clima.obtenido_en" />
+                    }
                   } @else {
                     <span class="aviso-suave">{{ 'RESULTADO.CLIMA_NO_DISPONIBLE' | translate }}</span>
                   }

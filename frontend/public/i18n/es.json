@@ -97,7 +97,9 @@
     "RINDE": "Tu presupuesto en {{ciudad}} rinde",
     "FECHA": "Fecha",
     "PASAJERO": "Pasajero",
-    "VUELO": "Cambio"
+    "VUELO": "Cambio",
+    "CLIMA_GUARDADO_HOY": "Clima guardado · hoy {{hora}}",
+    "CLIMA_GUARDADO_FECHA": "Clima guardado · {{fecha}} {{hora}}"
   },
   "HISTORIAL": {
     "TITULO": "Mis viajes",

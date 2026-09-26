@@ -112,13 +112,14 @@ class ConsultaCreacionTest extends TestCase
     {
         $fechaHistorica = now()->subDays(2)->startOfDay();
 
-        // Tasa guardada previamente en base de datos
+        // Tasa guardada previamente en base de datos, obtenida hace 2 días
+        // (si se hubiera obtenido hace menos de 6 horas, se serviría de caché sin llamar a la API)
         TasaCambio::create([
             'moneda_origen' => 'COP',
             'moneda_destino' => 'JPY',
             'tasa' => 0.04,
             'fecha_tasa' => $fechaHistorica,
-        ]);
+        ])->forceFill(['created_at' => $fechaHistorica, 'updated_at' => $fechaHistorica])->saveQuietly();
 
         Http::fake([
             '*/weather*' => Http::response([

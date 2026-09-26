@@ -42,13 +42,30 @@ describe('TalonViajeComponent', () => {
       },
       RESULTADO: {
         CLIMA_NO_DISPONIBLE: 'Clima no disponible',
-        CONVERSION_NO_DISPONIBLE: 'Conversión no disponible'
+        CONVERSION_NO_DISPONIBLE: 'Conversión no disponible',
+        CLIMA_GUARDADO_HOY: 'Clima guardado · hoy {{hora}}',
+        CLIMA_GUARDADO_FECHA: 'Clima guardado · {{fecha}} {{hora}}'
       }
     });
     translate.use('es');
   });
 
   afterEach(() => localStorage.clear());
+
+  it('muestra "Clima guardado" solo si el clima es más de 30 minutos anterior a la consulta', () => {
+    // Clima obtenido 3 horas antes de la consulta (fue de respaldo)
+    crear({ ...consultaCompleta, clima: { ...consultaCompleta.clima!, obtenido_en: '2026-09-25T22:45:00Z' } });
+    // "hoy" u otro día depende de la fecha real; esa lógica se prueba con fecha fija en formato.spec.ts
+    expect(texto('app-clima-guardado')).toMatch(/^Clima guardado · (hoy|\d{2} SEP) \d{2}:\d{2}$/);
+
+    // Clima obtenido 10 minutos antes (caché normal): nada extra
+    crear({ ...consultaCompleta, clima: { ...consultaCompleta.clima!, obtenido_en: '2026-09-26T01:35:00Z' } });
+    expect(fixture.nativeElement.querySelector('app-clima-guardado')).toBeNull();
+
+    // Consulta antigua sin obtenido_en: nada extra
+    crear(consultaCompleta);
+    expect(fixture.nativeElement.querySelector('app-clima-guardado')).toBeNull();
+  });
 
   it('muestra el código IATA, el destino, el presupuesto, el valor convertido y las dos tasas', () => {
     crear(consultaCompleta);

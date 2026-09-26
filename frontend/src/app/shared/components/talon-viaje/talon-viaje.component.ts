@@ -3,6 +3,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { ConsultaResultado } from '../../../core/models';
 import { IdiomaService } from '../../../core/services/idioma.service';
 import {
+  climaAnteriorALaConsulta,
   formatearCop,
   formatearFechaTalon,
   formatearMonto,
@@ -11,6 +12,7 @@ import {
   localeDe
 } from '../../../core/utils/formato';
 import { CapitalizarPrimeraPipe } from '../../pipes/capitalizar-primera.pipe';
+import { ClimaGuardadoComponent } from '../clima-guardado/clima-guardado.component';
 import { IconoClimaComponent } from '../icono-clima/icono-clima.component';
 
 /**
@@ -21,7 +23,7 @@ import { IconoClimaComponent } from '../icono-clima/icono-clima.component';
 @Component({
   selector: 'app-talon-viaje',
   standalone: true,
-  imports: [TranslatePipe, IconoClimaComponent, CapitalizarPrimeraPipe],
+  imports: [TranslatePipe, IconoClimaComponent, CapitalizarPrimeraPipe, ClimaGuardadoComponent],
   template: `
     @let item = consulta();
     <article class="boleto" [attr.aria-labelledby]="idTitulo()">
@@ -52,6 +54,10 @@ import { IconoClimaComponent } from '../icono-clima/icono-clima.component';
                   <span class="mono temperatura">{{ temperatura() }} °C</span>
                 </span>
                 <span class="secundario d-block">{{ clima.descripcion | capitalizarPrimera }}</span>
+                <!-- El historial no guarda la fuente: si el clima es más de 30 min anterior a la consulta, fue de respaldo -->
+                @if (climaGuardado()) {
+                  <app-clima-guardado [obtenidoEn]="clima.obtenido_en" />
+                }
               } @else {
                 <span class="aviso-suave aviso-clima">{{ 'RESULTADO.CLIMA_NO_DISPONIBLE' | translate }}</span>
               }
@@ -246,6 +252,11 @@ export class TalonViajeComponent {
     const talon = formatearFechaTalon(this.consulta().fecha, this.idioma());
     return talon.hora ? `${talon.fecha} · ${talon.hora}` : talon.fecha;
   });
+
+  /** El clima de esa consulta se había obtenido más de 30 minutos antes: se usó un clima guardado. */
+  readonly climaGuardado = computed(() =>
+    climaAnteriorALaConsulta(this.consulta().clima?.obtenido_en, this.consulta().fecha)
+  );
 
   readonly presupuesto = computed(() => formatearCop(this.consulta().presupuesto_cop, this.idioma()));
 

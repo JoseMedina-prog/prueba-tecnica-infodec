@@ -112,6 +112,43 @@ export function formatearFechaTalon(
   return { fecha: textoFecha, hora: textoHora };
 }
 
+/**
+ * Momento de un dato guardado (clima de respaldo) en hora local del navegador:
+ * si es de hoy, solo la hora ("18:05"); si no, día y mes sin año ("25 SEP" / "25 SEP.") y la hora.
+ */
+export function formatearMomentoGuardado(
+  fechaIso: string | null | undefined,
+  idioma: IdiomaApp,
+  ahora: Date = new Date()
+): { esHoy: boolean; fecha: string; hora: string } | null {
+  if (!fechaIso) return null;
+  const d = new Date(fechaIso);
+  if (isNaN(d.getTime())) return null;
+
+  const esHoy = d.getFullYear() === ahora.getFullYear() && d.getMonth() === ahora.getMonth() && d.getDate() === ahora.getDate();
+  const talon = formatearFechaTalon(fechaIso, idioma);
+  // "25 SEP 2026" → "25 SEP" (y "25 SEP. 2026" → "25 SEP.")
+  const fecha = talon.fecha.replace(/\s+\d{4}$/, '');
+
+  return { esHoy, fecha, hora: talon.hora };
+}
+
+/**
+ * True si el clima guardado en una consulta es más de `minutos` anterior a la consulta.
+ * El historial no guarda la fuente, así que esto indica que se usó un clima de respaldo.
+ */
+export function climaAnteriorALaConsulta(
+  climaObtenidoEn: string | null | undefined,
+  fechaConsulta: string,
+  minutos = 30
+): boolean {
+  if (!climaObtenidoEn) return false;
+  const clima = new Date(climaObtenidoEn).getTime();
+  const consulta = new Date(fechaConsulta).getTime();
+  if (isNaN(clima) || isNaN(consulta)) return false;
+  return consulta - clima > minutos * 60_000;
+}
+
 /** Solo la primera letra en mayúscula ("Nubes dispersas"). */
 export function capitalizarPrimera(texto: string | null | undefined): string {
   if (!texto) return '';

@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
     "name": "Pasabordo API",
-    "description": "# Pasabordo API — Colección Oficial Postman\n\nColección completa de pruebas para la API REST de **Pasabordo** (Laravel 11 + PostgreSQL).\n\n---\n\n## 🚀 Guía de inicio rápido\n\n### 1. Importación\n1. En Postman, haz clic en **Import**.\n2. Selecciona los dos archivos de la carpeta `docs/postman/`:\n   - `Pasabordo.postman_collection.json`\n   - `Pasabordo.local.postman_environment.json`\n\n### 2. Selección del entorno\n- En la esquina superior derecha de Postman, selecciona el entorno **Pasabordo Local**.\n- Variables incluidas en el entorno:\n  - `base_url`: `http://localhost:8000/api`\n  - `idioma`: `es` (cambiar a `de` para respuestas en alemán)\n  - `correo_prueba`: `prueba@travelapp.test`\n  - `password_prueba`: `Prueba123`\n  - `access_token`, `refresh_token`, `token_vencido`: administrados automáticamente por los scripts de prueba.\n  - `weather_api_key`, `exchange_api_key`: vacías por seguridad. Ingresa tus propias claves si deseas probar las peticiones directas a OpenWeatherMap y ExchangeRate-API.\n\n### 3. Ejecución automática (Collection Runner / Newman)\nLas carpetas están ordenadas secuencialmente (`01` a `06`) para que el flujo sea 100% autónomo:\n```bash\nnpx newman run docs/postman/Pasabordo.postman_collection.json -e docs/postman/Pasabordo.local.postman_environment.json\n```\n\n### 4. Soporte multilingüe (Español / Alemán)\n- Por defecto, la variable `idioma` está configurada en `es`.\n- Para recibir mensajes de validación y error en alemán, cambia el valor de la variable `idioma` a `de` en el entorno.\n",
+    "description": "# Pasabordo API — Colección Oficial Postman\n\nColección completa de pruebas para la API REST de **Pasabordo** (Laravel 11 + PostgreSQL).\n\n---\n\n## 🚀 Guía de inicio rápido\n\n### 1. Importación\n1. En Postman, haz clic en **Import**.\n2. Selecciona los dos archivos de la carpeta `docs/postman/`:\n   - `Pasabordo.postman_collection.json`\n   - `Pasabordo.local.postman_environment.json`\n\n### 2. Selección del entorno\n- En la esquina superior derecha de Postman, selecciona el entorno **Pasabordo Local**.\n- Variables incluidas en el entorno:\n  - `base_url`: `http://localhost:8000/api`\n  - `idioma`: `es` (cambiar a `de` para respuestas en alemán)\n  - `correo_prueba`: `prueba@travelapp.test`\n  - `password_prueba`: `Prueba123`\n  - `access_token`, `refresh_token`, `token_vencido`: administrados automáticamente por los scripts de prueba.\n  - `weather_api_key`, `exchange_api_key`: vacías por seguridad. Ingresa tus propias claves si deseas probar las peticiones directas a OpenWeatherMap y ExchangeRate-API.\n\n### 3. Ejecución automática (Collection Runner / Newman)\nLas carpetas están ordenadas secuencialmente (`01` a `06`) para que el flujo sea 100% autónomo:\n```bash\nnpx newman run docs/postman/Pasabordo.postman_collection.json -e docs/postman/Pasabordo.local.postman_environment.json\n```\n\n> **Nota sobre el límite del registro:** la colección hace 3 peticiones a `/auth/register` por corrida (registro, campos vacíos 422 y correo duplicado 409). Si se corre más de 3 veces en un minuto, el registro responde 429 `TOO_MANY_ATTEMPTS` por diseño: el límite (10 por minuto y 30 por hora por IP) cuenta toda petición porque el 409 permite averiguar qué correos existen (protección contra enumeración de usuarios). Basta con esperar un minuto y volver a correrla.\n\n### 4. Soporte multilingüe (Español / Alemán)\n- Por defecto, la variable `idioma` está configurada en `es`.\n- Para recibir mensajes de validación y error en alemán, cambia el valor de la variable `idioma` a `de` en el entorno.\n",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -598,6 +598,8 @@
                   "    pm.expect(json.data).to.have.property('temperatura');",
                   "    pm.expect(json.data).to.have.property('descripcion');",
                   "    pm.expect(json.data).to.have.property('icono');",
+                  "    pm.expect(json.data.obtenido_en).to.be.a('string');",
+                  "    pm.expect(['api', 'cache', 'respaldo']).to.include(json.data.fuente);",
                   "});"
                 ]
               }
@@ -645,7 +647,7 @@
                   "    pm.expect(json.success).to.be.true;",
                   "    pm.expect(json.data.tasa).to.be.a('number');",
                   "    pm.expect(json.data.fecha_tasa).to.be.a('string');",
-                  "    pm.expect(['api', 'respaldo']).to.include(json.data.fuente);",
+                  "    pm.expect(['api', 'cache', 'respaldo']).to.include(json.data.fuente);",
                   "});"
                 ]
               }

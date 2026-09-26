@@ -16,6 +16,7 @@ Este directorio contiene la especificación, scripts y esquemas visuales de la b
 erDiagram
     monedas ||--o{ paises : "utiliza"
     paises ||--o{ ciudades : "contiene"
+    ciudades ||--o{ climas : "tiene_clima_guardado"
     usuarios ||--o{ consultas : "realiza"
     ciudades ||--o{ consultas : "es_consultada"
     usuarios ||--o{ refresh_tokens : "posee"
@@ -50,6 +51,18 @@ erDiagram
         char(3) codigo_iata UK
     }
 
+    climas {
+        bigint id PK
+        bigint ciudad_id FK
+        char(2) idioma
+        decimal(5_2) temperatura
+        varchar descripcion
+        varchar icono
+        timestamp obtenido_en
+        timestamp created_at
+        timestamp updated_at
+    }
+
     usuarios {
         bigint id PK
         varchar nombre
@@ -72,6 +85,7 @@ erDiagram
         timestamp fecha_tasa
         timestamp created_at
         timestamp updated_at
+        timestamp clima_obtenido_en
     }
 
     tasas_cambio {

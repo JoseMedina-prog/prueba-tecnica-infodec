@@ -21,6 +21,7 @@ class Consulta extends Model
         'presupuesto_cop',
         'clima_temperatura',
         'clima_descripcion',
+        'clima_obtenido_en',
         'tasa',
         'valor_convertido',
         'fecha_tasa',
@@ -31,6 +32,7 @@ class Consulta extends Model
         return [
             'presupuesto_cop' => 'decimal:2',
             'clima_temperatura' => 'decimal:2',
+            'clima_obtenido_en' => 'datetime',
             'tasa' => 'decimal:10',
             'valor_convertido' => 'decimal:2',
             'fecha_tasa' => 'datetime',

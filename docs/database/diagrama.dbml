@@ -34,6 +34,22 @@ Table ciudades {
   }
 }
 
+Table climas {
+  id bigserial [pk, increment]
+  ciudad_id bigint [not null, ref: > ciudades.id, note: 'ON DELETE CASCADE']
+  idioma char(2) [not null, note: 'es o de: la descripción viene traducida por la API']
+  temperatura decimal(5,2) [not null]
+  descripcion varchar(255) [not null]
+  icono varchar(255) [not null]
+  obtenido_en timestamp [not null, note: 'Cuándo se pidió a OpenWeatherMap: caché 30 min, respaldo 24 h']
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  indexes {
+    (ciudad_id, idioma) [unique]
+  }
+}
+
 Table usuarios {
   id bigserial [pk, increment]
   nombre varchar(255) [not null]
@@ -56,6 +72,7 @@ Table consultas {
   fecha_tasa timestamp [null]
   created_at timestamp [null]
   updated_at timestamp [null]
+  clima_obtenido_en timestamp [null, note: 'De cuándo es el clima guardado en la consulta']
 
   indexes {
     (usuario_id, created_at)

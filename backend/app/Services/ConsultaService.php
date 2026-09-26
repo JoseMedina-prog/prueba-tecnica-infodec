@@ -43,8 +43,8 @@ class ConsultaService
         $errorClima = null;
         $errorMoneda = null;
 
-        // 2. Consulta de clima:
-        // Si la API falla (ApiException 502/504), no se cancela la operación global.
+        // 2. Consulta de clima (con caché y respaldo de hasta 24 h en la tabla climas):
+        // Si no hay clima utilizable (ApiException 502/504), no se cancela la operación global.
         // Se tolera el fallo dejando clima en null y agregando el aviso CLIMA_NO_DISPONIBLE.
         try {
             $climaData = $this->climaService->obtenerClima($ciudad, $idioma);
@@ -86,6 +86,7 @@ class ConsultaService
             'presupuesto_cop' => $presupuesto,
             'clima_temperatura' => $climaData ? $climaData['temperatura'] : null,
             'clima_descripcion' => $climaData ? $climaData['descripcion'] : null,
+            'clima_obtenido_en' => $climaData ? $climaData['obtenido_en'] : null,
             'tasa' => $tasaData ? $tasaData['tasa'] : null,
             'valor_convertido' => $valorConvertido,
             'fecha_tasa' => $tasaData ? $tasaData['fecha_tasa'] : null,
@@ -119,6 +120,8 @@ class ConsultaService
                 'temperatura' => (float) $climaData['temperatura'],
                 'descripcion' => (string) $climaData['descripcion'],
                 'icono' => (string) $climaData['icono'],
+                'obtenido_en' => (string) $climaData['obtenido_en'],
+                'fuente' => (string) $climaData['fuente'],
             ] : null,
             'moneda' => [
                 'codigo' => $moneda->codigo,

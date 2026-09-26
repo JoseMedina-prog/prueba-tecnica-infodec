@@ -41,6 +41,14 @@ class Ciudad extends Model
     }
 
     /**
+     * Climas guardados de esta ciudad (uno por idioma).
+     */
+    public function climas(): HasMany
+    {
+        return $this->hasMany(Clima::class, 'ciudad_id');
+    }
+
+    /**
      * Consultas turísticas realizadas para esta ciudad.
      */
     public function consultas(): HasMany

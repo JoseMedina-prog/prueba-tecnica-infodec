@@ -43,9 +43,12 @@ class ConsultaResource extends JsonResource
                 'codigo_iata' => $ciudad?->codigo_iata,
             ],
             'presupuesto_cop' => (float) $this->presupuesto_cop,
+            // La fuente del clima no se guarda; obtenido_en dice de cuándo es el clima de esa consulta
+            // (null en consultas anteriores a la columna clima_obtenido_en).
             'clima' => $this->clima_temperatura !== null ? [
                 'temperatura' => (float) $this->clima_temperatura,
                 'descripcion' => $this->clima_descripcion,
+                'obtenido_en' => $this->clima_obtenido_en?->toIso8601String(),
             ] : null,
             'moneda' => [
                 'codigo' => $moneda?->codigo,

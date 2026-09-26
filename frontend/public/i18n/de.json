@@ -97,7 +97,9 @@
     "RINDE": "So viel ist dein Budget in {{ciudad}} wert",
     "FECHA": "Datum",
     "PASAJERO": "Passagier",
-    "VUELO": "Umtausch"
+    "VUELO": "Umtausch",
+    "CLIMA_GUARDADO_HOY": "Gespeichertes Wetter · heute {{hora}}",
+    "CLIMA_GUARDADO_FECHA": "Gespeichertes Wetter · {{fecha}} {{hora}}"
   },
   "HISTORIAL": {
     "TITULO": "Meine Reisen",
