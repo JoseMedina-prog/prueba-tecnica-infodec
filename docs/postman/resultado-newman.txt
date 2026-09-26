@@ -1,178 +1,187 @@
+newman
+
 Pasabordo API
 
 □ 01 Autenticación
 └ 01 Registro de usuario nuevo
-  POST http://localhost:8000/api/auth/register [201 Created, 483B, 336ms]
+  POST http://localhost:8000/api/auth/register [201 Created, 780B, 311ms]
   √  Status code es 201 Created
   √  Respuesta exitosa con datos de usuario
 
 └ 02 Login de usuario de prueba
-  POST http://localhost:8000/api/auth/login [200 OK, 1.31kB, 249ms]
+  POST http://localhost:8000/api/auth/login [200 OK, 1.56kB, 257ms]
   √  Status code es 200 OK
   √  Guarda access_token y refresh_token en el entorno
 
 └ 03 Mi perfil (GET /auth/me)
-  GET http://localhost:8000/api/auth/me [200 OK, 451B, 157ms]
+  GET http://localhost:8000/api/auth/me [200 OK, 749B, 158ms]
   √  Status code es 200 OK
   √  Retorna los datos del usuario autenticado
 
 └ 04 Renovar sesión (POST /auth/refresh)
-  POST http://localhost:8000/api/auth/refresh [200 OK, 1.31kB, 59ms]
+  POST http://localhost:8000/api/auth/refresh [200 OK, 1.56kB, 53ms]
   √  Status code es 200 OK
   √  Actualiza tokens tras rotación
 
 □ 02 Países y ciudades
 └ 01 Listar países
-  GET http://localhost:8000/api/paises [200 OK, 824B, 68ms]
+  GET http://localhost:8000/api/paises [200 OK, 1.07kB, 52ms]
   √  Status code es 200 OK
   √  Retorna exactamente 4 países configurados
 
 └ 02 Ciudades de Japón
-  GET http://localhost:8000/api/paises/2/ciudades [200 OK, 423B, 68ms]
+  GET http://localhost:8000/api/paises/2/ciudades [200 OK, 705B, 54ms]
   √  Status code es 200 OK
   √  Retorna 2 ciudades de Japón y guarda Tokio
+  √  Cada ciudad trae su código IATA (Tokio = TYO)
+
+└ 03 Salidas (público)
+  GET http://localhost:8000/api/salidas [200 OK, 1.45kB, 155ms]
+  √  Status code es 200 OK sin token
+  √  Retorna las 8 salidas con codigo_iata, ciudad, pais y moneda
+  √  Incluye las cabeceras de seguridad
 
 □ 03 Consultas
 └ 01 Crear consulta (POST /consultas)
-  POST http://localhost:8000/api/consultas [201 Created, 786B, 715ms]
+  POST http://localhost:8000/api/consultas [201 Created, 1.12kB, 83ms]
   √  Status code es 201 Created
   √  Retorna consulta con clima y conversión completa
 
 └ 02 Crear consulta por alias (POST /conversion)
-  POST http://localhost:8000/api/conversion [201 Created, 786B, 725ms]
+  POST http://localhost:8000/api/conversion [201 Created, 1.12kB, 60ms]
   √  Status code es 201 Created
   √  El endpoint alterno responde exitosamente
 
 └ 03 Historial de consultas
-  GET http://localhost:8000/api/consultas/historial [200 OK, 2.23kB, 58ms]
+  GET http://localhost:8000/api/consultas/historial [200 OK, 2.81kB, 57ms]
   √  Status code es 200 OK
   √  Retorna lista con máximo 5 consultas ordenadas
 
 □ 04 APIs externas
 └ 01 Clima de Tokio (interno)
-  GET http://localhost:8000/api/externas/clima/3 [200 OK, 436B, 356ms]
+  GET http://localhost:8000/api/externas/clima/3 [200 OK, 737B, 55ms]
   √  Status code es 200 OK
   √  Retorna estructura de clima válida
 
 └ 02 Tasa COP a JPY (interno)
-  GET http://localhost:8000/api/externas/tasa/JPY [200 OK, 441B, 395ms]
+  GET http://localhost:8000/api/externas/tasa/JPY [200 OK, 685B, 49ms]
   √  Status code es 200 OK
   √  Retorna tasa con fuente y fecha
 
 └ 03 Directa a OpenWeatherMap
-  GET https://api.openweathermap.org/data/2.5/weather?lat=35.6762&lon=139.6503&appid=&units=metric&lang=es [401 Unauthorized, 453B, 262ms]
+  GET https://api.openweathermap.org/data/2.5/weather?lat=35.6762&lon=139.6503&appid=&units=metric&lang=es [401 Unauthorized, 453B, 268ms]
   -  [skipped] Se omite porque weather_api_key está vacía en el entorno (configura tu API key personal para probarla).
 
 └ 04 Directa a ExchangeRate-API
-  GET https://v6.exchangerate-api.com/v6//pair/COP/JPY [403 Forbidden, 522B, 279ms]
+  GET https://v6.exchangerate-api.com/v6//pair/COP/JPY [403 Forbidden, 522B, 334ms]
   -  [skipped] Se omite porque exchange_api_key está vacía en el entorno (configura tu API key personal para probarla).
 
 □ 05 Casos de error
 └ 01 Sin token (401 AUTH_TOKEN_MISSING)
-  GET http://localhost:8000/api/auth/me [401 Unauthorized, 552B, 23ms]
+  GET http://localhost:8000/api/auth/me [401 Unauthorized, 850B, 171ms]
   √  Status code es 401 Unauthorized
   √  Error code es AUTH_TOKEN_MISSING
 
 └ 02 Token alterado (401 AUTH_TOKEN_INVALID)
-  GET http://localhost:8000/api/auth/me [401 Unauthorized, 548B, 24ms]
+  GET http://localhost:8000/api/auth/me [401 Unauthorized, 846B, 48ms]
   √  Status code es 401 Unauthorized
   √  Error code es AUTH_TOKEN_INVALID
 
 └ 03 Guardar token actual como vencido (auxiliar)
-  GET http://localhost:8000/api/auth/me [200 OK, 451B, 51ms]
+  GET http://localhost:8000/api/auth/me [200 OK, 749B, 48ms]
   √  Token actual respaldado en token_vencido
 
 └ 04 Token vencido (401 AUTH_TOKEN_EXPIRED)
-  GET http://localhost:8000/api/auth/me [200 OK, 451B, 69ms]
+  GET http://localhost:8000/api/auth/me [200 OK, 749B, 57ms]
   -  [skipped] Se omite porque el token aún no ha alcanzado su TTL de 15 minutos. Para probarlo inmediatamente, configura TOKEN_ACCESS_TTL=1 en el backend.
 
 └ 05 Campos vacíos en registro (422 VALIDATION_ERROR)
-  POST http://localhost:8000/api/auth/register [422 Unprocessable Content, 740B, 25ms]
+  POST http://localhost:8000/api/auth/register [422 Unprocessable Content, 1.04kB, 66ms]
   √  Status code es 422 Unprocessable Content
   √  Error code es VALIDATION_ERROR con details
 
 └ 06 Campos vacíos en consulta (422 VALIDATION_ERROR)
-  POST http://localhost:8000/api/consultas [422 Unprocessable Content, 679B, 48ms]
+  POST http://localhost:8000/api/consultas [422 Unprocessable Content, 921B, 51ms]
   √  Status code es 422 Unprocessable Content
   √  Error code es VALIDATION_ERROR con details
 
 └ 07 Tipo de dato inválido (422 VALIDATION_ERROR)
-  POST http://localhost:8000/api/consultas [422 Unprocessable Content, 866B, 50ms]
+  POST http://localhost:8000/api/consultas [422 Unprocessable Content, 1.11kB, 158ms]
   √  Status code es 422 Unprocessable Content
   √  Error code es VALIDATION_ERROR
 
 └ 08 JSON mal formado (400 BAD_REQUEST)
-  POST http://localhost:8000/api/auth/login [400 Bad Request, 520B, 18ms]
+  POST http://localhost:8000/api/auth/login [400 Bad Request, 768B, 15ms]
   √  Status code es 400 Bad Request
   √  Error code es BAD_REQUEST
 
 └ 09 País inexistente (404 NOT_FOUND)
-  GET http://localhost:8000/api/paises/999/ciudades [404 Not Found, 502B, 158ms]
+  GET http://localhost:8000/api/paises/999/ciudades [404 Not Found, 744B, 50ms]
   √  Status code es 404 Not Found
   √  Error code es NOT_FOUND
 
 └ 10 Correo duplicado (409 USER_ALREADY_EXISTS)
-  POST http://localhost:8000/api/auth/register [409 Conflict, 525B, 51ms]
+  POST http://localhost:8000/api/auth/register [409 Conflict, 822B, 52ms]
   √  Status code es 409 Conflict
   √  Error code es USER_ALREADY_EXISTS
 
 └ 11 Credenciales incorrectas (401 AUTH_INVALID_CREDENTIALS)
-  POST http://localhost:8000/api/auth/login [401 Unauthorized, 520B, 234ms]
+  POST http://localhost:8000/api/auth/login [401 Unauthorized, 768B, 235ms]
   √  Status code es 401 Unauthorized
   √  Error code es AUTH_INVALID_CREDENTIALS
 
 └ 12 Mensaje en alemán (Accept-Language: de)
-  GET http://localhost:8000/api/auth/me [401 Unauthorized, 544B, 18ms]
+  GET http://localhost:8000/api/auth/me [401 Unauthorized, 842B, 165ms]
   √  Status code es 401 Unauthorized
   √  El mensaje de error se retorna traducido al alemán
 
 □ 06 Cierre de sesión
 └ 01 Cerrar sesión (POST /auth/logout)
-  POST http://localhost:8000/api/auth/logout [200 OK, 418B, 50ms]
+  POST http://localhost:8000/api/auth/logout [200 OK, 716B, 66ms]
   √  Status code es 200 OK
   √  Sesión cerrada exitosamente
 
 └ 02 Usar el token después del logout (401 AUTH_TOKEN_REVOKED)
-  GET http://localhost:8000/api/auth/me [401 Unauthorized, 526B, 163ms]
+  GET http://localhost:8000/api/auth/me [401 Unauthorized, 824B, 59ms]
   √  Status code es 401 Unauthorized
   √  Error code es AUTH_TOKEN_REVOKED
 
 └ 03 Nuevo login tras logout
-  POST http://localhost:8000/api/auth/login [200 OK, 1.31kB, 240ms]
+  POST http://localhost:8000/api/auth/login [200 OK, 1.56kB, 342ms]
   √  Status code es 200 OK
   √  Tokens renovados y guardados
 
 └ 04 Consumir refresh token (primera rotación)
-  POST http://localhost:8000/api/auth/refresh [200 OK, 1.31kB, 57ms]
+  POST http://localhost:8000/api/auth/refresh [200 OK, 1.56kB, 72ms]
   √  Status code es 200 OK
   √  Sesión renovada y token anterior consumido
 
 └ 05 Reuso de refresh token (401 AUTH_TOKEN_REVOKED)
-  POST http://localhost:8000/api/auth/refresh [401 Unauthorized, 559B, 55ms]
+  POST http://localhost:8000/api/auth/refresh [401 Unauthorized, 807B, 58ms]
   √  Status code es 401 Unauthorized
   √  Detección de reuso: AUTH_TOKEN_REVOKED y revocación total
 
 └ 06 Login final de restauración
-  POST http://localhost:8000/api/auth/login [200 OK, 1.31kB, 241ms]
+  POST http://localhost:8000/api/auth/login [200 OK, 1.56kB, 238ms]
   √  Status code es 200 OK
   √  Tokens válidos restaurados en el entorno
 
-┌─────────────────────────┬────────────────────┬────────────────────┐
-│                         │           executed │             failed │
-├─────────────────────────┼────────────────────┼────────────────────┤
-│              iterations │                  1 │                  0 │
-├─────────────────────────┼────────────────────┼────────────────────┤
-│                requests │                 31 │                  0 │
-├─────────────────────────┼────────────────────┼────────────────────┤
-│            test-scripts │                 31 │                  0 │
-├─────────────────────────┼────────────────────┼────────────────────┤
-│      prerequest-scripts │                  2 │                  0 │
-├─────────────────────────┼────────────────────┼────────────────────┤
-│              assertions │                 58 │                  0 │
-├─────────────────────────┴────────────────────┴────────────────────┤
-│ total run duration: 7.8s                                          │
-├───────────────────────────────────────────────────────────────────┤
-│ total data received: 11.76kB (approx)                             │
-├───────────────────────────────────────────────────────────────────┤
-│ average response time: 171ms [min: 18ms, max: 725ms, s.d.: 181ms] │
-└───────────────────────────────────────────────────────────────────┘
+┌─────────────────────────┬────────────────────┬───────────────────┐
+│                         │           executed │            failed │
+├─────────────────────────┼────────────────────┼───────────────────┤
+│              iterations │                  1 │                 0 │
+├─────────────────────────┼────────────────────┼───────────────────┤
+│                requests │                 32 │                 0 │
+├─────────────────────────┼────────────────────┼───────────────────┤
+│            test-scripts │                 32 │                 0 │
+├─────────────────────────┼────────────────────┼───────────────────┤
+│      prerequest-scripts │                  2 │                 0 │
+├─────────────────────────┼────────────────────┼───────────────────┤
+│              assertions │                 62 │                 0 │
+├─────────────────────────┴────────────────────┴───────────────────┤
+│ total run duration: 6.6s                                         │
+├──────────────────────────────────────────────────────────────────┤
+│ total data received: 13.25kB (approx)                            │
+├──────────────────────────────────────────────────────────────────┤
+│ average response time: 121ms [min: 15ms, max: 342ms, s.d.: 96ms] │
+└──────────────────────────────────────────────────────────────────┘
