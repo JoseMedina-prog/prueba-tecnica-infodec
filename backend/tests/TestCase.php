@@ -19,6 +19,9 @@ abstract class TestCase extends BaseTestCase
         Config::set('services.weather.key', 'fake-weather-api-key-test');
         Config::set('services.exchange.key', 'fake-exchange-api-key-test');
 
+        // Canal de seguridad aislado para que las pruebas no alteren el log de producción/local
+        Config::set('logging.channels.seguridad.path', storage_path('logs/seguridad-testing.log'));
+
         // Previene que cualquier prueba realice llamadas externas a internet
         Http::preventStrayRequests();
     }

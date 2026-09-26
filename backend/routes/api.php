@@ -22,14 +22,14 @@ Route::prefix('auth')->group(function () {
     Route::post('/refresh', [AuthController::class, 'refresh'])->name('auth.refresh');
 
     // Rutas protegidas por AuthTokenMiddleware
-    Route::middleware('auth.token')->group(function () {
+    Route::middleware(['auth.token', 'throttle:api'])->group(function () {
         Route::get('/me', [AuthController::class, 'me'])->name('auth.me');
         Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout');
     });
 });
 
-// Rutas protegidas por AuthTokenMiddleware
-Route::middleware('auth.token')->group(function () {
+// Rutas protegidas por AuthTokenMiddleware con límite general 'api' (60/min)
+Route::middleware(['auth.token', 'throttle:api'])->group(function () {
     // Países y ciudades
     Route::get('/paises', [PaisController::class, 'index'])->name('paises.index');
     Route::get('/paises/{id}/ciudades', [PaisController::class, 'ciudades'])
@@ -37,19 +37,26 @@ Route::middleware('auth.token')->group(function () {
         ->name('paises.ciudades');
 
     // Consultas turísticas y conversiones de presupuesto
-    // NOTA: El paso 12 del PDF especifica POST /api/consultas y el Anexo A indica POST /api/conversion.
-    // Se registran ambas apuntando al mismo método del controlador para compatibilidad total.
     Route::get('/consultas/historial', [ConsultaController::class, 'historial'])->name('consultas.historial');
-    Route::post('/consultas', [ConsultaController::class, 'crear'])->name('consultas.crear');
-    Route::post('/conversion', [ConsultaController::class, 'crear'])->name('conversion.crear');
+    Route::post('/consultas', [ConsultaController::class, 'crear'])
+        ->withoutMiddleware('throttle:api')
+        ->middleware('throttle:consultas')
+        ->name('consultas.crear');
+    Route::post('/conversion', [ConsultaController::class, 'crear'])
+        ->withoutMiddleware('throttle:api')
+        ->middleware('throttle:consultas')
+        ->name('conversion.crear');
 
     // APIs externas directas para pruebas y diagnóstico
-    Route::prefix('externas')->group(function () {
-        Route::get('/clima/{ciudadId}', [ExternasController::class, 'clima'])
-            ->whereNumber('ciudadId')
-            ->name('externas.clima');
+    Route::prefix('externas')
+        ->withoutMiddleware('throttle:api')
+        ->middleware('throttle:externas')
+        ->group(function () {
+            Route::get('/clima/{ciudadId}', [ExternasController::class, 'clima'])
+                ->whereNumber('ciudadId')
+                ->name('externas.clima');
 
-        Route::get('/tasa/{codigoMoneda}', [ExternasController::class, 'tasa'])
-            ->name('externas.tasa');
-    });
+            Route::get('/tasa/{codigoMoneda}', [ExternasController::class, 'tasa'])
+                ->name('externas.tasa');
+        });
 });

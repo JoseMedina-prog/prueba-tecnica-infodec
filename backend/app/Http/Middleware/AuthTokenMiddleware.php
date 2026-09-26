@@ -53,6 +53,12 @@ class AuthTokenMiddleware
         try {
             $claims = $this->tokenService->validarAccessToken($token);
         } catch (ApiException $e) {
+            if ($e->getErrorCode() === 'AUTH_TOKEN_EXPIRED') {
+                \App\Services\SeguridadLogger::registrar('token_vencido', ip: $request->ip());
+            } elseif ($e->getErrorCode() === 'AUTH_TOKEN_INVALID') {
+                \App\Services\SeguridadLogger::registrar('token_invalido', ip: $request->ip());
+            }
+
             throw new ApiException(
                 $e->getStatusCode(),
                 $e->getErrorCode(),
@@ -64,6 +70,12 @@ class AuthTokenMiddleware
 
         // 4. Verificación de revocación previa (blacklist por JTI)
         if (TokenRevocado::where('jti', $claims['jti'])->exists()) {
+            \App\Services\SeguridadLogger::registrar(
+                'token_revocado_usado',
+                ip: $request->ip(),
+                usuarioId: isset($claims['sub']) ? (int) $claims['sub'] : null
+            );
+
             throw new ApiException(
                 401,
                 'AUTH_TOKEN_REVOKED',
@@ -77,6 +89,12 @@ class AuthTokenMiddleware
         $usuario = Usuario::find($claims['sub']);
 
         if (!$usuario) {
+            \App\Services\SeguridadLogger::registrar(
+                'token_invalido',
+                ip: $request->ip(),
+                usuarioId: isset($claims['sub']) ? (int) $claims['sub'] : null
+            );
+
             throw new ApiException(
                 401,
                 'AUTH_TOKEN_INVALID',

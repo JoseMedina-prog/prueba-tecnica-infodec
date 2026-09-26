@@ -34,8 +34,8 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'correo' => ['required', 'string', 'email'],
-            'password' => ['required', 'string'],
+            'correo' => ['required', 'string', 'email:rfc,filter', 'max:150', 'not_regex:/[\x00-\x1F\x7F]/'],
+            'password' => ['required', 'string', 'max:128'],
         ];
     }
 

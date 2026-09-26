@@ -70,4 +70,34 @@ class RegistroTest extends TestCase
             'correo' => 'nuevo@travelapp.test',
         ]);
     }
+
+    /**
+     * Prueba Extra - Defensa en profundidad OWASP / CRLF Injection
+     * Un correo con caracteres de control (\r\n) es rechazado con 422 VALIDATION_ERROR en el campo correo.
+     */
+    public function test_registro_con_crlf_en_correo_devuelve_422(): void
+    {
+        $response = $this->postJson('/api/auth/register', [
+            'nombre' => 'Test Inyeccion',
+            'correo' => "a@b.com\r\nBcc: x@y.com",
+            'password' => 'Password123',
+            'password_confirmation' => 'Password123',
+            'idioma' => 'es',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJson([
+                'success' => false,
+                'error' => [
+                    'code' => 'VALIDATION_ERROR',
+                ],
+            ]);
+
+        $details = $response->json('error.details');
+        $this->assertIsArray($details);
+
+        $camposConError = array_column($details, 'field');
+        $this->assertContains('correo', $camposConError);
+    }
 }
+

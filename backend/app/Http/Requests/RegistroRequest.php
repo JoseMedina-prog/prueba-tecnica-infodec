@@ -35,11 +35,12 @@ class RegistroRequest extends FormRequest
     {
         return [
             'nombre' => ['required', 'string', 'max:100'],
-            'correo' => ['required', 'string', 'email', 'max:150'],
+            'correo' => ['required', 'string', 'email:rfc,filter', 'max:150', 'not_regex:/[\x00-\x1F\x7F]/'],
             'password' => [
                 'required',
                 'string',
                 'min:8',
+                'max:128',
                 'regex:/[A-Z]/',
                 'regex:/[a-z]/',
                 'regex:/[0-9]/',

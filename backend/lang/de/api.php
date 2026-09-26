@@ -22,4 +22,5 @@ return [
     'SESSION_LOGOUT_SUCCESS' => 'Sitzung erfolgreich beendet.',
     'CLIMA_NO_DISPONIBLE' => 'Wetter nicht verfügbar',
     'CONVERSION_NO_DISPONIBLE' => 'Umrechnung nicht verfügbar',
+    'PAYLOAD_TOO_LARGE' => 'Die Größe der Anfrage überschreitet das zulässige Limit (16 KB).',
 ];

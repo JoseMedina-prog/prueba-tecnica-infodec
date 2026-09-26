@@ -7,7 +7,13 @@ import { ConsultaResultado } from '../../core/models';
 import { ConsultaService } from '../../core/services/consulta.service';
 import { IdiomaService } from '../../core/services/idioma.service';
 import { codigoCiudad } from '../../core/utils/codigos';
-import { formatearCop, formatearFechaHora, formatearMonto, formatearTasa, localeDe } from '../../core/utils/formato';
+import {
+  formatearCop,
+  formatearFechaTalon,
+  formatearMonto,
+  formatearTasaInversa,
+  localeDe
+} from '../../core/utils/formato';
 
 import { IconoClimaComponent } from '../../shared/components/icono-clima/icono-clima.component';
 import { CapitalizarPrimeraPipe } from '../../shared/pipes/capitalizar-primera.pipe';
@@ -85,7 +91,7 @@ import { CapitalizarPrimeraPipe } from '../../shared/pipes/capitalizar-primera.p
                   <td class="num">
                     @if (item.conversion; as conversion) {
                       <span class="mono valor">{{ item.moneda.simbolo }} {{ monto(conversion.valor, item.moneda.codigo) }}</span>
-                      <span class="mono secundario">{{ tasa(conversion.tasa, item.moneda.codigo) }}</span>
+                      <span class="mono secundario">{{ tasaInversa(conversion.tasa, item.moneda.simbolo) }}</span>
                     } @else {
                       <span aria-hidden="true">—</span>
                       <span class="secundario">{{ 'RESULTADO.CONVERSION_NO_DISPONIBLE' | translate }}</span>
@@ -121,7 +127,7 @@ import { CapitalizarPrimeraPipe } from '../../shared/pipes/capitalizar-primera.p
                 <dd>
                   @if (item.conversion; as conversion) {
                     <span class="mono valor">{{ item.moneda.simbolo }} {{ monto(conversion.valor, item.moneda.codigo) }}</span>
-                    <span class="mono secundario d-block">{{ tasa(conversion.tasa, item.moneda.codigo) }}</span>
+                    <span class="mono secundario d-block">{{ tasaInversa(conversion.tasa, item.moneda.simbolo) }}</span>
                   } @else {
                     <span class="secundario">— {{ 'RESULTADO.CONVERSION_NO_DISPONIBLE' | translate }}</span>
                   }
@@ -315,7 +321,8 @@ export class HistorialComponent {
   }
 
   fecha(fechaIso: string): string {
-    return formatearFechaHora(fechaIso, this.idioma());
+    const talon = formatearFechaTalon(fechaIso, this.idioma());
+    return talon.hora ? `${talon.fecha} · ${talon.hora}` : talon.fecha;
   }
 
   cop(valor: number): string {
@@ -324,6 +331,10 @@ export class HistorialComponent {
 
   monto(valor: number, codigo: string): string {
     return formatearMonto(valor, codigo, this.idioma());
+  }
+
+  tasaInversa(valor: number, simbolo: string): string {
+    return formatearTasaInversa(valor, simbolo, this.idioma());
   }
 
   tasa(valor: number, codigo: string): string {

@@ -23,6 +23,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->prependToGroup('api', [
+            \App\Http\Middleware\CabecerasSeguridad::class,
+            \App\Http\Middleware\LimitarTamanoCuerpo::class,
             \App\Http\Middleware\AsignarTraceId::class,
             \App\Http\Middleware\EstablecerIdioma::class,
         ]);
@@ -126,6 +128,14 @@ return Application::configure(basePath: dirname(__DIR__))
 
                 if ($e instanceof ThrottleRequestsException) {
                     Log::info("Error 4xx [429 TOO_MANY_ATTEMPTS] en ruta: {$request->path()}");
+
+                    \App\Services\SeguridadLogger::registrar(
+                        'limite_consumo',
+                        traceId: $traceId,
+                        ip: $request->ip(),
+                        usuarioId: $request->user()?->id,
+                        correo: $request->user()?->correo
+                    );
 
                     $throttleHeaders = method_exists($e, 'getHeaders') ? $e->getHeaders() : [];
 

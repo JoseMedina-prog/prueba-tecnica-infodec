@@ -66,6 +66,16 @@
         },
         "platform": {
             "php": "8.2.0"
+        },
+        "audit": {
+            "ignore": {
+                "PKSA-m5cs-t1y6-qpcs": "No se utilizan URLs firmadas temporales en el proyecto",
+                "GHSA-crmm-hgp2-wgrp": "No se utilizan URLs firmadas temporales en el proyecto",
+                "PKSA-3r5d-mb8f-1qw9": "No se envían correos y la validación bloquea caracteres de control (email:rfc,filter + not_regex)",
+                "GHSA-5vg9-5847-vvmq": "No se envían correos y la validación bloquea caracteres de control (email:rfc,filter + not_regex)",
+                "PKSA-mdq4-51ck-6kdq": "No se envían correos y la validación bloquea caracteres de control (email:rfc,filter + not_regex)",
+                "CVE-2026-48019": "No se envían correos y la validación bloquea caracteres de control (email:rfc,filter + not_regex)"
+            }
         }
     },
     "minimum-stability": "stable",

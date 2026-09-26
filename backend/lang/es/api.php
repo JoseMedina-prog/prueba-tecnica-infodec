@@ -22,4 +22,5 @@ return [
     'SESSION_LOGOUT_SUCCESS' => 'Sesión cerrada correctamente.',
     'CLIMA_NO_DISPONIBLE' => 'Clima no disponible',
     'CONVERSION_NO_DISPONIBLE' => 'Conversión no disponible',
+    'PAYLOAD_TOO_LARGE' => 'El tamaño de la petición excede el límite permitido (16 KB).',
 ];

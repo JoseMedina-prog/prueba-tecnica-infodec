@@ -79,6 +79,8 @@ class AuthService
         // 1. Límite de intentos: 5 fallos por minuto antes de verificar contraseña
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             $segundos = RateLimiter::availableIn($throttleKey);
+            \App\Services\SeguridadLogger::registrar('bloqueo_intentos', ip: $ip, correo: $correoNormalizado);
+
             throw new ApiException(
                 429,
                 'TOO_MANY_ATTEMPTS',
@@ -95,12 +97,14 @@ class AuthService
         if (!$usuario) {
             Hash::check($password, self::DUMMY_HASH);
             RateLimiter::hit($throttleKey, 60);
+            \App\Services\SeguridadLogger::registrar('login_fallido', ip: $ip, correo: $correoNormalizado);
 
             throw new ApiException(401, 'AUTH_INVALID_CREDENTIALS');
         }
 
         if (!Hash::check($password, $usuario->password_hash)) {
             RateLimiter::hit($throttleKey, 60);
+            \App\Services\SeguridadLogger::registrar('login_fallido', ip: $ip, usuarioId: $usuario->id, correo: $correoNormalizado);
 
             throw new ApiException(401, 'AUTH_INVALID_CREDENTIALS');
         }
@@ -143,6 +147,8 @@ class AuthService
         $throttleKey = "refresh:{$ip}";
         if (RateLimiter::tooManyAttempts($throttleKey, 30)) {
             $segundos = RateLimiter::availableIn($throttleKey);
+            \App\Services\SeguridadLogger::registrar('limite_consumo', ip: $ip);
+
             throw new ApiException(
                 429,
                 'TOO_MANY_ATTEMPTS',
@@ -154,7 +160,7 @@ class AuthService
 
         RateLimiter::hit($throttleKey, 60);
 
-        $resultado = DB::transaction(function () use ($refreshPlano) {
+        $resultado = DB::transaction(function () use ($refreshPlano, $ip) {
             $tokenHash = hash('sha256', $refreshPlano);
 
             // Por qué lockForUpdate: Bloquea la fila del refresh token en la base de datos a nivel de transacción
@@ -183,7 +189,14 @@ class AuthService
                     ->whereNull('revocado_en')
                     ->update(['revocado_en' => Carbon::now()]);
 
-                // Registro seguro en auditoría: nunca se loguea el token plano
+                // Registro seguro en auditoría y canal de seguridad: nunca se loguea el token plano
+                \App\Services\SeguridadLogger::registrar(
+                    'reuso_refresh',
+                    ip: $ip,
+                    usuarioId: $rt->usuario_id,
+                    correo: $rt->usuario?->correo
+                );
+
                 Log::warning("Reuso de refresh token detectado para usuario ID: {$rt->usuario_id}, familia ID: {$rt->familia_id}", [
                     'usuario_id' => $rt->usuario_id,
                     'familia_id' => $rt->familia_id,
