@@ -1,8 +1,8 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
-import { provideTranslateService } from '@ngx-translate/core';
+import { TranslateService, provideTranslateService } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { DestinoSalida } from '../../../core/models';
 import { SalidaService } from '../../../core/services/salida.service';
@@ -202,5 +202,173 @@ describe('LoginComponent - aviso de sesión expirada', () => {
     expect(inputCorreo.disabled).toBeFalse();
     expect(inputPass.disabled).toBeFalse();
     httpMock.verify();
+  });
+
+  describe('LoginComponent - Aviso 429 y cuenta regresiva en vivo', () => {
+    let fixture: ComponentFixture<LoginComponent>;
+    let httpMock: HttpTestingController;
+    let translate: TranslateService;
+
+    beforeEach(async () => {
+      await TestBed.configureTestingModule({
+        imports: [LoginComponent],
+        providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting(), provideTranslateService()]
+      }).compileComponents();
+
+      const salidaService = TestBed.inject(SalidaService);
+      spyOn(salidaService, 'getSalidas').and.returnValue(of([]));
+
+      translate = TestBed.inject(TranslateService);
+      translate.setTranslation('es', {
+        ERRORES: {
+          TOO_MANY_ATTEMPTS: 'Demasiados intentos. Espera {{segundos}} segundos antes de volver a intentar.',
+          TOO_MANY_ATTEMPTS_1: 'Demasiados intentos. Espera 1 segundo antes de volver a intentar.',
+          REFERENCIA: 'Código de referencia'
+        }
+      });
+      translate.use('es');
+
+      httpMock = TestBed.inject(HttpTestingController);
+      fixture = TestBed.createComponent(LoginComponent);
+      fixture.detectChanges();
+    });
+
+    afterEach(() => {
+      httpMock.verify();
+    });
+
+    it('con un 429 y Retry-After: 3, el mensaje muestra 3, luego 2, luego 1, y a los 3 s desaparece y el botón se habilita', fakeAsync(() => {
+      fixture.componentInstance.form.setValue({
+        correo: 'marlon@travelapp.test',
+        password: 'Password123'
+      });
+      fixture.detectChanges();
+
+      const boton: HTMLButtonElement = fixture.nativeElement.querySelector('.ticket-talon button[type="submit"]');
+      expect(boton.disabled).toBeFalse();
+
+      fixture.componentInstance.onSubmit();
+      fixture.detectChanges();
+
+      const req = httpMock.expectOne((r) => r.url.endsWith('/auth/login'));
+      req.flush(
+        { success: false, error: { code: 'TOO_MANY_ATTEMPTS', message: 'Demasiados intentos' }, trace_id: 'TRC-429-ABC' },
+        { status: 429, statusText: 'Too Many Requests', headers: { 'Retry-After': '3' } }
+      );
+      fixture.detectChanges();
+
+      // Al aparecer el 429: muestra 3, el botón se deshabilita, y muestra el traceId
+      let alert = fixture.nativeElement.querySelector('.alert-danger');
+      expect(alert).toBeTruthy();
+      expect(alert.textContent).toContain('3');
+      expect(alert.textContent).toContain('TRC-429-ABC');
+      expect(boton.disabled).toBeTrue();
+
+      // Accesibilidad: tiene role="alert" y la parte dinámica tiene aria-live="off"
+      expect(alert.getAttribute('role')).toBe('alert');
+      const offLive = alert.querySelector('[aria-live="off"]');
+      expect(offLive).toBeTruthy();
+
+      // Tic 1 segundo: muestra 2
+      tick(1000);
+      fixture.detectChanges();
+      alert = fixture.nativeElement.querySelector('.alert-danger');
+      expect(alert).toBeTruthy();
+      expect(alert.textContent).toContain('2');
+      expect(boton.disabled).toBeTrue();
+
+      // Tic 2 segundos: muestra 1 (singular)
+      tick(1000);
+      fixture.detectChanges();
+      alert = fixture.nativeElement.querySelector('.alert-danger');
+      expect(alert).toBeTruthy();
+      expect(alert.textContent).toContain('1');
+      expect(boton.disabled).toBeTrue();
+
+      // Tic 3 segundos: desaparece el aviso y el botón se rehabilita
+      tick(1000);
+      fixture.detectChanges();
+      alert = fixture.nativeElement.querySelector('.alert-danger');
+      expect(alert).toBeNull();
+      expect(boton.disabled).toBeFalse();
+    }));
+
+    it('en el login, con la cuenta activa, cambiar el correo habilita el botón y volver al correo bloqueado lo deshabilita', fakeAsync(() => {
+      fixture.componentInstance.form.setValue({
+        correo: 'marlon@travelapp.test',
+        password: 'Password123'
+      });
+      fixture.detectChanges();
+
+      const boton: HTMLButtonElement = fixture.nativeElement.querySelector('.ticket-talon button[type="submit"]');
+
+      fixture.componentInstance.onSubmit();
+      fixture.detectChanges();
+
+      const req = httpMock.expectOne((r) => r.url.endsWith('/auth/login'));
+      req.flush(
+        { success: false, error: { code: 'TOO_MANY_ATTEMPTS', message: 'Demasiados intentos' }, trace_id: 'TRC-999' },
+        { status: 429, statusText: 'Too Many Requests', headers: { 'Retry-After': '5' } }
+      );
+      fixture.detectChanges();
+
+      // Bloqueado en marlon@travelapp.test
+      expect(boton.disabled).toBeTrue();
+      expect(fixture.nativeElement.querySelector('.alert-danger')).toBeTruthy();
+
+      // Cambiar a otro correo habilita el botón y oculta el aviso
+      fixture.componentInstance.form.controls['correo'].setValue('otro@travelapp.test');
+      fixture.detectChanges();
+
+      expect(boton.disabled).toBeFalse();
+      expect(fixture.nativeElement.querySelector('.alert-danger')).toBeNull();
+
+      // Avanzar 2 segundos (quedan 3 s)
+      tick(2000);
+      fixture.detectChanges();
+
+      // Volver al correo bloqueado (incluso con mayúsculas/espacios): reaparecen el aviso y la cuenta restante
+      fixture.componentInstance.form.controls['correo'].setValue('  MARLON@travelapp.test  ');
+      fixture.detectChanges();
+
+      expect(boton.disabled).toBeTrue();
+      const alert = fixture.nativeElement.querySelector('.alert-danger');
+      expect(alert).toBeTruthy();
+      expect(alert.textContent).toContain('3');
+
+      // Completar la cuenta (3 s más)
+      tick(3000);
+      fixture.detectChanges();
+
+      expect(boton.disabled).toBeFalse();
+      expect(fixture.nativeElement.querySelector('.alert-danger')).toBeNull();
+    }));
+
+    it('al destruir el componente no queda ningún temporizador pendiente', fakeAsync(() => {
+      fixture.componentInstance.form.setValue({
+        correo: 'marlon@travelapp.test',
+        password: 'Password123'
+      });
+      fixture.detectChanges();
+
+      fixture.componentInstance.onSubmit();
+      fixture.detectChanges();
+
+      const req = httpMock.expectOne((r) => r.url.endsWith('/auth/login'));
+      req.flush(
+        { success: false, error: { code: 'TOO_MANY_ATTEMPTS', message: 'Demasiados intentos' } },
+        { status: 429, statusText: 'Too Many Requests', headers: { 'Retry-After': '30' } }
+      );
+      fixture.detectChanges();
+
+      // Avanzar 2 segundos mientras la cuenta está activa
+      tick(2000);
+      fixture.detectChanges();
+
+      // Destruir el componente con la cuenta aún activa (quedan 28 s)
+      fixture.destroy();
+      expect(fixture.componentInstance.rateLimit.segundos()).toBe(0);
+      expect(fixture.componentInstance.rateLimit.activo()).toBeFalse();
+    }));
   });
 });

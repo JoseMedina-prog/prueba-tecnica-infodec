@@ -173,6 +173,8 @@
     "ROUTE_NOT_FOUND": "Die angeforderte Ressource wurde nicht gefunden.",
     "METHOD_NOT_ALLOWED": "HTTP-Methode nicht erlaubt.",
     "TOO_MANY_ATTEMPTS": "Zu viele Versuche. Warte {{segundos}} Sekunden, bevor du es erneut versuchst.",
+    "TOO_MANY_ATTEMPTS_1": "Zu viele Versuche. Warte 1 Sekunde, bevor du es erneut versuchst.",
+    "TOO_MANY_ATTEMPTS_SINGULAR": "Zu viele Versuche. Warte 1 Sekunde, bevor du es erneut versuchst.",
     "EXTERNAL_SERVICE_UNAVAILABLE": "Der externe Dienst ist vorübergehend nicht verfügbar.",
     "EXTERNAL_SERVICE_TIMEOUT": "Der externe Dienst hat zu lange für eine Antwort gebraucht.",
     "INTERNAL_SERVER_ERROR": "Ein interner Serverfehler ist aufgetreten. Bitte versuche es später erneut.",

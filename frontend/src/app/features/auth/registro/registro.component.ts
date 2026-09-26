@@ -16,6 +16,7 @@ import { ApiErrorService } from '../../../core/services/api-error.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { IdiomaService } from '../../../core/services/idioma.service';
 import { evaluatePasswordRules, passwordReglasValidator } from '../../../core/utils/password-rules';
+import { crearRateLimitTimer } from '../../../core/utils/rate-limit';
 import { RELOJ_FN, obtenerFechaColombia } from '../../../core/utils/salidas';
 import { AlertaErrorComponent } from '../../../shared/components/alerta-error/alerta-error.component';
 import { CampoErrorComponent } from '../../../shared/components/campo-error/campo-error.component';
@@ -244,7 +245,7 @@ export function passwordMatchValidator(group: AbstractControl): ValidationErrors
           <button
             type="submit"
             class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2 btn-auth-submit"
-            [disabled]="enviando()"
+            [disabled]="enviando() || estaBloqueado()"
           >
             @if (enviando()) {
               <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
@@ -333,8 +334,18 @@ export class RegistroComponent {
 
   readonly enviando = signal<boolean>(false);
   readonly cargando = this.enviando;
-  readonly errorGeneral = signal<ApiHttpError | null>(null);
+  readonly otroError = signal<ApiHttpError | null>(null);
   readonly erroresCampos = signal<Record<string, string>>({});
+
+  readonly rateLimit = crearRateLimitTimer();
+  readonly estaBloqueado = computed(() => this.rateLimit.estaBloqueado());
+
+  readonly errorGeneral = computed<ApiHttpError | null>(() => {
+    if (this.estaBloqueado()) {
+      return this.rateLimit.errorParaMostrar();
+    }
+    return this.otroError();
+  });
 
   readonly mostrarPassword = signal(false);
   readonly mostrarConfirmacion = signal(false);
@@ -365,7 +376,7 @@ export class RegistroComponent {
   ]);
 
   onSubmit(): void {
-    if (this.enviando()) {
+    if (this.enviando() || this.estaBloqueado()) {
       return;
     }
 
@@ -377,7 +388,7 @@ export class RegistroComponent {
     const payload = this.form.getRawValue();
     this.enviando.set(true);
     this.form.disable();
-    this.errorGeneral.set(null);
+    this.otroError.set(null);
     this.erroresCampos.set({});
 
     this.authService
@@ -402,7 +413,11 @@ export class RegistroComponent {
         },
         error: (err) => {
           const apiError = this.apiErrorService.procesarError(err);
-          this.errorGeneral.set(apiError);
+          if (apiError.status === 429 || apiError.code === 'TOO_MANY_ATTEMPTS') {
+            this.rateLimit.iniciar(apiError);
+          } else {
+            this.otroError.set(apiError);
+          }
 
           if (apiError.details) {
             this.erroresCampos.set(this.apiErrorService.mapearDetallesPorCampo(apiError.details));

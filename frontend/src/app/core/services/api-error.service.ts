@@ -37,16 +37,28 @@ export class ApiErrorService {
     const traceId: string | undefined = payload?.trace_id || err.headers?.get('X-Trace-Id') || undefined;
 
     // Obtener Retry-After si viene en cabeceras
-    const retryAfterHeader = err.headers?.get('Retry-After');
-    const retryAfter = retryAfterHeader ? parseInt(retryAfterHeader, 10) : undefined;
+    const retryAfterHeader = err.headers?.get('Retry-After') ?? err.headers?.get('retry-after');
+    const parsedRetryAfter = retryAfterHeader ? parseInt(retryAfterHeader, 10) : undefined;
+    const retryAfter = (parsedRetryAfter !== undefined && !isNaN(parsedRetryAfter)) ? parsedRetryAfter : undefined;
 
     // Obtener mensaje traducido según el código de error
-    const claveTraduccion = `ERRORES.${backendCode}`;
-    let mensaje = this.translate.instant(claveTraduccion, { segundos: retryAfter ?? 60 });
+    const segundos = retryAfter ?? 60;
+    const claveTraduccion = (backendCode === 'TOO_MANY_ATTEMPTS' && segundos === 1)
+      ? 'ERRORES.TOO_MANY_ATTEMPTS_1'
+      : `ERRORES.${backendCode}`;
+    let mensaje = this.translate.instant(claveTraduccion, { segundos });
 
     // Si ngx-translate devuelve la misma clave porque no existe, usar el mensaje del backend o genérico
     if (mensaje === claveTraduccion) {
-      mensaje = payload?.error?.message || this.translate.instant('ERRORES.ERROR_DESCONOCIDO');
+      if (backendCode === 'TOO_MANY_ATTEMPTS') {
+        const lang = typeof this.translate.currentLang === 'function' ? this.translate.currentLang() : (this.translate as any).currentLang;
+        const esAleman = lang === 'de';
+        mensaje = segundos === 1
+          ? (esAleman ? 'Zu viele Versuche. Warte 1 Sekunde, bevor du es erneut versuchst.' : 'Demasiados intentos. Espera 1 segundo antes de volver a intentar.')
+          : (esAleman ? `Zu viele Versuche. Warte ${segundos} Sekunden, bevor du es erneut versuchst.` : `Demasiados intentos. Espera ${segundos} segundos antes de volver a intentar.`);
+      } else {
+        mensaje = payload?.error?.message || this.translate.instant('ERRORES.ERROR_DESCONOCIDO');
+      }
     }
 
     return {

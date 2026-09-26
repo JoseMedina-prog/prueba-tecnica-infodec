@@ -11,6 +11,7 @@ import { ConsultaStateService } from '../../../core/services/consulta-state.serv
 import { ConsultaService } from '../../../core/services/consulta.service';
 import { IdiomaService } from '../../../core/services/idioma.service';
 import { formatearCop, localeDe, normalizarPresupuesto } from '../../../core/utils/formato';
+import { crearRateLimitTimer } from '../../../core/utils/rate-limit';
 import { AlertaErrorComponent } from '../../../shared/components/alerta-error/alerta-error.component';
 import { PasosIndicadorComponent } from '../../../shared/components/pasos-indicador/pasos-indicador.component';
 import { presupuestoValidator, validarPresupuesto } from './presupuesto.validator';
@@ -109,7 +110,7 @@ const ATAJOS = [500000, 1000000, 3000000];
           <button
             type="submit"
             class="btn btn-primary d-inline-flex align-items-center justify-content-center gap-2 btn-consultar"
-            [disabled]="enviando()"
+            [disabled]="enviando() || estaBloqueado()"
           >
             @if (enviando()) {
               <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
@@ -218,8 +219,18 @@ export class PresupuestoComponent {
   readonly enviando = signal(false);
   readonly cargando = this.enviando;
   readonly intentoEnviar = signal(false);
-  readonly errorHttp = signal<ApiHttpError | null>(null);
+  readonly errorGeneralOtro = signal<ApiHttpError | null>(null);
   readonly errorServidor = signal<string | null>(null);
+
+  readonly rateLimit = crearRateLimitTimer();
+  readonly estaBloqueado = computed(() => this.rateLimit.estaBloqueado());
+
+  readonly errorHttp = computed<ApiHttpError | null>(() => {
+    if (this.estaBloqueado()) {
+      return this.rateLimit.errorParaMostrar();
+    }
+    return this.errorGeneralOtro();
+  });
 
   /** Clave del error del cliente; solo se muestra después de intentar avanzar. */
   readonly mensajeError = computed(() => {
@@ -251,7 +262,7 @@ export class PresupuestoComponent {
 
   limpiarErroresServidor(): void {
     this.errorServidor.set(null);
-    this.errorHttp.set(null);
+    this.errorGeneralOtro.set(null);
   }
 
   volverAtras(): void {
@@ -260,7 +271,7 @@ export class PresupuestoComponent {
   }
 
   consultar(): void {
-    if (this.enviando()) {
+    if (this.enviando() || this.estaBloqueado()) {
       return;
     }
 
@@ -300,8 +311,10 @@ export class PresupuestoComponent {
           // 422 del presupuesto va debajo del campo; cualquier otro error (502/504, red...) como alerta general.
           if (err.status === 422 && porCampo['presupuesto']) {
             this.errorServidor.set(porCampo['presupuesto']);
+          } else if (error.status === 429 || error.code === 'TOO_MANY_ATTEMPTS') {
+            this.rateLimit.iniciar(error);
           } else {
-            this.errorHttp.set(error);
+            this.errorGeneralOtro.set(error);
           }
         }
       });

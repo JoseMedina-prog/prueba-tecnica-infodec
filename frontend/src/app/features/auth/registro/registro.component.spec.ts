@@ -1,8 +1,8 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
-import { provideTranslateService } from '@ngx-translate/core';
+import { TranslateService, provideTranslateService } from '@ngx-translate/core';
 import { RegistroComponent } from './registro.component';
 
 describe('RegistroComponent - Checklist de contraseña', () => {
@@ -149,5 +149,143 @@ describe('RegistroComponent - Checklist de contraseña', () => {
     expect(inputPass.disabled).toBeFalse();
     expect(inputConfirm.disabled).toBeFalse();
     httpMock.verify();
+  });
+
+  describe('RegistroComponent - Aviso 429 y cuenta regresiva en vivo', () => {
+    let translate: TranslateService;
+    let httpMock: HttpTestingController;
+
+    beforeEach(() => {
+      translate = TestBed.inject(TranslateService);
+      translate.setTranslation('es', {
+        ERRORES: {
+          TOO_MANY_ATTEMPTS: 'Demasiados intentos. Espera {{segundos}} segundos antes de volver a intentar.',
+          TOO_MANY_ATTEMPTS_1: 'Demasiados intentos. Espera 1 segundo antes de volver a intentar.',
+          REFERENCIA: 'Código de referencia'
+        }
+      });
+      translate.use('es');
+      httpMock = TestBed.inject(HttpTestingController);
+    });
+
+    afterEach(() => {
+      httpMock.verify();
+    });
+
+    it('con un 429 y Retry-After: 3, el mensaje muestra 3, luego 2, luego 1, y a los 3 s desaparece y el botón se habilita', fakeAsync(() => {
+      component.form.setValue({
+        nombre: 'Marlon',
+        correo: 'marlon@travelapp.test',
+        password: 'Password123',
+        password_confirmation: 'Password123'
+      });
+      fixture.detectChanges();
+
+      const boton: HTMLButtonElement = fixture.nativeElement.querySelector('.ticket-talon button[type="submit"]');
+      expect(boton.disabled).toBeFalse();
+
+      component.onSubmit();
+      fixture.detectChanges();
+
+      const req = httpMock.expectOne((r) => r.url.endsWith('/auth/register'));
+      req.flush(
+        { success: false, error: { code: 'TOO_MANY_ATTEMPTS', message: 'Demasiados intentos' }, trace_id: 'TRC-REG-429' },
+        { status: 429, statusText: 'Too Many Requests', headers: { 'Retry-After': '3' } }
+      );
+      fixture.detectChanges();
+
+      // Al aparecer el 429
+      let alert = fixture.nativeElement.querySelector('.alert-danger');
+      expect(alert).toBeTruthy();
+      expect(alert.textContent).toContain('3');
+      expect(alert.textContent).toContain('TRC-REG-429');
+      expect(boton.disabled).toBeTrue();
+
+      // Tic 1: muestra 2
+      tick(1000);
+      fixture.detectChanges();
+      alert = fixture.nativeElement.querySelector('.alert-danger');
+      expect(alert.textContent).toContain('2');
+      expect(boton.disabled).toBeTrue();
+
+      // Tic 2: muestra 1
+      tick(1000);
+      fixture.detectChanges();
+      alert = fixture.nativeElement.querySelector('.alert-danger');
+      expect(alert.textContent).toContain('1');
+      expect(boton.disabled).toBeTrue();
+
+      // Tic 3: desaparece el aviso y se rehabilita el botón
+      tick(1000);
+      fixture.detectChanges();
+      alert = fixture.nativeElement.querySelector('.alert-danger');
+      expect(alert).toBeNull();
+      expect(boton.disabled).toBeFalse();
+    }));
+
+    it('el botón permanece bloqueado por IP sin importar lo que se escriba', fakeAsync(() => {
+      component.form.setValue({
+        nombre: 'Marlon',
+        correo: 'marlon@travelapp.test',
+        password: 'Password123',
+        password_confirmation: 'Password123'
+      });
+      fixture.detectChanges();
+
+      const boton: HTMLButtonElement = fixture.nativeElement.querySelector('.ticket-talon button[type="submit"]');
+
+      component.onSubmit();
+      fixture.detectChanges();
+
+      const req = httpMock.expectOne((r) => r.url.endsWith('/auth/register'));
+      req.flush(
+        { success: false, error: { code: 'TOO_MANY_ATTEMPTS', message: 'Demasiados intentos' } },
+        { status: 429, statusText: 'Too Many Requests', headers: { 'Retry-After': '5' } }
+      );
+      fixture.detectChanges();
+
+      expect(boton.disabled).toBeTrue();
+
+      // Cambiar valores del formulario no desbloquea el botón (límite por IP)
+      component.form.controls['correo'].setValue('otro@travelapp.test');
+      component.form.controls['nombre'].setValue('Otro Nombre');
+      fixture.detectChanges();
+
+      expect(boton.disabled).toBeTrue();
+      expect(fixture.nativeElement.querySelector('.alert-danger')).toBeTruthy();
+
+      tick(5000);
+      fixture.detectChanges();
+
+      expect(boton.disabled).toBeFalse();
+      expect(fixture.nativeElement.querySelector('.alert-danger')).toBeNull();
+    }));
+
+    it('al destruir el componente no queda ningún temporizador pendiente', fakeAsync(() => {
+      component.form.setValue({
+        nombre: 'Marlon',
+        correo: 'marlon@travelapp.test',
+        password: 'Password123',
+        password_confirmation: 'Password123'
+      });
+      fixture.detectChanges();
+
+      component.onSubmit();
+      fixture.detectChanges();
+
+      const req = httpMock.expectOne((r) => r.url.endsWith('/auth/register'));
+      req.flush(
+        { success: false, error: { code: 'TOO_MANY_ATTEMPTS', message: 'Demasiados intentos' } },
+        { status: 429, statusText: 'Too Many Requests', headers: { 'Retry-After': '45' } }
+      );
+      fixture.detectChanges();
+
+      tick(2000);
+      fixture.detectChanges();
+
+      fixture.destroy();
+      expect(component.rateLimit.segundos()).toBe(0);
+      expect(component.rateLimit.activo()).toBeFalse();
+    }));
   });
 });

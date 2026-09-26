@@ -1,15 +1,16 @@
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
-import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { catchError, finalize, of, switchMap } from 'rxjs';
+import { catchError, finalize, map, of, switchMap } from 'rxjs';
 import { ApiHttpError, DestinoSalida } from '../../../core/models';
 import { ApiErrorService } from '../../../core/services/api-error.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { IdiomaService } from '../../../core/services/idioma.service';
 import { SalidaService } from '../../../core/services/salida.service';
 import { consumirEstadoLogin } from '../../../core/utils/estado-login';
+import { crearRateLimitTimer } from '../../../core/utils/rate-limit';
 import { RELOJ_FN, obtenerFechaColombia } from '../../../core/utils/salidas';
 import { AlertaErrorComponent } from '../../../shared/components/alerta-error/alerta-error.component';
 import { CampoErrorComponent } from '../../../shared/components/campo-error/campo-error.component';
@@ -190,7 +191,7 @@ import { LogoComponent } from '../../../shared/components/logo/logo.component';
           <button
             type="submit"
             class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2 btn-auth-submit"
-            [disabled]="enviando()"
+            [disabled]="enviando() || estaBloqueado()"
           >
             @if (enviando()) {
               <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
@@ -238,11 +239,13 @@ export class LoginComponent implements OnInit {
   readonly avisoSesionExpirada = signal(false);
   readonly enviando = signal<boolean>(false);
   readonly cargando = this.enviando;
-  readonly errorGeneral = signal<ApiHttpError | null>(null);
+  readonly otroError = signal<ApiHttpError | null>(null);
   readonly erroresCampos = signal<Record<string, string>>({});
   readonly mensajeExito = signal<string | null>(null);
   readonly mostrarPassword = signal(false);
   readonly resumenDestinos = signal<{ paises: number; ciudades: number } | null>(null);
+
+  readonly rateLimit = crearRateLimitTimer();
 
   readonly fechaColombia = computed(() => obtenerFechaColombia(this.relojFn()));
 
@@ -272,6 +275,22 @@ export class LoginComponent implements OnInit {
     password: ['', [Validators.required]]
   });
 
+  readonly correoActual = toSignal(
+    this.form.controls['correo'].valueChanges.pipe(
+      map((val) => (typeof val === 'string' ? val : ''))
+    ),
+    { initialValue: (this.form.controls['correo'].value as string) ?? '' }
+  );
+
+  readonly estaBloqueado = computed(() => this.rateLimit.estaBloqueado(this.correoActual()));
+
+  readonly errorGeneral = computed<ApiHttpError | null>(() => {
+    if (this.rateLimit.estaBloqueado(this.correoActual())) {
+      return this.rateLimit.errorParaMostrar();
+    }
+    return this.otroError();
+  });
+
   ngOnInit(): void {
     const estado = consumirEstadoLogin();
     if (estado.correo) {
@@ -288,7 +307,7 @@ export class LoginComponent implements OnInit {
   }
 
   onSubmit(): void {
-    if (this.enviando()) {
+    if (this.enviando() || this.estaBloqueado()) {
       return;
     }
 
@@ -301,7 +320,7 @@ export class LoginComponent implements OnInit {
     const credenciales = this.form.getRawValue();
     this.enviando.set(true);
     this.form.disable();
-    this.errorGeneral.set(null);
+    this.otroError.set(null);
     this.erroresCampos.set({});
     this.mensajeExito.set(null);
 
@@ -321,7 +340,11 @@ export class LoginComponent implements OnInit {
         },
         error: (err) => {
           const apiError = this.apiErrorService.procesarError(err);
-          this.errorGeneral.set(apiError);
+          if (apiError.status === 429 || apiError.code === 'TOO_MANY_ATTEMPTS') {
+            this.rateLimit.iniciar(apiError, credenciales.correo);
+          } else {
+            this.otroError.set(apiError);
+          }
 
           if (apiError.details) {
             this.erroresCampos.set(this.apiErrorService.mapearDetallesPorCampo(apiError.details));

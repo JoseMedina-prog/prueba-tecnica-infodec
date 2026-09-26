@@ -10,7 +10,9 @@ import { ApiHttpError } from '../../../core/models';
   template: `
     @if (error()) {
       <div class="alert alert-danger" role="alert">
-        <div class="fw-semibold">{{ obtenerMensaje() }}</div>
+        <div class="fw-semibold" aria-live="off">
+          <span aria-live="off">{{ obtenerMensaje() }}</span>
+        </div>
         @if (obtenerTraceId()) {
           <div class="mt-1 small text-body-secondary">
             {{ 'ERRORES.REFERENCIA' | translate }}: <span class="mono">{{ obtenerTraceId() }}</span>
