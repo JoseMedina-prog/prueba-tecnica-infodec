@@ -42,6 +42,14 @@ return Application::configure(basePath: dirname(__DIR__))
             'auth.token' => AuthTokenMiddleware::class,
         ]);
     })
+    /**
+     * Manejador centralizado de errores para la API:
+     * - Unifica todas las respuestas bajo el formato { success: false, error: { code, message, details }, trace_id }.
+     * - Convierte cada excepción a un código del Anexo B (validación a VALIDATION_ERROR con details como lista
+     *   de campo y mensaje, tokens a AUTH_TOKEN_*, rutas inexistentes a NOT_FOUND, etc.).
+     * - Los mensajes se traducen con lang/es y lang/de según la cabecera Accept-Language de la petición.
+     * - Con APP_DEBUG=false nunca se exponen trazas internas, consultas SQL ni rutas del servidor.
+     */
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->dontFlash([
             'password',

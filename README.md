@@ -504,13 +504,14 @@ El backend devuelve los errores en un formato JSON unificado:
 - Códigos 404 y 405 en lugar de excepciones 500.
 - Código 413 por encima de 16 KB (16.384 bytes).
 - Con APP_DEBUG=false no se filtran trazas de código ni credenciales.
+- El error FORBIDDEN (403) no ocurre porque ningún endpoint recibe el id de otro usuario ni maneja recursos ajenos (todas las operaciones se resuelven contra el usuario autenticado en el token).
 
 ### Códigos de error y estado HTTP
 
 | Código                     | Estado | Descripción                                               |
 | :------------------------- | :----: | :-------------------------------------------------------- |
 | `BAD_REQUEST`              |  400   | JSON con formato inválido.                                |
-| `AUTH_INVALID_CREDENTIALS` |  401   | Correo o contraseña incorrectos.                          |
+| `AUTH_INVALID_CREDENTIALS` |  401   | Correo o contraseña inválidos.                            |
 | `AUTH_TOKEN_MISSING`       |  401   | No se incluyó el token en la cabecera.                    |
 | `AUTH_TOKEN_INVALID`       |  401   | Firma inválida, descifrado fallido o usuario inexistente. |
 | `AUTH_TOKEN_EXPIRED`       |  401   | Access token superó los 15 minutos.                       |
@@ -593,7 +594,7 @@ cd frontend
 npx ng test --watch=false --browsers=ChromeHeadless
 ```
 
-Resultado: 86 pruebas exitosas, sin fallos.
+Resultado: 114 pruebas exitosas, sin fallos.
 
 ### 3. Pruebas de integración con Newman
 

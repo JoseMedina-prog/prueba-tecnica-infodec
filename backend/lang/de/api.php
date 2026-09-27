@@ -2,7 +2,7 @@
 
 return [
     'BAD_REQUEST' => 'Ungültige Anfrage oder fehlerhaftes JSON-Format.',
-    'AUTH_INVALID_CREDENTIALS' => 'Ungültige E-Mail-Adresse oder falsches Passwort.',
+    'AUTH_INVALID_CREDENTIALS' => 'E-Mail oder Passwort ungültig.',
     'AUTH_TOKEN_MISSING' => 'Kein Authentifizierungstoken bereitgestellt.',
     'AUTH_TOKEN_INVALID' => 'Das Authentifizierungstoken ist ungültig.',
     'AUTH_TOKEN_EXPIRED' => 'Das Authentifizierungstoken ist abgelaufen.',
