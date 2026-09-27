@@ -286,7 +286,7 @@ Aclaraciones sobre la carga del script:
 2. **Puerto 8000 ocupado**: el frontend espera la API en `http://localhost:8000/api`. Si el backend corre en otro puerto (por ejemplo 8001), debe actualizarse la URL en `frontend/src/environments/environment.development.ts` (`ng serve`) y `frontend/src/environments/environment.ts` (`ng build`).
 3. **Frontend en un puerto distinto de 4200**: si Angular se ejecuta en otro puerto, las peticiones fallarán por CORS. Ajustar la variable `FRONTEND_URL` en `backend/.env` con la URL y el puerto exactos del frontend.
 4. **`createdb` o `psql` no reconocido**: PostgreSQL no está en el PATH del sistema; consultar las alternativas en el paso de creación de bases de datos (ruta completa en `C:\Program Files\PostgreSQL\<versión>\bin`, pgAdmin o `CREATE DATABASE` vía SQL).
-5. **Claves recién creadas que todavía no funcionan**: una clave nueva de OpenWeatherMap puede tardar hasta un par de horas en activarse (responde 401 mientras tanto). Si ya se ejecutó `php artisan externos:actualizar`, la app responderá con los datos de respaldo locales; de lo contrario hay que esperar su activación.
+5. **Claves recién creadas que responden 401**: una clave nueva de OpenWeatherMap puede tardar hasta un par de horas en activarse. Cuando funcione, corre `php artisan externos:actualizar`.
 6. **Error 500 del servidor de desarrollo**: se soluciona ejecutando `php artisan optimize:clear` en la carpeta `backend/` y reiniciando `php artisan serve`.
 7. **Cierre de sesión al correr Postman**: ejecutar la colección de Postman con la aplicación abierta en el navegador revoca las sesiones activas, porque la prueba de reuso del refresh token invalida la familia completa de tokens por seguridad.
 
