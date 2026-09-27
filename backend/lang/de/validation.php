@@ -15,6 +15,7 @@ return [
     'confirmed' => 'Die Bestätigung für :attribute stimmt nicht überein.',
     'in' => 'Der ausgewählte Wert für :attribute ist ungültig.',
     'regex' => 'Das Format von :attribute ist ungültig.',
+    'not_regex' => 'Das Feld :attribute enthält unzulässige Zeichen.',
     'numeric' => 'Das Feld :attribute muss eine Zahl sein.',
     'gt' => [
         'numeric' => 'Das Feld :attribute muss größer als :value sein.',
@@ -42,8 +43,5 @@ return [
         'idioma' => 'Sprache',
         'presupuesto' => 'Budget',
         'ciudad_id' => 'Stadt',
-        'moneda_origen_id' => 'Ausgangswährung',
-        'moneda_destino_id' => 'Zielwährung',
-        'monto' => 'Betrag',
     ],
 ];

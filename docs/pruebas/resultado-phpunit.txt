@@ -3,9 +3,9 @@ PHPUnit 10.5.65 by Sebastian Bergmann and contributors.
 Runtime:       PHP 8.5.9
 Configuration: C:\Users\Jose Medina\Documents\proyectos\infodec\prueba-tecnica-infodec\backend\phpunit.xml
 
-..............................................                    46 / 46 (100%)
+................................................                  48 / 48 (100%)
 
-Time: 00:05.097, Memory: 54.00 MB
+Time: 00:05.748, Memory: 56.00 MB
 
 Cache Externos (Tests\Feature\Externos\CacheExternos)
  ✔ Clima guardado hace menos de 30 minutos se sirve de cache sin peticiones http
@@ -38,6 +38,7 @@ Historial (Tests\Feature\Consultas\Historial)
 
 Login (Tests\Feature\Auth\Login)
  ✔ Contrasena incorrecta bloquea al sexto intento con retry after
+ ✔ Veinte fallos con correos distintos desde una ip bloquean el intento 21
 
 Logout (Tests\Feature\Auth\Logout)
  ✔ Un token usado despues del logout es rechazado
@@ -54,6 +55,7 @@ Registro (Tests\Feature\Auth\Registro)
  ✔ Registro con correo duplicado devuelve 409
  ✔ Registro exitoso crea usuario
  ✔ Registro con crlf en correo devuelve 422
+ ✔ El error not regex del correo sale en espanol
  ✔ El undecimo registro en un minuto devuelve 429
  ✔ El registro 31 en una hora devuelve 429
 
@@ -81,4 +83,4 @@ Token (Tests\Feature\Auth\Token)
 Token Service (Tests\Unit\TokenService)
  ✔ Token service emite y valida access tokens
 
-OK (46 tests, 353 assertions)
+OK (48 tests, 402 assertions)

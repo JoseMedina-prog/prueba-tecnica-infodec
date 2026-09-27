@@ -32,7 +32,8 @@ Route::prefix('auth')->group(function () {
 });
 
 // Tablero de salidas del login: PÚBLICO y de solo lectura (sin auth.token). Solo expone el código
-// IATA y los nombres traducidos de ciudad y país; limitado a 30 peticiones por minuto por IP.
+// IATA, los nombres traducidos de ciudad y país y la moneda (código y símbolo); limitado a 30 peticiones
+// por minuto por IP.
 Route::get('/salidas', [SalidaController::class, 'index'])
     ->middleware('throttle:salidas')
     ->name('salidas.index');

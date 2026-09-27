@@ -20,7 +20,7 @@ class MonedaSeeder extends Seeder
             ],
             [
                 'codigo' => 'JPY',
-                'nombre' => 'Yen',
+                'nombre' => 'Yen japonés',
                 'simbolo' => '¥',
             ],
             [

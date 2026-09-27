@@ -15,6 +15,7 @@ return [
     'confirmed' => 'La confirmación de :attribute no coincide.',
     'in' => 'El campo :attribute seleccionado es inválido.',
     'regex' => 'El formato del campo :attribute es inválido.',
+    'not_regex' => 'El campo :attribute contiene caracteres no permitidos.',
     'numeric' => 'El campo :attribute debe ser un número.',
     'gt' => [
         'numeric' => 'El campo :attribute debe ser mayor que :value.',
@@ -42,8 +43,5 @@ return [
         'idioma' => 'idioma',
         'presupuesto' => 'presupuesto',
         'ciudad_id' => 'ciudad',
-        'moneda_origen_id' => 'moneda de origen',
-        'moneda_destino_id' => 'moneda de destino',
-        'monto' => 'monto',
     ],
 ];

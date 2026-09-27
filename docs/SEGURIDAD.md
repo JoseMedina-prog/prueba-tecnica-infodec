@@ -26,7 +26,7 @@ Este documento detalla las medidas de seguridad defensiva implementadas en **Pas
 | Riesgo API | Aplicabilidad en Pasabordo | Implementación y Defensa |
 | :--- | :--- | :--- |
 | **API1: Broken Object Level Authorization (BOLA)** | Historial y consultas por usuario | El usuario no puede consultar datos ajenos: `GET /api/consultas/historial` no acepta parámetro de `usuario_id`; siempre consulta el ID del token verificado en BD. |
-| **API2: Broken Authentication** | Endpoint de login y refresh | Identificación de intentos fallidos por clave compuesta `login:{correo}|{ip}`; bloqueo al 5.º fallo; detección y revocación masiva ante reuso de refresh token. |
+| **API2: Broken Authentication** | Endpoint de login y refresh | Identificación de intentos fallidos por clave compuesta `login:{correo}|{ip}`; bloqueo al 5.º fallo; tope adicional de 20 fallos por minuto por IP (`login-ip:{ip}`) contra password spraying; detección y revocación masiva ante reuso de refresh token. |
 | **API3: Broken Object Property Level Authorization** | Exposición excesiva de datos | Los controladores y `ConsultaResource` devuelven únicamente los campos necesarios para la UI; nunca se retornan hashes, IDs internos ajenos ni timestamps del sistema. |
 | **API4: Unrestricted Resource Consumption** | Agotamiento de CPU, memoria y APIs | Límite de tamaño de cuerpo (16 KB) vía middleware; limitadores de tasa `RateLimiter::for` (registro: 10/min y 30/h, consultas: 20/min, externas: 30/min, salidas: 30/min, general: 60/min); historial limitado a 5 registros en la consulta SQL (`limit(5)`). **Menos llamadas externas:** el clima se guarda en la tabla `climas` y se sirve sin llamar a OpenWeatherMap durante 30 minutos (`WEATHER_CACHE_MINUTOS`); la tasa se sirve sin llamar a ExchangeRate-API si es del día (UTC) o se obtuvo hace menos de 6 horas (`EXCHANGE_CACHE_HORAS`). Así el número de llamadas a terceros ya no crece con el número de consultas de los usuarios, lo que protege la cuota de las claves y evita que un usuario agote el servicio para los demás. |
 | **API6: Unrestricted Access to Sensitive Business Flows** | Creación de cuentas (`/auth/register`, público) | El registro no requiere sesión, así que es el flujo que un bot automatizaría para crear cuentas masivamente. Limitador `registro` por IP: 10 por minuto y 30 por hora; cuenta toda petición, válida o no, porque el 409 `USER_ALREADY_EXISTS` que exige el enunciado permite averiguar qué correos están registrados (enumeración de usuarios). Al exceder responde 429 `TOO_MANY_ATTEMPTS` con `Retry-After` y registra `limite_consumo` en el log de seguridad. |
@@ -41,6 +41,7 @@ Este documento detalla las medidas de seguridad defensiva implementadas en **Pas
 | Recurso / Operación | Límite Aplicado | Clave del Límite | Respuesta al Exceder | Justificación Técnica |
 | :--- | :--- | :--- | :--- | :--- |
 | **Login (`/auth/login`)** | 5 intentos / minuto | `login:{correo}\|{ip}` | 429 `TOO_MANY_ATTEMPTS` + `Retry-After` | Previene ataques de fuerza bruta y credential stuffing sobre cuentas de usuario. |
+| **Login por IP (`/auth/login`)** | 20 intentos fallidos / minuto, con cualquier correo | `login-ip:{ip}` | 429 `TOO_MANY_ATTEMPTS` + `Retry-After` | Previene el password spraying: probar una contraseña común contra muchos correos distintos desde la misma IP, donde cada correo queda por debajo de su propio límite de 5. Solo cuenta fallos, y un login correcto no reinicia este contador. |
 | **Registro (`/auth/register`, público)** | 10 peticiones / min y 30 / hora | `registro:minuto:{ip}` y `registro:hora:{ip}` | 429 `TOO_MANY_ATTEMPTS` + `Retry-After` + evento `limite_consumo` | OWASP API6: frena la creación masiva de cuentas por bots. Cuenta toda petición al endpoint, válida o no: el 409 `USER_ALREADY_EXISTS` que exige el PDF revela si un correo ya existe, y contar también los 409 y 422 es lo que impide probar correos en masa (enumeración de usuarios). Una persona se registra una sola vez. |
 | **Refresh (`/auth/refresh`)** | 30 peticiones / min | `refresh:{ip}` | 429 `TOO_MANY_ATTEMPTS` + `Retry-After` | Evita ataques de denegación de servicio sobre la base de datos y la rotación criptográfica. |
 | **Consultas (`/consultas`, `/conversion`)** | 20 peticiones / min | Usuario autenticado (ID) | 429 `TOO_MANY_ATTEMPTS` + `Retry-After` | Protege la cuota de las APIs externas de clima y divisas, evitando sobrecostos y agotamiento de recursos. |
@@ -76,7 +77,7 @@ Todo lo demás exige `Authorization: Bearer` (middleware `auth.token`). Estos so
 | Endpoint | Método | Por qué es público | Límite |
 | :--- | :---: | :--- | :--- |
 | `/api/auth/register` | POST | Crear la cuenta ocurre, por definición, antes de tener sesión. Es un flujo de negocio sensible (OWASP API6): se limita para que no se automatice la creación masiva de cuentas. | 10 / min y 30 / hora por IP (limitador `registro`, cuenta toda petición), más validación estricta del cuerpo (422) y correo único (409) |
-| `/api/auth/login` | POST | Obtener el primer par de tokens. | 5 intentos / min por `correo + IP` |
+| `/api/auth/login` | POST | Obtener el primer par de tokens. | 5 intentos fallidos / min por `correo + IP` y 20 fallidos / min por IP |
 | `/api/auth/refresh` | POST | Renovar el access token vencido; se autentica con el refresh token del cuerpo, no con la cabecera. | 30 / min por IP |
 | `/api/salidas` | GET | Alimenta el tablero de destinos del login, que se muestra antes de iniciar sesión. **Datos no sensibles:** el código IATA, nombres traducidos de las 8 ciudades destino y la moneda oficial (código y símbolo), que ya son públicos en la propia interfaz; sin ids, coordenadas ni datos de usuarios. **Solo lectura:** GET sin parámetros, sin efectos sobre la base de datos. | 30 / min por IP (limitador `salidas`) |
 
@@ -89,7 +90,7 @@ Los eventos se almacenan en `storage/logs/seguridad.log` utilizando un canal Mon
 
 **Eventos tipificados:**
 1. `login_fallido` (Nivel: `info`): Contraseña incorrecta o usuario inexistente.
-2. `bloqueo_intentos` (Nivel: `warning`): Se sobrepasa el límite de 5 intentos fallidos de login.
+2. `bloqueo_intentos` (Nivel: `warning`): Se sobrepasa el límite de 5 intentos fallidos de login por correo e IP, o el de 20 por IP.
 3. `token_invalido` (Nivel: `info`): Firma alterada, formato JWT corrupto o usuario inexistente.
 4. `token_vencido` (Nivel: `info`): Presentación de access token expirado.
 5. `token_revocado_usado` (Nivel: `info`): Intento de uso de un token revocado en blacklist (`jti`).

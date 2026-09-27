@@ -195,7 +195,7 @@ npm ci
 ```
 
 Verificar la URL de la API:
-La URL del backend está configurada en src/environments/environment.ts y src/environments/environment.development.ts con el valor http://localhost:8000/api.
+La URL del backend está configurada en src/environments/environment.ts (build de producción, `ng build`) y src/environments/environment.development.ts (`ng serve`, que lo reemplaza con fileReplacements en angular.json), ambos con el valor http://localhost:8000/api.
 
 Iniciar el servidor de desarrollo de Angular:
 ```bash
@@ -298,6 +298,7 @@ El token se firma primero con HS256 y luego se cifra con AES-256-GCM mediante el
 
 ### Inicio de sesión (Login)
 - Límite de 5 intentos fallidos por minuto por correo e IP (login:{correo}|{ip}). Al sexto intento da 429 TOO_MANY_ATTEMPTS con Retry-After.
+- Límite de 20 intentos fallidos por minuto por IP con cualquier correo (login-ip:{ip}), contra password spraying. Al intento 21 da el mismo 429 con Retry-After. Un login correcto no reinicia este contador.
 - Si el correo no existe se compara igual contra un hash ficticio (self::DUMMY_HASH), para que la respuesta tarde lo mismo y el mensaje sea idéntico (AUTH_INVALID_CREDENTIALS).
 
 ### Refresh token y detección de reuso
@@ -381,7 +382,7 @@ Rutas definidas en backend/routes/api.php:
 | Método | Ruta | Acceso | Límite | Propósito |
 | :--- | :--- | :--- | :--- | :--- |
 | `POST` | `/api/auth/register` | Público | 10/min y 30/hora por IP | Registro de usuarios. El límite por IP frena la enumeración de correos. |
-| `POST` | `/api/auth/login` | Público | 5 intentos/min por correo+IP | Inicio de sesión. Entrega access y refresh tokens. |
+| `POST` | `/api/auth/login` | Público | 5 fallos/min por correo+IP y 20 fallos/min por IP | Inicio de sesión. Entrega access y refresh tokens. |
 | `POST` | `/api/auth/refresh` | Público | 30/min por IP | Renovación de sesión con rotación de refresh token. |
 | `GET` | `/api/auth/me` | Protegido | 60/min por usuario | Retorna los datos del usuario autenticado actual. |
 | `POST` | `/api/auth/logout` | Protegido | 60/min por usuario | Cierre de sesión. Revoca el access token actual y los refresh de su familia. |
@@ -472,7 +473,7 @@ Se descartaron Frankfurter (no tiene COP) y Open Exchange Rates (base solo USD e
 
 ## Seguridad y auditoría
 
-- Límites por endpoint en AppServiceProvider (login 5/min, registro 10/min y 30/hora, consultas 20/min, externas y salidas 30/min, general 60/min).
+- Límites del login (5 fallos/min por correo+IP y 20 fallos/min por IP) y del refresh (30/min por IP) en AuthService; el resto, por endpoint, en AppServiceProvider (registro 10/min y 30/hora, consultas 20/min, externas y salidas 30/min, general 60/min).
 - Cabeceras de seguridad en CabecerasSeguridad (nosniff, DENY, no-referrer, CSP, Cache-Control: no-store en auth y remoción de X-Powered-By).
 - Log de seguridad en storage/logs/seguridad.log en JSON por línea, con correos enmascarados e IP.
 - Comando `php artisan seguridad:resumen --horas=24` para inspección en terminal, sin panel web de administración a propósito para no abrir Broken Access Control.
@@ -495,7 +496,7 @@ Comando de ejecución:
 ```bash
 vendor/bin/phpunit
 ```
-Resultado: 46 pruebas y 353 aserciones exitosas, sin fallos. Evidencia en [docs/pruebas/resultado-phpunit.txt](docs/pruebas/resultado-phpunit.txt) y [docs/pruebas/resultado-phpunit.xml](docs/pruebas/resultado-phpunit.xml).
+Resultado: 48 pruebas y 402 aserciones exitosas, sin fallos. Evidencia en [docs/pruebas/resultado-phpunit.txt](docs/pruebas/resultado-phpunit.txt) y [docs/pruebas/resultado-phpunit.xml](docs/pruebas/resultado-phpunit.xml).
 
 ### 2. Pruebas de frontend (Angular / Karma / Jasmine)
 Comando de ejecución:

@@ -104,6 +104,34 @@ class RegistroTest extends TestCase
     }
 
     /**
+     * El mensaje de not_regex (caracteres de control en el correo) sale traducido al español,
+     * no en el inglés por defecto de Laravel.
+     */
+    public function test_el_error_not_regex_del_correo_sale_en_espanol(): void
+    {
+        $response = $this->withHeaders(['Accept-Language' => 'es'])
+            ->postJson('/api/auth/register', [
+                'nombre' => 'Test Inyeccion',
+                'correo' => "a@b.com\r\nBcc: x@y.com",
+                'password' => 'Password123',
+                'password_confirmation' => 'Password123',
+                'idioma' => 'es',
+            ]);
+
+        $response->assertStatus(422);
+
+        $mensajesCorreo = collect($response->json('error.details'))
+            ->where('field', 'correo')
+            ->pluck('message')
+            ->all();
+
+        $this->assertContains('El campo correo contiene caracteres no permitidos.', $mensajesCorreo);
+        foreach ($mensajesCorreo as $mensaje) {
+            $this->assertStringNotContainsString('The ', $mensaje);
+        }
+    }
+
+    /**
      * OWASP API6 (flujo de negocio sensible): el registro está limitado a 10 por minuto por IP.
      * El undécimo responde 429 TOO_MANY_ATTEMPTS con Retry-After, no crea el usuario
      * y deja el evento limite_consumo en el canal de seguridad.

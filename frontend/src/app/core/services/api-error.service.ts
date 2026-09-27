@@ -88,26 +88,31 @@ export class ApiErrorService {
     return mapa;
   }
 
+  /** Respaldo cuando la respuesta no trae error.code: los mismos códigos que usa el backend. */
   private obtenerCodigoPorStatus(status: number): string {
     switch (status) {
       case 400:
-        return 'VALIDATION_ERROR';
+        return 'BAD_REQUEST';
       case 401:
         return 'AUTH_INVALID_CREDENTIALS';
       case 404:
-        return 'ROUTE_NOT_FOUND';
+        return 'NOT_FOUND';
       case 405:
         return 'METHOD_NOT_ALLOWED';
+      case 409:
+        return 'USER_ALREADY_EXISTS';
+      case 413:
+        return 'PAYLOAD_TOO_LARGE';
       case 422:
         return 'VALIDATION_ERROR';
       case 429:
         return 'TOO_MANY_ATTEMPTS';
       case 502:
-        return 'EXTERNAL_SERVICE_UNAVAILABLE';
+        return 'EXTERNAL_API_ERROR';
       case 504:
-        return 'EXTERNAL_SERVICE_TIMEOUT';
+        return 'EXTERNAL_API_TIMEOUT';
       default:
-        return 'INTERNAL_SERVER_ERROR';
+        return 'INTERNAL_ERROR';
     }
   }
 }

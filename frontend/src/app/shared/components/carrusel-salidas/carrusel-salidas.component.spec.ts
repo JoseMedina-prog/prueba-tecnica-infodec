@@ -109,10 +109,18 @@ describe('CarruselSalidasComponent', () => {
     expect(monedas[3].textContent?.trim()).toBe('INR ₹');
   });
 
-  it('el encabezado muestra el texto COP → £ ¥ ₹ kr', () => {
+  it('el encabezado arma COP → símbolos con las monedas que llegan de /salidas, sin repetir y en su orden', () => {
     const indicador = fixture.nativeElement.querySelector('.carrusel-monedas');
     expect(indicador).toBeTruthy();
-    expect(indicador.textContent?.trim()).toBe('COP → £ ¥ ₹ kr');
+    expect(indicador.textContent?.trim()).toBe('COP → £ kr ¥ ₹');
+    expect(indicador.getAttribute('aria-label')).toBe('TABLERO.MONEDAS_DESTINO');
+  });
+
+  it('el encabezado solo muestra los símbolos de los destinos recibidos', () => {
+    salidaService.getSalidas.and.returnValue(of(DESTINOS_PRUEBA.slice(0, 2)));
+    const fixture2 = TestBed.createComponent(CarruselSalidasComponent);
+    fixture2.detectChanges();
+    expect(fixture2.nativeElement.querySelector('.carrusel-monedas').textContent?.trim()).toBe('COP → £ kr');
   });
 
   it('cada tarjeta tiene aria-label accesible con formato X de Y', () => {

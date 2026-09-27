@@ -72,4 +72,43 @@ class LoginTest extends TestCase
         $this->assertNotEmpty($retryAfter);
         $this->assertGreaterThan(0, (int) $retryAfter);
     }
+
+    /**
+     * Password spraying: 20 fallos por minuto desde una misma IP con correos distintos
+     * (cada correo lleva un solo fallo, lejos de su propio límite de 5). El intento 21 desde esa IP
+     * responde 429 con Retry-After aunque el correo sea nuevo; otra IP no queda afectada.
+     */
+    public function test_veinte_fallos_con_correos_distintos_desde_una_ip_bloquean_el_intento_21(): void
+    {
+        $usuarios = Usuario::factory()->count(21)->create();
+
+        foreach ($usuarios->take(20) as $usuario) {
+            $this->withServerVariables(['REMOTE_ADDR' => '10.0.0.7'])
+                ->postJson('/api/auth/login', [
+                    'correo' => $usuario->correo,
+                    'password' => 'ClaveIncorrecta1',
+                ])
+                ->assertStatus(401)
+                ->assertJsonPath('error.code', 'AUTH_INVALID_CREDENTIALS');
+        }
+
+        $bloqueado = $this->withServerVariables(['REMOTE_ADDR' => '10.0.0.7'])
+            ->postJson('/api/auth/login', [
+                'correo' => $usuarios->last()->correo,
+                'password' => 'ClaveIncorrecta1',
+            ]);
+
+        $bloqueado->assertStatus(429)
+            ->assertHeader('Retry-After')
+            ->assertJsonPath('error.code', 'TOO_MANY_ATTEMPTS');
+        $this->assertGreaterThan(0, (int) $bloqueado->headers->get('Retry-After'));
+
+        // Desde otra IP el mismo correo sigue pudiendo intentar
+        $this->withServerVariables(['REMOTE_ADDR' => '10.0.0.8'])
+            ->postJson('/api/auth/login', [
+                'correo' => $usuarios->last()->correo,
+                'password' => 'ClaveIncorrecta1',
+            ])
+            ->assertStatus(401);
+    }
 }

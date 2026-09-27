@@ -184,7 +184,10 @@
     "EXTERNAL_API_ERROR": "No pudimos comunicarnos con los servicios de clima y moneda. Intenta de nuevo en unos minutos.",
     "EXTERNAL_API_TIMEOUT": "Los servicios de clima y moneda tardaron demasiado en responder. Intenta de nuevo en unos minutos.",
     "NOT_FOUND": "El recurso solicitado no fue encontrado.",
-    "INTERNAL_ERROR": "Ocurrió un error interno en el servidor. Intenta de nuevo más tarde."
+    "INTERNAL_ERROR": "Ocurrió un error interno en el servidor. Intenta de nuevo más tarde.",
+    "USER_ALREADY_EXISTS": "Ya existe una cuenta con ese correo. Inicia sesión o usa otro correo.",
+    "BAD_REQUEST": "La petición no es válida. Revisa los datos e intenta de nuevo.",
+    "PAYLOAD_TOO_LARGE": "La petición es demasiado grande (máximo 16 KB)."
   },
   "AVISOS": {
     "CLIMA_NO_DISPONIBLE": "Información meteorológica no disponible actualmente para esta ciudad.",
@@ -195,7 +198,8 @@
     "DESTINOS_DISPONIBLES": "Destinos disponibles",
     "ANTERIOR": "Anterior",
     "SIGUIENTE": "Siguiente",
-    "DE": "de"
+    "DE": "de",
+    "MONEDAS_DESTINO": "Monedas de destino"
   },
   "NO_ENCONTRADO": {
     "TITULO": "Vuelo no encontrado",

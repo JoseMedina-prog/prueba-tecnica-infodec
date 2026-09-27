@@ -24,6 +24,16 @@ class AuthService
      */
     protected const DUMMY_HASH = '$2y$12$e8x/kM.hZp0jLkWjUeQe5eI5Lw/9mZ6U3jU4w7L8K9J0m1n2o3p4q';
 
+    /**
+     * Fallos de login permitidos por minuto para una misma cuenta desde una IP (fuerza bruta).
+     */
+    protected const MAX_FALLOS_POR_CORREO = 5;
+
+    /**
+     * Fallos de login permitidos por minuto desde una IP, sin importar el correo (password spraying).
+     */
+    protected const MAX_FALLOS_POR_IP = 20;
+
     public function __construct(
         protected TokenService $tokenService
     ) {}
@@ -75,10 +85,19 @@ class AuthService
     {
         $correoNormalizado = strtolower(trim($correo));
         $throttleKey = "login:{$correoNormalizado}|{$ip}";
+        $throttleKeyIp = "login-ip:{$ip}";
 
-        // 1. Límite de intentos: 5 fallos por minuto antes de verificar contraseña
-        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
-            $segundos = RateLimiter::availableIn($throttleKey);
+        // 1. Límites de intentos, antes de verificar la contraseña:
+        //    - 5 fallos por minuto para el mismo correo desde la misma IP (fuerza bruta sobre una cuenta);
+        //    - 20 fallos por minuto desde la misma IP con cualquier correo (password spraying).
+        $bloqueadas = array_filter(
+            [$throttleKey => self::MAX_FALLOS_POR_CORREO, $throttleKeyIp => self::MAX_FALLOS_POR_IP],
+            fn (int $maximo, string $clave) => RateLimiter::tooManyAttempts($clave, $maximo),
+            ARRAY_FILTER_USE_BOTH
+        );
+
+        if ($bloqueadas !== []) {
+            $segundos = max(array_map(fn (string $clave) => RateLimiter::availableIn($clave), array_keys($bloqueadas)));
             SeguridadLogger::registrar('bloqueo_intentos', ip: $ip, correo: $correoNormalizado);
 
             throw new ApiException(
@@ -97,6 +116,7 @@ class AuthService
         if (!$usuario) {
             Hash::check($password, self::DUMMY_HASH);
             RateLimiter::hit($throttleKey, 60);
+            RateLimiter::hit($throttleKeyIp, 60);
             SeguridadLogger::registrar('login_fallido', ip: $ip, correo: $correoNormalizado);
 
             throw new ApiException(401, 'AUTH_INVALID_CREDENTIALS');
@@ -104,12 +124,14 @@ class AuthService
 
         if (!Hash::check($password, $usuario->password_hash)) {
             RateLimiter::hit($throttleKey, 60);
+            RateLimiter::hit($throttleKeyIp, 60);
             SeguridadLogger::registrar('login_fallido', ip: $ip, usuarioId: $usuario->id, correo: $correoNormalizado);
 
             throw new ApiException(401, 'AUTH_INVALID_CREDENTIALS');
         }
 
-        // 4. Credenciales correctas: limpiar intentos fallidos
+        // 4. Credenciales correctas: limpiar los fallos de esa cuenta. El contador por IP NO se limpia:
+        //    si no, quien rocía contraseñas podría reiniciarlo intercalando un login válido de su propia cuenta.
         RateLimiter::clear($throttleKey);
 
         // 5. Emisión de tokens: se genera primero familia_id (sid) para asociar unívocamente ambos tokens
@@ -152,7 +174,7 @@ class AuthService
             throw new ApiException(
                 429,
                 'TOO_MANY_ATTEMPTS',
-                'Demasiados intentos de renovación. Por favor intente más tarde.',
+                null,
                 [],
                 ['Retry-After' => (string) $segundos]
             );

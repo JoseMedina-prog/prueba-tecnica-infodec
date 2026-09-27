@@ -7,8 +7,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Fila del tablero de salidas público (pantalla de login).
- * Solo expone el código IATA y los nombres traducidos de la ciudad y el país:
- * sin ids, coordenadas, monedas ni timestamps.
+ * Solo expone el código IATA, los nombres traducidos de la ciudad y el país y la moneda
+ * (código y símbolo): sin ids, coordenadas ni timestamps.
  */
 class SalidaResource extends JsonResource
 {

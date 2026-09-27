@@ -3,6 +3,7 @@ import {
   Component,
   ElementRef,
   ViewChild,
+  computed,
   inject,
   signal
 } from '@angular/core';
@@ -24,7 +25,7 @@ import { SplitFlapComponent } from '../split-flap/split-flap.component';
         <header class="carrusel-header">
           <h2 class="carrusel-titulo">{{ 'TABLERO.DESTINOS_DISPONIBLES' | translate }}</h2>
           <div class="carrusel-header-der">
-            <span class="carrusel-monedas mono" aria-label="Monedas de destino">COP → £ ¥ ₹ kr</span>
+            <span class="carrusel-monedas mono" [attr.aria-label]="'TABLERO.MONEDAS_DESTINO' | translate">COP → {{ simbolosMonedas() }}</span>
             <div class="carrusel-nav">
               <button
                 type="button"
@@ -257,6 +258,10 @@ export class CarruselSalidasComponent implements AfterViewInit {
   readonly destinos = signal<DestinoSalida[]>([]);
   // Alias de compatibilidad para pruebas y plantillas
   readonly salidas = this.destinos;
+  /** Símbolos de las monedas destino, sin repetir, en el orden en que llegan de /salidas ("£ kr ¥ ₹"). */
+  readonly simbolosMonedas = computed(() =>
+    [...new Set(this.destinos().map((d) => d.moneda.simbolo).filter((s) => !!s))].join(' ')
+  );
   readonly enInicio = signal(true);
   readonly enFin = signal(false);
 

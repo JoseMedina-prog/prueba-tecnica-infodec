@@ -100,8 +100,9 @@ export class AuthService {
     );
   }
 
-  registro(datos: RegistroRequest): Observable<ApiResponse<{ usuario: Usuario }>> {
-    return this.http.post<ApiResponse<{ usuario: Usuario }>>(`${this.apiUrl}/auth/register`, datos);
+  /** El backend responde 201 con el usuario creado directamente en data (id, nombre, correo, idioma). */
+  registro(datos: RegistroRequest): Observable<ApiResponse<Usuario>> {
+    return this.http.post<ApiResponse<Usuario>>(`${this.apiUrl}/auth/register`, datos);
   }
 
   /**

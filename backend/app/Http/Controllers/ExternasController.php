@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exceptions\ApiException;
 use App\Models\Ciudad;
+use App\Models\Moneda;
 use App\Services\ClimaService;
 use App\Services\MonedaService;
 use App\Traits\ApiResponse;
@@ -37,14 +38,13 @@ class ExternasController extends Controller
     }
 
     /**
-     * Consulta la tasa de cambio COP -> moneda destino. Acepta solo GBP, JPY, INR o DKK.
+     * Consulta la tasa de cambio COP -> moneda destino. Acepta solo las monedas de la tabla monedas.
      */
     public function tasa(string $codigoMoneda): JsonResponse
     {
         $codigoNormalizado = strtoupper(trim($codigoMoneda));
-        $monedasPermitidas = ['GBP', 'JPY', 'INR', 'DKK'];
 
-        if (!in_array($codigoNormalizado, $monedasPermitidas, true)) {
+        if (!Moneda::where('codigo', $codigoNormalizado)->exists()) {
             throw new ApiException(404, 'NOT_FOUND');
         }
 

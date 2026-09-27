@@ -184,7 +184,10 @@
     "EXTERNAL_API_ERROR": "Die Wetter- und Währungsdienste sind nicht erreichbar. Bitte versuche es in einigen Minuten erneut.",
     "EXTERNAL_API_TIMEOUT": "Die Wetter- und Währungsdienste haben zu lange gebraucht. Bitte versuche es in einigen Minuten erneut.",
     "NOT_FOUND": "Die angeforderte Ressource wurde nicht gefunden.",
-    "INTERNAL_ERROR": "Ein interner Serverfehler ist aufgetreten. Bitte versuche es später erneut."
+    "INTERNAL_ERROR": "Ein interner Serverfehler ist aufgetreten. Bitte versuche es später erneut.",
+    "USER_ALREADY_EXISTS": "Mit dieser E-Mail-Adresse gibt es bereits ein Konto. Melde dich an oder verwende eine andere E-Mail-Adresse.",
+    "BAD_REQUEST": "Die Anfrage ist ungültig. Prüfe die Daten und versuche es erneut.",
+    "PAYLOAD_TOO_LARGE": "Die Anfrage ist zu groß (maximal 16 KB)."
   },
   "AVISOS": {
     "CLIMA_NO_DISPONIBLE": "Wetterinformationen sind für diese Stadt derzeit nicht verfügbar.",
@@ -195,7 +198,8 @@
     "DESTINOS_DISPONIBLES": "Verfügbare Ziele",
     "ANTERIOR": "Zurück",
     "SIGUIENTE": "Weiter",
-    "DE": "von"
+    "DE": "von",
+    "MONEDAS_DESTINO": "Zielwährungen"
   },
   "NO_ENCONTRADO": {
     "TITULO": "Flug nicht gefunden",
