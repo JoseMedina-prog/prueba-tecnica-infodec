@@ -15,16 +15,17 @@ El pasabordo es la metáfora visual de la app: el resultado de cada consulta se 
 3. [Stack tecnológico y versiones probadas](#stack-tecnológico-y-versiones-probadas)
 4. [Requisitos previos y claves de servicios externos](#requisitos-previos-y-claves-de-servicios-externos)
 5. [Instalación paso a paso](#instalación-paso-a-paso)
-6. [Base de datos](#base-de-datos)
-7. [Autenticación y ciclo de vida del token](#autenticación-y-ciclo-de-vida-del-token)
-8. [Endpoints de la API](#endpoints-de-la-api)
-9. [Manejo de errores](#manejo-de-errores)
-10. [Consumo de APIs externas](#consumo-de-apis-externas)
-11. [Seguridad y auditoría](#seguridad-y-auditoría)
-12. [Pruebas automatizadas](#pruebas-automatizadas)
-13. [Inconsistencias del enunciado y soluciones aplicadas](#inconsistencias-del-enunciado-y-soluciones-aplicadas)
-14. [Decisiones técnicas y limitaciones conocidas](#decisiones-técnicas-y-limitaciones-conocidas)
-15. [Estructura del repositorio](#estructura-del-repositorio)
+6. [Problemas comunes](#problemas-comunes)
+7. [Base de datos](#base-de-datos)
+8. [Autenticación y ciclo de vida del token](#autenticación-y-ciclo-de-vida-del-token)
+9. [Endpoints de la API](#endpoints-de-la-api)
+10. [Manejo de errores](#manejo-de-errores)
+11. [Consumo de APIs externas](#consumo-de-apis-externas)
+12. [Seguridad y auditoría](#seguridad-y-auditoría)
+13. [Pruebas automatizadas](#pruebas-automatizadas)
+14. [Inconsistencias del enunciado y soluciones aplicadas](#inconsistencias-del-enunciado-y-soluciones-aplicadas)
+15. [Decisiones técnicas y limitaciones conocidas](#decisiones-técnicas-y-limitaciones-conocidas)
+16. [Estructura del repositorio](#estructura-del-repositorio)
 
 ---
 
@@ -101,19 +102,26 @@ El proyecto consta de un backend en Laravel 11 y un frontend en Angular 20. Las 
 
 ## Requisitos previos y claves de servicios externos
 
-Antes de la instalación, se requiere PHP 8.2+, Composer, Node.js 20+, PostgreSQL 16+ y claves de acceso para dos servicios externos gratuitos:
+Antes de la instalación se requiere:
 
-### Obtención de la clave de OpenWeatherMap
+- **Node.js**: versión 20.19.0 o superior (Angular 20 exige `^20.19.0 || ^22.12.0 || >=24.0.0`).
+- **PHP**: 8.2 o superior con las extensiones necesarias (`pdo_pgsql`, `pgsql`, `openssl`, `mbstring`, `curl`, `ctype`, `filter`, `hash`, `session`, `tokenizer`). En Windows o XAMPP es indispensable abrir `php.ini` y habilitar `extension=pdo_pgsql` y `extension=pgsql` retirando el punto y coma (`;`) inicial.
+- **Composer**: 2.x para dependencias de PHP.
+- **PostgreSQL**: 16 o superior.
 
-1. Entrar a https://home.openweathermap.org/users/sign_up y registrarse.
-2. Confirmar la cuenta mediante el correo recibido.
-3. En la sección "API keys", copiar la clave generada por defecto o crear una nueva. La activación de una clave nueva puede tardar entre 10 y 60 minutos en sus servidores.
+### Claves de servicios externos
 
-### Obtención de la clave de ExchangeRate-API
+La aplicación consulta dos servicios externos para obtener clima y tasas de cambio:
 
-1. Entrar a https://www.exchangerate-api.com/ y registrarse en el plan gratuito ("Free Plan").
-2. Confirmar la cuenta con el correo de verificación.
-3. Copiar la clave asignada en el panel principal ("Your API Key").
+- **Claves de prueba recibidas con la entrega**: si el evaluador recibió claves de prueba junto con el proyecto, debe colocarlas directamente en las variables `WEATHER_API_KEY` y `EXCHANGE_API_KEY` del archivo `backend/.env` (coincidiendo con los nombres definidos en `backend/.env.example`).
+- **Obtención de claves propias**:
+  - **OpenWeatherMap**: registrarse en https://home.openweathermap.org/users/sign_up, confirmar la cuenta por correo y copiar la clave en la sección "API keys". Una clave recién creada puede tardar hasta un par de horas en activarse en sus servidores; durante ese lapso la API responde 401 Unauthorized.
+  - **ExchangeRate-API**: registrarse en el plan gratuito en https://www.exchangerate-api.com/, confirmar el correo y copiar la clave asignada en el panel principal ("Your API Key").
+
+### Funcionamiento con y sin claves
+
+- **Qué funciona sin claves**: registro de usuarios, inicio y cierre de sesión, selector de países y listado de destinos.
+- **Qué no funciona sin claves**: la consulta de pasabordo (`POST /api/consultas` o `POST /api/conversion`). Si las APIs no tienen claves válidas o fallan y no hay datos guardados previamente, el backend responde con error 502 (Bad Gateway) o 504 (Gateway Timeout). Si ya se precargó la base de datos con `php artisan externos:actualizar`, la consulta devuelve los datos de respaldo guardados aun sin conexión a las APIs externas.
 
 ---
 
@@ -188,10 +196,19 @@ createdb -U postgres travel_app_db
 createdb -U postgres travel_app_test
 ```
 
+Si el comando `createdb` no se reconoce en Windows:
+- Usar la ruta completa al binario (por ejemplo `& "C:\Program Files\PostgreSQL\16\bin\createdb.exe" -U postgres travel_app_db` y `travel_app_test`).
+- O crearlas desde pgAdmin: clic derecho en **Databases** → **Create** → **Database...**, escribir `travel_app_db` y guardar (repetir para `travel_app_test`).
+- O crearlas con SQL desde cualquier cliente conectado al motor:
+  ```sql
+  CREATE DATABASE travel_app_db;
+  CREATE DATABASE travel_app_test;
+  ```
+
 Ejecutar las migraciones y sembrar los datos:
 
 ```bash
-php artisan migrate --sseed
+php artisan migrate --seed
 ```
 
 Llenar la caché de clima y tasas de cambio:
@@ -251,16 +268,27 @@ El seeder crea el siguiente usuario listo para iniciar sesión:
 
 ### Alternativa de carga por script SQL
 
-Para restaurar el esquema completo con datos base sin ejecutar migraciones de Laravel:
+La vía recomendada para inicializar la base de datos es `php artisan migrate --seed`. Si se prefiere restaurar el esquema completo con datos base desde el archivo [docs/database/schema.sql](docs/database/schema.sql) sin pasar por las migraciones de Laravel:
 
 ```bash
 psql -U postgres -d travel_app_db -f docs/database/schema.sql
 ```
 
-### Problemas comunes
+Aclaraciones sobre la carga del script:
+- Debe cargarse obligatoriamente con la consola `psql`. El Query Tool de pgAdmin no ejecuta las directivas `\restrict` / `\unrestrict` ni los bloques de datos con `COPY ... FROM stdin;`.
+- El archivo contiene las líneas `\restrict` y `\unrestrict` generadas por `pg_dump` 16.14. Con versiones de `psql` anteriores a la 16.10 esas dos líneas producen un aviso que se puede ignorar sin inconvenientes.
 
-1. Error 500 del servidor de desarrollo: se soluciona ejecutando `php artisan optimize:clear` y reiniciando `php artisan serve`.
-2. Correr la colección de Postman con la app abierta en el navegador: cierra la sesión del navegador a propósito, porque la prueba de reuso del refresh token revoca todas las sesiones del usuario activo.
+---
+
+## Problemas comunes
+
+1. **`could not find driver`**: activar la extensión `pdo_pgsql` (y `pgsql`) en el archivo `php.ini` descomentando su línea y reiniciando la consola o el servidor web.
+2. **Puerto 8000 ocupado**: el frontend espera la API en `http://localhost:8000/api`. Si el backend corre en otro puerto (por ejemplo 8001), debe actualizarse la URL en `frontend/src/environments/environment.development.ts` (`ng serve`) y `frontend/src/environments/environment.ts` (`ng build`).
+3. **Frontend en un puerto distinto de 4200**: si Angular se ejecuta en otro puerto, las peticiones fallarán por CORS. Ajustar la variable `FRONTEND_URL` en `backend/.env` con la URL y el puerto exactos del frontend.
+4. **`createdb` o `psql` no reconocido**: PostgreSQL no está en el PATH del sistema; consultar las alternativas en el paso de creación de bases de datos (ruta completa en `C:\Program Files\PostgreSQL\<versión>\bin`, pgAdmin o `CREATE DATABASE` vía SQL).
+5. **Claves recién creadas que todavía no funcionan**: una clave nueva de OpenWeatherMap puede tardar hasta un par de horas en activarse (responde 401 mientras tanto). Si ya se ejecutó `php artisan externos:actualizar`, la app responderá con los datos de respaldo locales; de lo contrario hay que esperar su activación.
+6. **Error 500 del servidor de desarrollo**: se soluciona ejecutando `php artisan optimize:clear` en la carpeta `backend/` y reiniciando `php artisan serve`.
+7. **Cierre de sesión al correr Postman**: ejecutar la colección de Postman con la aplicación abierta en el navegador revoca las sesiones activas, porque la prueba de reuso del refresh token invalida la familia completa de tokens por seguridad.
 
 ---
 
