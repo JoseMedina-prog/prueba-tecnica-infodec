@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict kX9OUMHFbNkNub2xuboCaf53gsj03FuI2Zf8ZLdWplkmy8M4HG48H1s45XdRxHn
+\restrict cphEz9qyVGrDbdRpf4n9N838087t2gHqDTctXq3hKlfsfLRVqSb3kfA3NeOyaIz
 
 -- Dumped from database version 16.14
 -- Dumped by pg_dump version 16.14
@@ -402,14 +402,14 @@ ALTER TABLE ONLY public.usuarios ALTER COLUMN id SET DEFAULT nextval('public.usu
 --
 
 COPY public.ciudades (id, pais_id, nombre, latitud, longitud, created_at, updated_at, codigo_iata) FROM stdin;
-1	1	Londres	51.507400	-0.127800	2026-09-26 02:30:05	2026-09-26 02:30:05	LON
-2	1	Mánchester	53.480800	-2.242600	2026-09-26 02:30:05	2026-09-26 02:30:05	MAN
-3	2	Tokio	35.676200	139.650300	2026-09-26 02:30:05	2026-09-26 02:30:05	TYO
-4	2	Osaka	34.693700	135.502300	2026-09-26 02:30:05	2026-09-26 02:30:05	OSA
-5	3	Nueva Delhi	28.613900	77.209000	2026-09-26 02:30:05	2026-09-26 02:30:05	DEL
-6	3	Bombay	19.076000	72.877700	2026-09-26 02:30:05	2026-09-26 02:30:05	BOM
-7	4	Copenhague	55.676100	12.568300	2026-09-26 02:30:05	2026-09-26 02:30:05	CPH
-8	4	Aarhus	56.162900	10.203900	2026-09-26 02:30:05	2026-09-26 02:30:05	AAR
+1	1	Londres	51.507400	-0.127800	2026-09-27 01:01:43	2026-09-27 01:01:43	LON
+2	1	Mánchester	53.480800	-2.242600	2026-09-27 01:01:43	2026-09-27 01:01:43	MAN
+3	2	Tokio	35.676200	139.650300	2026-09-27 01:01:43	2026-09-27 01:01:43	TYO
+4	2	Osaka	34.693700	135.502300	2026-09-27 01:01:43	2026-09-27 01:01:43	OSA
+5	3	Nueva Delhi	28.613900	77.209000	2026-09-27 01:01:43	2026-09-27 01:01:43	DEL
+6	3	Bombay	19.076000	72.877700	2026-09-27 01:01:43	2026-09-27 01:01:43	BOM
+7	4	Copenhague	55.676100	12.568300	2026-09-27 01:01:43	2026-09-27 01:01:43	CPH
+8	4	Aarhus	56.162900	10.203900	2026-09-27 01:01:43	2026-09-27 01:01:43	AAR
 \.
 
 
@@ -434,10 +434,10 @@ COPY public.consultas (id, usuario_id, ciudad_id, presupuesto_cop, clima_tempera
 --
 
 COPY public.monedas (id, codigo, nombre, simbolo, created_at, updated_at) FROM stdin;
-1	GBP	Libra esterlina	£	2026-09-26 02:30:05	2026-09-26 02:30:05
-2	JPY	Yen	¥	2026-09-26 02:30:05	2026-09-26 02:30:05
-3	INR	Rupia india	₹	2026-09-26 02:30:05	2026-09-26 02:30:05
-4	DKK	Corona danesa	kr	2026-09-26 02:30:05	2026-09-26 02:30:05
+1	GBP	Libra esterlina	£	2026-09-27 01:01:43	2026-09-27 01:01:43
+2	JPY	Yen japonés	¥	2026-09-27 01:01:43	2026-09-27 01:01:43
+3	INR	Rupia india	₹	2026-09-27 01:01:43	2026-09-27 01:01:43
+4	DKK	Corona danesa	kr	2026-09-27 01:01:43	2026-09-27 01:01:43
 \.
 
 
@@ -446,10 +446,10 @@ COPY public.monedas (id, codigo, nombre, simbolo, created_at, updated_at) FROM s
 --
 
 COPY public.paises (id, nombre, codigo, moneda_id, created_at, updated_at) FROM stdin;
-1	Inglaterra	GB	1	2026-09-26 02:30:05	2026-09-26 02:30:05
-2	Japón	JP	2	2026-09-26 02:30:05	2026-09-26 02:30:05
-3	India	IN	3	2026-09-26 02:30:05	2026-09-26 02:30:05
-4	Dinamarca	DK	4	2026-09-26 02:30:05	2026-09-26 02:30:05
+1	Inglaterra	GB	1	2026-09-27 01:01:43	2026-09-27 01:01:43
+2	Japón	JP	2	2026-09-27 01:01:43	2026-09-27 01:01:43
+3	India	IN	3	2026-09-27 01:01:43	2026-09-27 01:01:43
+4	Dinamarca	DK	4	2026-09-27 01:01:43	2026-09-27 01:01:43
 \.
 
 
@@ -482,7 +482,7 @@ COPY public.tokens_revocados (id, jti, usuario_id, expira_en, created_at) FROM s
 --
 
 COPY public.usuarios (id, nombre, correo, password_hash, idioma, created_at, updated_at) FROM stdin;
-1	Usuario Prueba	prueba@travelapp.test	$2y$12$lCPOnwfbAgxJ.EN/K7ThRuUf1q8embDVvtsD2nKujS5VQUkx0455y	es	2026-09-26 02:30:06	2026-09-26 02:30:06
+1	Usuario Prueba	prueba@travelapp.test	$2y$12$5u6LOzgXu4Spqor40xmKWOlG1w3zmfs.CvRoexPE9IVIMaXG1dZpO	es	2026-09-27 01:01:43	2026-09-27 01:01:43
 \.
 
 
@@ -766,5 +766,5 @@ ALTER TABLE ONLY public.tokens_revocados
 -- PostgreSQL database dump complete
 --
 
-\unrestrict kX9OUMHFbNkNub2xuboCaf53gsj03FuI2Zf8ZLdWplkmy8M4HG48H1s45XdRxHn
+\unrestrict cphEz9qyVGrDbdRpf4n9N838087t2gHqDTctXq3hKlfsfLRVqSb3kfA3NeOyaIz
 
