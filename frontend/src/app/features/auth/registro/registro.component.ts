@@ -25,15 +25,30 @@ import { BotonVerPasswordComponent } from '../../../shared/components/boton-ver-
 import { LogoComponent } from '../../../shared/components/logo/logo.component';
 
 /**
- * Validador para confirmar que password y password_confirmation coincidan
+ * Validador de grupo para confirmar que password y password_confirmation coincidan.
+ * Corre al cambiar cualquiera de los dos campos. El error también se pone en la confirmación
+ * (para mostrarlo debajo de ella) y se quita de ahí cuando vuelven a coincidir, sin tocar sus otros errores.
  */
 export function passwordMatchValidator(group: AbstractControl): ValidationErrors | null {
-  const password = group.get('password')?.value;
-  const confirmacion = group.get('password_confirmation')?.value;
+  const confirmacionControl = group.get('password_confirmation');
+  if (!confirmacionControl) {
+    return null;
+  }
 
-  if (password && confirmacion && password !== confirmacion) {
-    group.get('password_confirmation')?.setErrors({ passwordMismatch: true });
+  const password = group.get('password')?.value;
+  const confirmacion = confirmacionControl.value;
+  const noCoinciden = !!password && !!confirmacion && password !== confirmacion;
+  const { passwordMismatch, ...otrosErrores } = confirmacionControl.errors ?? {};
+
+  if (noCoinciden) {
+    if (!passwordMismatch) {
+      confirmacionControl.setErrors({ ...otrosErrores, passwordMismatch: true });
+    }
     return { passwordMismatch: true };
+  }
+
+  if (passwordMismatch) {
+    confirmacionControl.setErrors(Object.keys(otrosErrores).length > 0 ? otrosErrores : null);
   }
   return null;
 }
@@ -385,7 +400,8 @@ export class RegistroComponent {
       return;
     }
 
-    const payload = this.form.getRawValue();
+    // El idioma elegido en la app queda en el perfil: al iniciar sesión se aplica ese mismo idioma.
+    const payload = { ...this.form.getRawValue(), idioma: this.idiomaService.getIdioma() };
     this.enviando.set(true);
     this.form.disable();
     this.otroError.set(null);

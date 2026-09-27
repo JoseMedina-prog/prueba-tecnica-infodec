@@ -66,12 +66,6 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
       // Caso A: Token expirado (AUTH_TOKEN_EXPIRED)
       if (codigoError === 'AUTH_TOKEN_EXPIRED') {
-        // Evitar bucles infinitos: si ya fue reintentada una vez, no reintentar de nuevo
-        if (req.headers.has('X-Reintento-Auth')) {
-          authService.limpiarSesion(true);
-          return throwError(() => err);
-        }
-
         // Si ya hay una renovación en curso, reutilizarla; si no, crearla
         if (!renovacionEnCurso$) {
           renovacionEnCurso$ = authService.refrescarToken().pipe(
@@ -97,15 +91,28 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
               return throwError(() => err);
             }
 
-            // Reintentar la petición original con el nuevo token y marca de reintento
+            // Reintentar la petición original UNA vez con el nuevo token. El reintento va directo a `next`
+            // (no vuelve a pasar por este interceptor), así que no puede entrar en bucle.
             const peticionReintentada = req.clone({
               headers: req.headers
                 .set('Authorization', `Bearer ${nuevoToken}`)
                 .set('Accept-Language', idiomaService.getIdioma())
-                .set('X-Reintento-Auth', '1')
             });
 
-            return next(peticionReintentada);
+            return next(peticionReintentada).pipe(
+              catchError((errReintento: unknown) => {
+                // Un 401 con el token recién renovado: la sesión ya no sirve. Solo limpia si la sesión
+                // sigue siendo la de ese token, para que varios reintentos fallidos redirijan una sola vez.
+                if (
+                  errReintento instanceof HttpErrorResponse &&
+                  errReintento.status === 401 &&
+                  tokenStorage.getAccessToken() === nuevoToken
+                ) {
+                  authService.limpiarSesion(true);
+                }
+                return throwError(() => errReintento);
+              })
+            );
           })
         );
       }

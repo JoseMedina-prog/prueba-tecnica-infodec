@@ -1,9 +1,11 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { provideTranslateService } from '@ngx-translate/core';
 import { environment } from '../../../environments/environment';
 import { ApiResponse } from '../models/api-response.model';
 import { DestinoSalida } from '../models/salida.model';
+import { IdiomaService } from './idioma.service';
 import { SalidaService } from './salida.service';
 
 describe('SalidaService', () => {
@@ -31,21 +33,55 @@ describe('SalidaService', () => {
     data: mockSalidas
   };
 
+  let idiomaService: IdiomaService;
+
   beforeEach(() => {
+    localStorage.clear();
     TestBed.configureTestingModule({
       providers: [
         SalidaService,
         provideHttpClient(),
-        provideHttpClientTesting()
+        provideHttpClientTesting(),
+        provideTranslateService()
       ]
     });
 
+    idiomaService = TestBed.inject(IdiomaService);
+    idiomaService.cambiarIdioma('es');
     service = TestBed.inject(SalidaService);
     httpMock = TestBed.inject(HttpTestingController);
   });
 
   afterEach(() => {
     httpMock.verify();
+    localStorage.clear();
+  });
+
+  it('pide de nuevo al cambiar de idioma con el Accept-Language nuevo, y volver al anterior no repite la petición', () => {
+    const salidasDe: DestinoSalida[] = [
+      { codigo_iata: 'LON', ciudad: 'London', pais: 'England', moneda: { codigo: 'GBP', simbolo: '£' } }
+    ];
+
+    let enEspanol: DestinoSalida[] | undefined;
+    service.getSalidas().subscribe((data) => (enEspanol = data));
+    const reqEs = httpMock.expectOne(`${apiUrl}/salidas`);
+    expect(reqEs.request.headers.get('Accept-Language')).toBe('es');
+    reqEs.flush(mockResponse);
+    expect(enEspanol).toEqual(mockSalidas);
+
+    idiomaService.cambiarIdioma('de');
+    let enAleman: DestinoSalida[] | undefined;
+    service.getSalidas().subscribe((data) => (enAleman = data));
+    const reqDe = httpMock.expectOne(`${apiUrl}/salidas`);
+    expect(reqDe.request.headers.get('Accept-Language')).toBe('de');
+    reqDe.flush({ success: true, data: salidasDe });
+    expect(enAleman).toEqual(salidasDe);
+
+    idiomaService.cambiarIdioma('es');
+    let otraVezEspanol: DestinoSalida[] | undefined;
+    service.getSalidas().subscribe((data) => (otraVezEspanol = data));
+    httpMock.expectNone(`${apiUrl}/salidas`);
+    expect(otraVezEspanol).toEqual(mockSalidas);
   });
 
   it('hace una sola petición HTTP cuando hay dos suscripciones concurrentes', () => {

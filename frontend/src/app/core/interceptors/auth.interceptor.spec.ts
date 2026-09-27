@@ -97,14 +97,53 @@ describe('authInterceptor', () => {
       }
     });
 
-    // 3. La petición original se repite con el nuevo token y marca de reintento
+    // 3. La petición original se repite con el nuevo token, sin cabeceras propias extra
     const reqReintento = httpMock.expectOne(`${apiUrl}/consultas`);
     expect(reqReintento.request.headers.get('Authorization')).toBe('Bearer nuevo-token-789');
-    expect(reqReintento.request.headers.get('X-Reintento-Auth')).toBe('1');
+    expect(reqReintento.request.headers.has('X-Reintento-Auth')).toBeFalse();
     reqReintento.flush({ success: true, data: [{ id: 1 }] });
 
     expect(respuestaFinal).toEqual({ success: true, data: [{ id: 1 }] });
     expect(tokenStorage.getAccessToken()).toBe('nuevo-token-789');
+  });
+
+  it('b2) si el reintento vuelve a responder 401, limpia la sesión, navega al login una sola vez y entrega el error', () => {
+    const navigateSpy = spyOn(router, 'navigate').and.resolveTo(true);
+    tokenStorage.setTokens('token-expirado', 'refresh-token-valido');
+
+    let errorRecibido: any;
+    http.get(`${apiUrl}/consultas`).subscribe({
+      error: (err) => (errorRecibido = err)
+    });
+
+    httpMock
+      .expectOne(`${apiUrl}/consultas`)
+      .flush(
+        { success: false, error: { code: 'AUTH_TOKEN_EXPIRED', message: 'Expirado' } },
+        { status: 401, statusText: 'Unauthorized' }
+      );
+    httpMock.expectOne(`${apiUrl}/auth/refresh`).flush({
+      success: true,
+      data: { access_token: 'nuevo-token', refresh_token: 'nuevo-refresh', token_type: 'Bearer', expires_in: 900 }
+    });
+
+    // El reintento con el token nuevo también es rechazado
+    httpMock
+      .expectOne(`${apiUrl}/consultas`)
+      .flush(
+        { success: false, error: { code: 'AUTH_TOKEN_REVOKED', message: 'Revocado' } },
+        { status: 401, statusText: 'Unauthorized' }
+      );
+
+    // No hay más refresh ni reintentos
+    httpMock.expectNone(`${apiUrl}/auth/refresh`);
+    httpMock.expectNone(`${apiUrl}/consultas`);
+
+    expect(tokenStorage.getAccessToken()).toBeNull();
+    expect(tokenStorage.getRefreshToken()).toBeNull();
+    expect(navigateSpy).toHaveBeenCalledTimes(1);
+    expect(navigateSpy).toHaveBeenCalledWith(['/login'], { state: { sesionExpirada: true } });
+    expect(errorRecibido?.status).toBe(401);
   });
 
   it('c) dos peticiones que vencen al mismo tiempo deben generar UNA sola llamada a /auth/refresh', () => {

@@ -1,8 +1,9 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { TranslateService, provideTranslateService } from '@ngx-translate/core';
+import { IdiomaService } from '../../../core/services/idioma.service';
 import { RegistroComponent } from './registro.component';
 
 describe('RegistroComponent - Checklist de contraseña', () => {
@@ -90,6 +91,52 @@ describe('RegistroComponent - Checklist de contraseña', () => {
     expect(control.hasError('passwordComplexity')).toBeTrue();
     control.setValue('Abcdefg1');
     expect(control.valid).toBeTrue();
+  });
+
+  it('con la confirmación escrita, corregir la contraseña deja el formulario válido y quita el mensaje', () => {
+    const password = component.form.get('password')!;
+    const confirmacion = component.form.get('password_confirmation')!;
+    component.form.patchValue({ nombre: 'Marlon', correo: 'marlon@travelapp.test' });
+
+    password.setValue('Password12');
+    confirmacion.setValue('Password123');
+    confirmacion.markAsTouched();
+    fixture.detectChanges();
+
+    // No coinciden: el error y su mensaje salen debajo de la confirmación
+    expect(confirmacion.hasError('passwordMismatch')).toBeTrue();
+    expect(component.form.valid).toBeFalse();
+    const campoConfirmacion = fixture.nativeElement.querySelector('#password_confirmation').closest('.mb-3');
+    expect(campoConfirmacion.querySelector('.invalid-feedback')?.textContent).toContain('VALIDACION.PASSWORD_MISMATCH');
+
+    // Se corrige solo la contraseña, sin reescribir la confirmación
+    password.setValue('Password123');
+    fixture.detectChanges();
+
+    expect(confirmacion.hasError('passwordMismatch')).toBeFalse();
+    expect(confirmacion.valid).toBeTrue();
+    expect(component.form.valid).toBeTrue();
+    expect(campoConfirmacion.querySelector('.invalid-feedback')).toBeNull();
+  });
+
+  it('el body del registro incluye el idioma actual de la app', () => {
+    const httpMock = TestBed.inject(HttpTestingController);
+    spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+    TestBed.inject(IdiomaService).cambiarIdioma('de');
+
+    component.form.setValue({
+      nombre: 'Marlon',
+      correo: 'marlon@travelapp.test',
+      password: 'Password123',
+      password_confirmation: 'Password123'
+    });
+    component.onSubmit();
+
+    const req = httpMock.expectOne((r) => r.url.endsWith('/auth/register'));
+    expect(req.request.body.idioma).toBe('de');
+    req.flush({ success: true, data: {} }, { status: 201, statusText: 'Created' });
+    httpMock.verify();
+    localStorage.clear();
   });
 
   it('el registro no muestra la tira de salidas', () => {
